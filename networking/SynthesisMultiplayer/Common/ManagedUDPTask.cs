@@ -2,69 +2,50 @@
 using SynthesisMultiplayer.Threading.Message;
 using SynthesisMultiplayer.Util;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace SynthesisMultiplayer.Common
 {
-    class ManagedUDPTask : IManagedTask
+    public class ManagedUDPTask : IManagedTask
     {
-        public enum ServerType
-        {
-            Broadcast,
-            Listener,
-            Sender,
-            Receiver
-        }
-
-        protected int port { get; set; }
-        protected bool alive;
-        protected bool paused;
-        bool disposedValue = false;
-        IPAddress Ip;
-        readonly ServerType Type;
-        List<UdpClient> Connections;
+        protected bool Alive { get; set; }
+        protected bool Paused { get; set; }
+        protected bool disposedValue = false;
+        protected IPEndPoint Endpoint;
+        protected UdpClient Connection;
+        protected IMessage LastState;
         Channel<IMessage> StatusChannel, MessageChannel;
         Dictionary<string, ManagedTaskCallback> callbackRegistery;
-
         public ManagedUDPTask(Channel<IMessage> statusChannel,
             Channel<IMessage> messageChannel,
-            ServerType type,
             IPAddress ip,
             int port = 33000)
         {
             StatusChannel = statusChannel;
             MessageChannel = messageChannel;
-            Ip = ip;
-            this.port = port;
-            Type = type;
-            Connections = new List<UdpClient>();
+            Endpoint = new IPEndPoint(ip, port);
             callbackRegistery = new Dictionary<string, ManagedTaskCallback>();
         }
-
         public void RegisterCallback(string name, ManagedTaskCallback callback)
         {
-            if (callbackRegistery.ContainsKey(name))
-                throw new Exception("Callback '" + name + "' already registered");
+            if (callbackRegistery.ContainsKey(name) || GetType().GetMethod(name) != null)
+                throw new Exception("Callback '" + name + "' already registered or is a method");
             callbackRegistery[name] = callback;
         }
-
-        public void SendMessage(IMessage message)
-        {
-            MessageChannel.Send(message);
-        }
-
-        public bool IsAlive() => alive;
-        public bool IsPaused() => paused;
-
-        public virtual void OnStart(ITaskContext context) { }
-
-        public virtual void OnResume(ITaskContext context) { }
-
-        public virtual void OnMessage(ITaskContext context)
+        public bool IsAlive() => Alive;
+        public bool IsPaused() => Paused;
+        public void SendMessage(IMessage message) => MessageChannel.Send(message);
+        public IMessage GetMessage() => StatusChannel.TryPeek().IsValid() ? StatusChannel.Get() : LastState;
+        public virtual void OnStart(ref ITaskContext context) => Alive = true;
+        public virtual void OnResume(ref ITaskContext context) { }
+        public virtual void OnCycle(ref ITaskContext context) { }
+        public virtual void OnPause(ref ITaskContext context) { }
+        public virtual void OnStop(ref ITaskContext context) { }
+        public virtual void OnExit(ref ITaskContext context) { }
+        public virtual void OnMessage(ref ITaskContext context)
         {
             var message = MessageChannel.TryGet();
             if (message.IsValid())
@@ -72,19 +53,19 @@ namespace SynthesisMultiplayer.Common
                 switch (((IMessage)message).GetName())
                 {
                     case Default.Task.Start:
-                        OnStart(context);
+                        OnStart(ref context);
                         break;
                     case Default.Task.Resume:
-                        OnResume(context);
+                        OnResume(ref context);
                         break;
                     case Default.Task.Pause:
-                        OnPause(context);
+                        OnPause(ref context);
                         break;
                     case Default.Task.Stop:
-                        OnStop(context);
+                        OnStop(ref context);
                         break;
                     case Default.Task.Exit:
-                        OnExit(context);
+                        OnExit(ref context);
                         break;
                     default:
                         var messageName = ((IMessage)message).GetName();
@@ -92,48 +73,19 @@ namespace SynthesisMultiplayer.Common
                         {
                             throw new Exception("Unknown thread command");
                         }
-                        callbackRegistery[messageName](context);
+                        callbackRegistery[messageName](ref context);
                         break;
                 }
             }
         }
-
-        public virtual void OnCycle(ITaskContext context) { }
-
-        public virtual void OnPause(ITaskContext context)
-        {
-            foreach (var conn in Connections)
-            {
-                switch (Type)
-                {
-                    case ServerType.Broadcast:
-                    case ServerType.Sender:
-
-                        break;
-                    case ServerType.Listener:
-                    case ServerType.Receiver:
-
-                        break;
-                }
-            }
-        }
-
-        public virtual void OnStop(ITaskContext context) { }
-
-        public virtual void OnExit(ITaskContext context) => Dispose();
-
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
                 {
-                    foreach (var conn in Connections)
-                    {
-                        conn.Close();
-                        Connections.Remove(conn);
-                        conn.Dispose();
-                    }
+                    Connection.Close();
+                    Connection.Dispose();
                     MessageChannel.Dispose();
                 }
                 disposedValue = true;

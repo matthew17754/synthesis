@@ -4,65 +4,58 @@ using System.Net;
 using System.Collections.Generic;
 using System.Threading;
 using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Common;
+using SynthesisMultiplayer.Util;
+using MatchmakingService;
+using System.Text;
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    class ListenerServer
+    public class ListenerServer : ManagedUDPTask
     {
-        int Port;
-
-        public ListenerServer(int port = 33000)
-        {
-            Port = port;
-        }
-
         protected class ListenerContext : TaskContextBase
         {
             public UdpClient client;
             public IPEndPoint peer;
+
+            public Channel<byte[]> sender;
         }
-        private sealed class ListenerServerData
+        private class ListenerServerData
         {
-            private ListenerServerData()
+            public ListenerServerData()
             {
-                mutex = new Mutex();
-                connInfo = new Dictionary<Guid, Common.ConnectionInfo>();
+                Mutex = new Mutex();
+                ConnectionInfo = new Dictionary<Guid, IPEndPoint>();
             }
-            public static ListenerServerData Instance { get => InstanceData.instance; }
-            private class InstanceData
-            {
-                static InstanceData() { }
-                internal static readonly ListenerServerData instance = new ListenerServerData();
-            }
-            public Mutex mutex;
-            public Dictionary<Guid, Common.ConnectionInfo> connInfo;
+            public Mutex Mutex;
+            public Dictionary<Guid, IPEndPoint> ConnectionInfo;
+            public IPEndPoint LastEndpoint;
         }
+
+        ListenerServerData ServerData;
+        Channel<byte[]> SendChannel, ReceiveChannel;
+        public ListenerServer(Channel<IMessage> statusChannel, Channel<IMessage> messageChannel, int port = 33000) :
+            base(statusChannel, messageChannel, IPAddress.Any, port) { }
         private void receiveCallback(IAsyncResult result)
         {
             var context = ((ListenerContext)(result.AsyncState));
             var udpClient = context.client;
             var peer = context.peer;
-            var data = MatchmakingService.UDPValidatorMessage.Parser.ParseFrom(
-                udpClient.EndReceive(result, ref peer));
-            if (data.Api != "v1")
-            {
-                Console.WriteLine("Error: could not understand API version '" + data.Api + "'");
-                udpClient.BeginReceive(new AsyncCallback(receiveCallback), context);
-            }
-            SetConnectionInfo(new Guid(data.JobId), new Common.ConnectionInfo {
-                    Ip = peer.Address.ToString(),
-                    Port = peer.Port,
-            });
-            context.peer = new IPEndPoint(IPAddress.Any, Port);
+            var receivedData = udpClient.EndReceive(result, ref context.peer);
+            ServerData.LastEndpoint = context.peer;
+            context.sender.Send(receivedData);
+            Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
+            context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
             udpClient.BeginReceive(receiveCallback, context);
         }
-        private Common.ConnectionInfo? GetConnectionInfo(Guid id)
+
+        private IPEndPoint GetConnectionInfo(Guid id)
         {
-            lock (ListenerServerData.Instance.mutex)
+            lock (ServerData.Mutex)
             {
-                if (ListenerServerData.Instance.connInfo.ContainsKey(id))
+                if (ServerData.ConnectionInfo.ContainsKey(id))
                 {
-                    return ListenerServerData.Instance.connInfo[id];
+                    return ServerData.ConnectionInfo[id];
                 }
                 else
                 {
@@ -70,12 +63,68 @@ namespace SynthesisMultiplayer.Server.UDP
                 }
             }
         }
-        private void SetConnectionInfo(Guid id, Common.ConnectionInfo connInfo)
+
+        public override void OnStart(ref ITaskContext context)
         {
-            lock(ListenerServerData.Instance.mutex)
+            Console.WriteLine("Server started");
+            ServerData = new ListenerServerData();
+            (SendChannel, ReceiveChannel) = Channel<byte[]>.CreateMPSCChannel();
+            Connection = new UdpClient(Endpoint);
+            Connection.BeginReceive(receiveCallback, new ListenerContext
             {
-                ListenerServerData.Instance.connInfo[id] = connInfo;
+                client = Connection,
+                peer = Endpoint,
+                sender = SendChannel,
+            });
+            base.OnStart(ref context);
+        }
+
+        public override void OnResume(ref ITaskContext context)
+        {
+            base.OnResume(ref context);
+        }
+
+        public override void OnCycle(ref ITaskContext context)
+        {
+            var newData = SendChannel.TryGet();
+            if (!newData.IsValid())
+            {
+                base.OnCycle(ref context);
+                return;
             }
+            try
+            {
+                var decodedData = UDPValidatorMessage.Parser.ParseFrom(newData);
+
+                if (decodedData.Api != "v1")
+                {
+                    Console.WriteLine("API version not recognized. Skipping");
+                    base.OnCycle(ref context);
+                    return;
+                }
+                ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
+            } 
+            catch(Exception e)
+            {
+                    Console.WriteLine("API version not recognized. Skipping");
+                    base.OnCycle(ref context);
+                    return;
+            }
+        }
+
+        public override void OnPause(ref ITaskContext context)
+        {
+            base.OnPause(ref context);
+        }
+
+        public override void OnStop(ref ITaskContext context)
+        {
+            base.OnStop(ref context);
+        }
+
+        public override void OnExit(ref ITaskContext context)
+        {
+            base.OnExit(ref context);
         }
     }
 }

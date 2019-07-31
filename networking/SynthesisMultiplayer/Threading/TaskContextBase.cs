@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Threading
 {
-    class TaskContextBase : ITaskContext
+    public class TaskContextBase : ITaskContext
     {
         bool disposedValue = false;
         Dictionary<string, dynamic> data;

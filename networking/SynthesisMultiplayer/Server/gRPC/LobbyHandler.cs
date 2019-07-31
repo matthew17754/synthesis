@@ -23,7 +23,6 @@ namespace SynthesisMultiplayer.Server.gRPC
             public Uri uri;
         }
 
-        Dictionary<int, Common.ConnectionInfo> connections;
         Dictionary<Guid, Job> jobs;
 
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest req, Grpc.Core.ServerCallContext context)

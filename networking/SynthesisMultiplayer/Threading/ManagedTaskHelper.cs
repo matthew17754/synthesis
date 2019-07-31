@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Threading
@@ -7,21 +8,26 @@ namespace SynthesisMultiplayer.Threading
     {
         public static Task Run(IManagedTask task, ITaskContext context)
         {
-            return Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew((c) =>
             {
-                task.OnStart(context);
+                ITaskContext taskContext;
+                if (c != null)
+                    taskContext = (ITaskContext)c;
+                else
+                    taskContext = new TaskContextBase();
+                task.OnStart(ref taskContext);
                 while (true)
                 {
-                    task.OnMessage(context);
+                    task.OnMessage(ref taskContext);
                     if (!task.IsAlive())
                         return;
                     if (task.IsPaused())
                         Thread.Sleep(50);
                     else
-                        task.OnCycle(context);
+                        task.OnCycle(ref taskContext);
                 }
 
-            });
+            }, context);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace SynthesisMultiplayer.Threading
         RestforOne
     }
 
-    interface ISupervisor
+    interface ISupervisor : IManagedTask
     {
         (IManagedTask, Task) GetChild(string name);
         void RestartChild(string name);

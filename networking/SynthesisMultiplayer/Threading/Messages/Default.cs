@@ -56,35 +56,47 @@ namespace SynthesisMultiplayer.Threading.Message
                 }
             }
         }
-    }
-    public class State
-    {
-        public const string ThreadStopped = "THREAD_STOPPED";
-        public const string ConnectionFailure = "CONNECTION_FAILURE";
-        public const string GracefulExist = "GRACEFUL_EXIT";
-        public class ThreadStoppedMessage : IMessage
+        public class State
         {
-            public static implicit operator string(ThreadStoppedMessage m) => m.GetName();  
-            public string GetName()
+            public const string ThreadStopped = "THREAD_STOPPED";
+            public const string ConnectionFailure = "CONNECTION_FAILURE";
+            public const string GracefulExit = "GRACEFUL_EXIT";
+            public const string UnhandledException = "UNHANDLED_EXCEPTION";
+            public class ThreadStoppedMessage : IMessage
             {
-                return "THREAD_STOPPED";
+                public static implicit operator string(ThreadStoppedMessage m) => m.GetName();
+                public string GetName()
+                {
+                    return "THREAD_STOPPED";
+                }
             }
-        }
-        public class ConnectionFailureMessage : IMessage
-        {
-            public static implicit operator string(ConnectionFailureMessage m) => m.GetName();
-            public string GetName()
+            public class ConnectionFailureMessage : IMessage
             {
-                return "CONNECTION_FAILURE";
+                public static implicit operator string(ConnectionFailureMessage m) => m.GetName();
+                public string GetName()
+                {
+                    return "CONNECTION_FAILURE";
+                }
             }
-        }
-        public class GracefulExitMessage : IMessage
-        {
-            public static implicit operator string(GracefulExitMessage m) => m.GetName();
-            public string GetName()
+            public class GracefulExitMessage : IMessage
             {
-                return "GRACEFUL_EXIT";
+                public static implicit operator string(GracefulExitMessage m) => m.GetName();
+                public string GetName()
+                {
+                    return "GRACEFUL_EXIT";
+
+                }
             }
+            public class UnhandledExceptionMessage : IMessage
+            {
+                public static implicit operator string(UnhandledExceptionMessage m) => m.GetName();
+                public string GetName()
+                {
+                    return "GRACEFUL_EXIT";
+
+                }
+            }
+
         }
     }
 }

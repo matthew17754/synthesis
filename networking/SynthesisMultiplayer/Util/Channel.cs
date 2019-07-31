@@ -27,7 +27,7 @@ namespace SynthesisMultiplayer.Util
 
         public void Send(T item)
         {
-            if (open)
+            if (!open)
                 throw new Exception("Attempt to push to closed channel");
             lock(mutex)
             {
@@ -74,9 +74,9 @@ namespace SynthesisMultiplayer.Util
         {
             open = false;
         }
-        public static (Channel<T>, Channel<R>) CreateMPSCChannel<R>()
+        public static (Channel<T>, Channel<T>) CreateMPSCChannel()
         {
-            return (new Channel<T>(), new Channel<R>());
+            return (new Channel<T>(), new Channel<T>());
         }
 
         protected virtual void Dispose(bool disposing)

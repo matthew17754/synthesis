@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SynthesisMultiplayer.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 namespace SynthesisMultiplayer.Threading
 {
 
-    public delegate void ManagedTaskCallback(ITaskContext context);
+    public delegate void ManagedTaskCallback(ref ITaskContext context);
     public interface IManagedTask : IDisposable
     {
         bool IsAlive();
@@ -15,13 +16,17 @@ namespace SynthesisMultiplayer.Threading
 
         void RegisterCallback(string name, ManagedTaskCallback callback);
 
-        void OnStart(ITaskContext context);
-        void OnResume(ITaskContext context);
-        void OnMessage(ITaskContext context);
-        void OnCycle(ITaskContext context);
-        void OnPause(ITaskContext context);
-        void OnStop(ITaskContext context);
-        void OnExit(ITaskContext context);
         void SendMessage(IMessage message);
+        IMessage GetMessage();
+
+        void OnMessage(ref ITaskContext context);
+        void OnCycle(ref ITaskContext context);
+
+        void OnStart(ref ITaskContext context);
+        void OnResume(ref ITaskContext context);
+
+        void OnPause(ref ITaskContext context);
+        void OnStop(ref ITaskContext context);
+        void OnExit(ref ITaskContext context);
     }
 }
