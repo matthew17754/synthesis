@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("EmulationCommunication")]
+[assembly: AssemblyTitle("EmulationNetworking")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("EmulationCommunication")]
+[assembly: AssemblyProduct("EmulationNetworking")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("ded98240-b00b-4053-adee-4d717aa7339d")]
+[assembly: Guid("50d601a1-e5d7-4378-abcf-ad1f136d7b72")]
 
 // Version information for an assembly consists of the following four values:
 //
