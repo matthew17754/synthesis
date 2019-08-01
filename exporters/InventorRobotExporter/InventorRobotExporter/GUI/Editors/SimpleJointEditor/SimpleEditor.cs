@@ -212,7 +212,7 @@ namespace InventorRobotExporter.GUI.Editors.SimpleJointEditor
 
         private void BackButton_Click(object sender, EventArgs e)
         {
-            if (jointNavigator.SelectedIndex - 1 > -1)
+            if (jointNavigator.SelectedIndex != 0)
             {
                 jointNavigator.SelectedIndex -= 1;
             }
@@ -220,7 +220,7 @@ namespace InventorRobotExporter.GUI.Editors.SimpleJointEditor
 
         private void NextButton_Click(object sender, EventArgs e)
         {
-            if (jointNavigator.SelectedIndex + 1 < jointNavigator.Items.Count - 1)
+            if (jointNavigator.SelectedIndex != jointNavigator.Items.Count - 1)
             {
                 jointNavigator.SelectedIndex += 1;
             }
