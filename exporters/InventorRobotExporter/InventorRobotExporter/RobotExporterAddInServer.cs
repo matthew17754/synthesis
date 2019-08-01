@@ -5,13 +5,11 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using InventorRobotExporter.GUI.Editors;
 using InventorRobotExporter.GUI.Editors.AdvancedJointEditor;
-using InventorRobotExporter.GUI.Editors.JointEditor;
 using InventorRobotExporter.GUI.Guide;
 using InventorRobotExporter.Managers;
 using InventorRobotExporter.Properties;
 using InventorRobotExporter.Utilities;
 using InventorRobotExporter.Utilities.Synthesis;
-using Inventor;
 using Inventor;
 using InventorRobotExporter.GUI.Editors.SimpleJointEditor;
 using InventorRobotExporter.GUI.JointView;
@@ -53,7 +51,6 @@ namespace InventorRobotExporter
 
         private ButtonDefinition advancedEditJointButton;
         private ButtonDefinition editJointButton;
-        private ButtonDefinition altEditJointButton;
 
         private ButtonDefinition dofButton;
 
@@ -68,7 +65,6 @@ namespace InventorRobotExporter
         public readonly HighlightManager HighlightManager = new HighlightManager();
 
         // UI elements
-        private readonly JointFormSimple jointForm = new JointFormSimple();
         private SimpleEditor simpleJointEditor = new SimpleEditor();
 
         protected override Environment CreateEnvironment()
@@ -128,20 +124,10 @@ namespace InventorRobotExporter
             editJointButton.OnExecute += context =>
             {
                 AnalyticsUtils.LogEvent("Toolbar", "Button Clicked", "Edit Joint");
-                jointForm.ShowDialog();
-                advancedJointEditor.UpdateSkeleton(RobotDataManager);
-            };
-            jointPanel.CommandControls.AddButton(editJointButton, true);
-            
-            altEditJointButton = controlDefs.AddButtonDefinition("Alt Edit Joints", "BxD:RobotExporter:AltEditJoint",
-                CommandTypesEnum.kNonShapeEditCmdType, clientId, null, "Edit existing joints.", ToIPictureDisp(new Bitmap(Resources.JointEditor32)), ToIPictureDisp(new Bitmap(Resources.JointEditor32)));
-            altEditJointButton.OnExecute += context =>
-            {
-                AnalyticsUtils.LogEvent("Toolbar", "Button Clicked", "Edit Joint");
                 simpleJointEditor.ShowDialog();
                 advancedJointEditor.UpdateSkeleton(RobotDataManager);
             };
-            jointPanel.CommandControls.AddButton(altEditJointButton, true);
+            jointPanel.CommandControls.AddButton(editJointButton, true);
 
             // PRECHECK PANEL
             precheckPanel = exporterTab.RibbonPanels.Add("Export Precheck", "BxD:RobotExporter:ChecklistPanel", clientId);
@@ -209,7 +195,6 @@ namespace InventorRobotExporter
             loadingBar.SetProgress(new ProgressUpdate("Loading Robot Skeleton...", 9, 10));
             // Load skeleton into joint editors
             advancedJointEditor.UpdateSkeleton(RobotDataManager);
-            jointForm.UpdateSkeleton(RobotDataManager);
             simpleJointEditor.UpdateSkeleton(RobotDataManager);
             loadingBar.Close();
             Application.UserInterfaceManager.UserInteractionDisabled = false;
