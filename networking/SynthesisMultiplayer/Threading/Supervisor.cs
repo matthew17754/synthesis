@@ -7,39 +7,47 @@ using SynthesisMultiplayer.Threading.Message;
 namespace SynthesisMultiplayer.Threading
 {
 
-    class Supervisor : ISupervisor
+    class Supervisor : ManagedTask, ISupervisor
     {
-        public Supervisor()
+        bool disposed = false; // To detect redundant calls
+        readonly RestartStrategy strategy;
+        Dictionary<string, (IManagedTask, Task)> Children;
+
+
+        public Supervisor(params IManagedTask[] children)
         {
             Children = new Dictionary<string, (IManagedTask, Task)>();
         }
 
-        readonly RestartStrategy strategy;
-        Dictionary<string, (IManagedTask, Task)> Children;
-
         public (IManagedTask, Task) GetChild(string name)
         {
-            if(!Children.ContainsKey(name))
+            if (!Children.ContainsKey(name))
             {
                 throw new Exception("No task named '" + name + "' was found.");
             }
             return Children[name];
         }
 
+        public override void OnStart(ITaskContext context, AsyncCallHandle? handle)
+        {
+
+            base.OnStart(context, handle);
+        }
+
         public void RestartChild(string name)
         {
             var (taskObject, task) = GetChild(name);
-            taskObject.SendMessage(new Default.Task.ExitMessage());
-            if (taskObject.GetMessage().GetName() != Default.State.GracefulExit)
+            taskObject.Do(Default.Task.Exit).Wait();
+            if (taskObject.GetState().GetName() != Default.State.GracefulExit)
             {
                 // This case is impossible right now, but still good to check
             }
-            
+
         }
 
         public string SpawnChild(IManagedTask taskObject, string name = "")
         {
-            var task = ManagedTaskHelper.Run(taskObject, new TaskContextBase());
+            var task = ManagedTaskHelper.Run(taskObject, new TaskContext());
             if (name == "")
             {
                 var guid = new Guid();
@@ -51,16 +59,16 @@ namespace SynthesisMultiplayer.Threading
 
         protected void PollTasks()
         {
-            foreach(var child in Children)
+            foreach (var child in Children)
             {
                 var (taskObject, task) = child.Value;
-                switch(task.Status)
+                switch (task.Status)
                 {
                     case TaskStatus.Created:
                     case TaskStatus.Running:
                         break;
                     case TaskStatus.RanToCompletion:
-                        if(taskObject.GetMessage().GetName() == Default.State.GracefulExit)
+                        if (taskObject.GetState().GetName() == Default.State.GracefulExit)
                             break;
                         HandleRestart();
                         break;
@@ -68,7 +76,6 @@ namespace SynthesisMultiplayer.Threading
                     case TaskStatus.Faulted:
                         task.Exception.Handle(ex =>
                         {
-
                             return false;
                         });
                         break;
@@ -79,99 +86,16 @@ namespace SynthesisMultiplayer.Threading
         }
         void HandleRestart() { }
 
-        public bool IsAlive()
-        {
-            throw new NotImplementedException();
-        }
 
-        public bool IsPaused()
+        protected override void Dispose(bool disposing)
         {
-            throw new NotImplementedException();
-        }
-
-        public void RegisterCallback(string name, ManagedTaskCallback callback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SendMessage(IMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IMessage GetMessage()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnMessage(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnCycle(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnStart(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnResume(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnPause(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnStop(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnExit(ref ITaskContext context)
-        {
-            throw new NotImplementedException();
-        }
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
+            if (!disposed)
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).
                 }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
+                disposed = true;
             }
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~Supervisor() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
-        #endregion
     }
 }

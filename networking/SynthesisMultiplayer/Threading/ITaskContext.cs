@@ -10,5 +10,8 @@ namespace SynthesisMultiplayer.Threading
     {
         dynamic GetObject(string key);
         void PutObject(string key, dynamic value);
+        bool ContainsKey(string key);
+        void Merge(ITaskContext other);
+        string[] Keys();
     }
 }

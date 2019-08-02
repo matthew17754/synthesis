@@ -6,10 +6,16 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Threading
 {
-    public class TaskContextBase : ITaskContext
+    public class TaskContext : ITaskContext
     {
         bool disposedValue = false;
-        Dictionary<string, dynamic> data;
+
+        public Dictionary<string, dynamic> Data { get; set; }
+
+        public TaskContext()
+        {
+            Data = new Dictionary<string, dynamic>();
+        }
         public dynamic GetObject(string key)
         {
             try
@@ -18,9 +24,9 @@ namespace SynthesisMultiplayer.Threading
             }
             catch (Exception e)
             {
-                if (data.ContainsKey(key))
+                if (Data.ContainsKey(key))
                 {
-                    return data[key];
+                    return Data[key];
                 }
                 throw new Exception("Failed to find key '"+key+"'");
             }
@@ -34,7 +40,7 @@ namespace SynthesisMultiplayer.Threading
             } 
             catch(Exception e)
             {
-                data[key] = value;
+                Data[key] = value;
             }
         }
 
@@ -52,6 +58,24 @@ namespace SynthesisMultiplayer.Threading
         public void Dispose()
         {
             Dispose(true);
+        }
+
+        public string[] Keys()
+        {
+            return Data.Keys.ToArray();
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return Data.ContainsKey(key);
+        }
+
+        public void Merge(ITaskContext other)
+        {
+            foreach(var key in other.Keys())
+            {
+                PutObject(key, other.GetObject(key));    
+            }
         }
     }
 }

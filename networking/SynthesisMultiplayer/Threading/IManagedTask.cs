@@ -8,25 +8,25 @@ using System.Threading.Tasks;
 namespace SynthesisMultiplayer.Threading
 {
 
-    public delegate void ManagedTaskCallback(ref ITaskContext context);
+    public delegate void ManagedTaskCallback(ITaskContext context, AsyncCallHandle? handle = null);
     public interface IManagedTask : IDisposable
     {
         bool IsAlive();
         bool IsPaused();
 
-        void RegisterCallback(string name, ManagedTaskCallback callback);
+        IMessage GetState();
 
-        void SendMessage(IMessage message);
-        IMessage GetMessage();
+        Task<dynamic> Call(string method, params dynamic[] args);
+        Task Do(string method, params dynamic[] args);
 
-        void OnMessage(ref ITaskContext context);
-        void OnCycle(ref ITaskContext context);
+        void OnMessage(ITaskContext context, AsyncCallHandle? handle = null);
+        void OnCycle(ITaskContext context, AsyncCallHandle? handle = null);
 
-        void OnStart(ref ITaskContext context);
-        void OnResume(ref ITaskContext context);
+        void OnStart(ITaskContext context, AsyncCallHandle? handle = null);
+        void OnResume(ITaskContext context, AsyncCallHandle? handle = null);
 
-        void OnPause(ref ITaskContext context);
-        void OnStop(ref ITaskContext context);
-        void OnExit(ref ITaskContext context);
+        void OnPause(ITaskContext context, AsyncCallHandle? handle = null);
+        void OnStop(ITaskContext context, AsyncCallHandle? handle = null);
+        void OnExit(ITaskContext context, AsyncCallHandle? handle = null);
     }
 }

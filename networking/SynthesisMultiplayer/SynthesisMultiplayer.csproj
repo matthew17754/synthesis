@@ -65,20 +65,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Common\ManagedUDPTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\gRPC\LobbyHandler.cs" />
     <Compile Include="Server\UDP\Broadcaster.cs" />
     <Compile Include="Server\UDP\ListenerServer.cs" />
+    <Compile Include="Threading\AsyncCallStatus.cs" />
+    <Compile Include="Threading\ContextHelper.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
     <Compile Include="Threading\IMessage.cs" />
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ITaskContext.cs" />
+    <Compile Include="Threading\ManagedTask.cs" />
     <Compile Include="Threading\ManagedTaskHelper.cs" />
-    <Compile Include="Threading\ManagedTaskRunner.cs" />
     <Compile Include="Threading\Messages\Default.cs" />
     <Compile Include="Threading\Supervisor.cs" />
-    <Compile Include="Threading\TaskContextBase.cs" />
+    <Compile Include="Threading\TaskContext.cs" />
     <Compile Include="Util\Channel.cs" />
     <Compile Include="Util\Optional.cs" />
   </ItemGroup>

@@ -8,12 +8,14 @@ using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Util;
 using MatchmakingService;
 using System.Text;
+using SynthesisMultiplayer.Attribute;
+using SynthesisMultiplayer.Threading.Message;
 
 namespace SynthesisMultiplayer.Server.UDP
 {
     public class ListenerServer : ManagedUDPTask
     {
-        protected class ListenerContext : TaskContextBase
+        protected class ListenerContext : TaskContext
         {
             public UdpClient client;
             public IPEndPoint peer;
@@ -34,7 +36,7 @@ namespace SynthesisMultiplayer.Server.UDP
 
         ListenerServerData ServerData;
         Channel<byte[]> SendChannel, ReceiveChannel;
-        public ListenerServer(Channel<IMessage> statusChannel, Channel<IMessage> messageChannel, int port = 33000) :
+        public ListenerServer(Channel<(IMessage, AsyncCallHandle?)> statusChannel, Channel<(IMessage, AsyncCallHandle?)> messageChannel, int port = 33000) :
             base(statusChannel, messageChannel, IPAddress.Any, port) { }
         private void receiveCallback(IAsyncResult result)
         {
@@ -64,7 +66,7 @@ namespace SynthesisMultiplayer.Server.UDP
             }
         }
 
-        public override void OnStart(ref ITaskContext context)
+        public override void OnStart(ITaskContext context, AsyncCallHandle? handle)
         {
             Console.WriteLine("Server started");
             ServerData = new ListenerServerData();
@@ -76,20 +78,20 @@ namespace SynthesisMultiplayer.Server.UDP
                 peer = Endpoint,
                 sender = SendChannel,
             });
-            base.OnStart(ref context);
+            base.OnStart(context, handle);
         }
 
-        public override void OnResume(ref ITaskContext context)
+        public override void OnResume(ITaskContext context, AsyncCallHandle? handle)
         {
-            base.OnResume(ref context);
+            base.OnResume(context, handle);
         }
 
-        public override void OnCycle(ref ITaskContext context)
+        public override void OnCycle(ITaskContext context, AsyncCallHandle? handle)
         {
             var newData = SendChannel.TryGet();
             if (!newData.IsValid())
             {
-                base.OnCycle(ref context);
+                base.OnCycle(context, handle);
                 return;
             }
             try
@@ -99,7 +101,7 @@ namespace SynthesisMultiplayer.Server.UDP
                 if (decodedData.Api != "v1")
                 {
                     Console.WriteLine("API version not recognized. Skipping");
-                    base.OnCycle(ref context);
+                    base.OnCycle(context, handle);
                     return;
                 }
                 ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
@@ -107,24 +109,24 @@ namespace SynthesisMultiplayer.Server.UDP
             catch(Exception e)
             {
                     Console.WriteLine("API version not recognized. Skipping");
-                    base.OnCycle(ref context);
+                    base.OnCycle(context, handle);
                     return;
             }
         }
 
-        public override void OnPause(ref ITaskContext context)
+        public override void OnPause(ITaskContext context, AsyncCallHandle? handle)
         {
-            base.OnPause(ref context);
+            base.OnPause(context, handle);
         }
 
-        public override void OnStop(ref ITaskContext context)
+        public override void OnStop(ITaskContext context, AsyncCallHandle? handle)
         {
-            base.OnStop(ref context);
+            base.OnStop(context, handle);
         }
-
-        public override void OnExit(ref ITaskContext context)
+        public override void OnExit(ITaskContext context, AsyncCallHandle? handle)
         {
-            base.OnExit(ref context);
+            Console.WriteLine("Exiting");
+            base.OnExit(context, handle);
         }
     }
 }
