@@ -38,7 +38,7 @@ namespace SynthesisMultiplayer.Threading
         {
             var (taskObject, task) = GetChild(name);
             taskObject.Do(Default.Task.Exit).Wait();
-            if (taskObject.GetState().GetName() != Default.State.GracefulExit)
+            if (taskObject.GetState() != Default.State.GracefulExit)
             {
                 // This case is impossible right now, but still good to check
             }
@@ -68,7 +68,7 @@ namespace SynthesisMultiplayer.Threading
                     case TaskStatus.Running:
                         break;
                     case TaskStatus.RanToCompletion:
-                        if (taskObject.GetState().GetName() == Default.State.GracefulExit)
+                        if (taskObject.GetState() == Default.State.GracefulExit)
                             break;
                         HandleRestart();
                         break;

@@ -13,35 +13,37 @@ namespace SynthesisMultiplayer.Threading
     public abstract class ManagedTask : IManagedTask
     {
 
-        bool disposed = false;
-        private IMessage state;
+        private bool disposed = false;
+        private Dictionary<string, ManagedTaskCallback> callbackRegistery;
+        private Dictionary<string, string> methodRegistery;
+        private Dictionary<string, ManagedTaskCallback> overwrittenCallbacks;
         protected bool Alive { get; set; }
         protected bool Paused { get; set; }
         protected int MethodCallWaitPeriod = 10; // ms
-        protected Channel<(IMessage, AsyncCallHandle?)> StatusChannel, MessageChannel;
-        protected Dictionary<string, ManagedTaskCallback> callbackRegistery;
-        protected Dictionary<string, IMessage> methodRegistery;
-        protected IMessage State { get; set; }
+        protected Channel<(string, AsyncCallHandle?)> StatusChannel, MessageChannel;
+        protected string State { get; set; }
         public bool IsAlive() => Alive;
         public bool IsPaused() => Paused;
 
         public ManagedTask()
         {
             callbackRegistery = new Dictionary<string, ManagedTaskCallback>();
-            methodRegistery = new Dictionary<string, IMessage>();
-            foreach(var method in GetType().GetMethods()
-                .Where(m => m.GetCustomAttributes(typeof(Callback), false).Length > 0).ToArray())
-            {
-                var callbackInfo = ((Callback)method
-                    .GetCustomAttributes(typeof(Attribute.Callback), false)
-                    .GetValue(0));
-                if (!typeof(IMessage).IsAssignableFrom(callbackInfo.CallbackMessageType))
-                    throw new Exception("Attempt to register method with no message interface specified");
-                Console.WriteLine("Callback: '" + callbackInfo.Name + "' was found");
-                RegisterCallback(callbackInfo.Name, (ManagedTaskCallback)Delegate
-                    .CreateDelegate(typeof(ManagedTaskCallback), this, method));
-                RegisterMethod(callbackInfo.Name, (IMessage)Activator.CreateInstance(callbackInfo.CallbackMessageType));
-            }
+            methodRegistery = new Dictionary<string, string>();
+            GetType().GetMethods()
+                .Where(m => m.GetCustomAttributes(typeof(Callback), false).Length > 0).ToList()
+                .ForEach(method =>
+                {
+                    var callbackInfo = ((Callback)method
+                        .GetCustomAttributes(typeof(Attribute.Callback), false)
+                        .GetValue(0));
+                    var callbackName = method.DeclaringType.Name + 
+                        (callbackInfo.Name != null ? callbackInfo.Name : method.Name);
+                    Console.WriteLine("Callback: '" + callbackInfo.Name + "' was found");
+                    RegisterCallback(callbackName, (ManagedTaskCallback)Delegate
+                        .CreateDelegate(typeof(ManagedTaskCallback), this, method));
+                    if (callbackInfo.MethodName != null)
+                        RegisterMethod(callbackInfo.MethodName, callbackName);
+                });
         }
 
         protected void RegisterCallback(string name, ManagedTaskCallback callback)
@@ -50,26 +52,23 @@ namespace SynthesisMultiplayer.Threading
                 throw new Exception("Callback '" + name + "' already registered or is a method");
             callbackRegistery[name] = callback;
         }
-        protected void RegisterMethod(string name, IMessage methodMessage)
+        protected void RegisterMethod(string name, string methodMessage)
         {
-            var duplicates = methodRegistery
-                .Where(kv => kv.Value.GetType().IsEquivalentTo(methodMessage.GetType()))
-                .ToArray();
-                foreach(var dup in duplicates)
-                {
-                    if (dup.Key != name)
-                    {
-                    throw new Exception("Attempting to register multiple callbacks of type '" +
-                        methodMessage.GetType() + "' under different method names");
-                    }
-                }
+            if(methodRegistery
+                .Where(kv => kv.Value.GetType()
+                .IsEquivalentTo(methodMessage.GetType()))
+                .Select(duplicate => duplicate.Key != name)
+                .ToArray().Length > 0)
+            {
+                throw new Exception("Attempt to create multiple methods with the same key under different names");
+            }
             if (methodRegistery.ContainsKey(name))
                 throw new Exception("Method '" + name + "' already registered or is a method");
             methodRegistery[name] = methodMessage;
         }
 
-        public void SendMessage(IMessage message, AsyncCallHandle? handle) => MessageChannel.Send((message, handle));
-        public IMessage GetState()
+        public void SendMessage(string message, AsyncCallHandle? handle) => MessageChannel.Send((message, handle));
+        public string GetState()
         {
             if (StatusChannel.TryPeek().IsValid())
                 State = StatusChannel.Get().Item1;
@@ -125,7 +124,7 @@ namespace SynthesisMultiplayer.Threading
         public virtual void OnCycle(ITaskContext context, AsyncCallHandle? handle) { }
         public virtual void OnPause(ITaskContext context, AsyncCallHandle? handle) { }
         public virtual void OnStop(ITaskContext context, AsyncCallHandle? handle) { }
-        public virtual void OnExit(ITaskContext context, AsyncCallHandle? handle) => StatusChannel.Send((new Default.State.GracefulExitMessage(), null));
+        public virtual void OnExit(ITaskContext context, AsyncCallHandle? handle) => StatusChannel.Send((Default.State.GracefulExit, null));
         public virtual void OnMessage(ITaskContext context, AsyncCallHandle? handle)
         {
             var messageData = MessageChannel.TryGet();
@@ -133,7 +132,7 @@ namespace SynthesisMultiplayer.Threading
             {
 
                 var (message, callHandle) = messageData.Get();
-                switch (((IMessage)message).GetName())
+                switch ((string)message)
                 {
                     case Default.Task.Start:
                         OnStart(context, handle);
@@ -151,7 +150,7 @@ namespace SynthesisMultiplayer.Threading
                         OnExit(context, handle);
                         break;
                     default:
-                        var messageName = ((IMessage)message).GetName();
+                        var messageName = (string)message;
                         if (!callbackRegistery.ContainsKey(messageName))
                         {
                             throw new Exception("Unknown thread command");

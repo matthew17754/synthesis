@@ -36,7 +36,7 @@ namespace SynthesisMultiplayer.Server.UDP
 
         ListenerServerData ServerData;
         Channel<byte[]> SendChannel, ReceiveChannel;
-        public ListenerServer(Channel<(IMessage, AsyncCallHandle?)> statusChannel, Channel<(IMessage, AsyncCallHandle?)> messageChannel, int port = 33000) :
+        public ListenerServer(Channel<(string, AsyncCallHandle?)> statusChannel, Channel<(string, AsyncCallHandle?)> messageChannel, int port = 33000) :
             base(statusChannel, messageChannel, IPAddress.Any, port) { }
         private void receiveCallback(IAsyncResult result)
         {
@@ -123,6 +123,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             base.OnStop(context, handle);
         }
+        [Callback(MethodName = Default.Task.Exit)]
         public override void OnExit(ITaskContext context, AsyncCallHandle? handle)
         {
             Console.WriteLine("Exiting");

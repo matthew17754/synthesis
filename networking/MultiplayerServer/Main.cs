@@ -15,7 +15,7 @@ namespace MultiplayerServer
     {
         public static void Main(string[] args)
         {
-            var (send, recv) = Channel<(IMessage, AsyncCallHandle?)>.CreateMPSCChannel();
+            var (send, recv) = Channel<(string, AsyncCallHandle?)>.CreateMPSCChannel();
             var test = new ListenerServer(send, recv);
             ManagedTaskHelper.Run(test, new TaskContext());
             int iterator = 0;
@@ -25,7 +25,7 @@ namespace MultiplayerServer
                 {
                     test.Call(Default.Task.Exit);
                 }
-                if (test.GetState() != null && test.GetState().GetName() == Default.State.GracefulExit) {
+                if (test.GetState() != null && test.GetState() == Default.State.GracefulExit) {
                     Console.WriteLine("Exited");
                     while (Console.ReadKey(true).Key != ConsoleKey.Enter) { }
                     break;

@@ -14,7 +14,7 @@ namespace SynthesisMultiplayer.Threading
         bool IsAlive();
         bool IsPaused();
 
-        IMessage GetState();
+        string GetState();
 
         Task<dynamic> Call(string method, params dynamic[] args);
         Task Do(string method, params dynamic[] args);

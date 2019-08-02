@@ -11,15 +11,14 @@ namespace SynthesisMultiplayer.Common
         bool disposed;
         protected IPEndPoint Endpoint;
         protected UdpClient Connection;
-        public ManagedUDPTask(Channel<(IMessage, AsyncCallHandle?)> statusChannel,
-            Channel<(IMessage, AsyncCallHandle?)> messageChannel,
+        public ManagedUDPTask(Channel<(string, AsyncCallHandle?)> statusChannel,
+            Channel<(string, AsyncCallHandle?)> messageChannel,
             IPAddress ip,
             int port = 33000) : base()
         {
             StatusChannel = statusChannel;
             MessageChannel = messageChannel;
             Endpoint = new IPEndPoint(ip, port);
-            callbackRegistery = new Dictionary<string, ManagedTaskCallback>();
         }
 
         protected override void Dispose(bool disposing)

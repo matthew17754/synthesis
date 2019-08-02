@@ -10,11 +10,11 @@ namespace SynthesisMultiplayer.Attribute
     public sealed class Callback : System.Attribute
     {
         public string Name { get; set; }
-        public Type CallbackMessageType;
-        public Callback(string name, Type callbackMessageType)
+        public string MethodName { get; set; }
+        public Callback(string name = null, string methodName = null)
         {
             Name = name;
-            CallbackMessageType = callbackMessageType;
+            MethodName = methodName;
         }
     }
 }

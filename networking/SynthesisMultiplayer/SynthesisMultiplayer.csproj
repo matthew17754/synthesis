@@ -74,7 +74,6 @@
     <Compile Include="Threading\AsyncCallStatus.cs" />
     <Compile Include="Threading\ContextHelper.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
-    <Compile Include="Threading\IMessage.cs" />
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ITaskContext.cs" />
     <Compile Include="Threading\ManagedTask.cs" />
