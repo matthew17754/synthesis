@@ -38,7 +38,6 @@ namespace SynthesisMultiplayer.Threading
                         .GetValue(0));
                     var callbackName = method.DeclaringType.Name + 
                         (callbackInfo.Name != null ? callbackInfo.Name : method.Name);
-                    Console.WriteLine("Callback: '" + callbackInfo.Name + "' was found");
                     RegisterCallback(callbackName, (ManagedTaskCallback)Delegate
                         .CreateDelegate(typeof(ManagedTaskCallback), this, method));
                     if (callbackInfo.MethodName != null)
@@ -48,22 +47,12 @@ namespace SynthesisMultiplayer.Threading
 
         protected void RegisterCallback(string name, ManagedTaskCallback callback)
         {
-            if (callbackRegistery.ContainsKey(name) || GetType().GetMethod(name) != null)
-                throw new Exception("Callback '" + name + "' already registered or is a method");
+            if (callbackRegistery.ContainsKey(name))
+                throw new Exception("Callback '" + name + "' already registered");
             callbackRegistery[name] = callback;
         }
         protected void RegisterMethod(string name, string methodMessage)
         {
-            if(methodRegistery
-                .Where(kv => kv.Value.GetType()
-                .IsEquivalentTo(methodMessage.GetType()))
-                .Select(duplicate => duplicate.Key != name)
-                .ToArray().Length > 0)
-            {
-                throw new Exception("Attempt to create multiple methods with the same key under different names");
-            }
-            if (methodRegistery.ContainsKey(name))
-                throw new Exception("Method '" + name + "' already registered or is a method");
             methodRegistery[name] = methodMessage;
         }
 
