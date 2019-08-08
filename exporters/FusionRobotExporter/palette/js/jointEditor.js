@@ -1,3 +1,5 @@
+import { join } from "bluebird";
+
 var noJoints = false;
 let openFieldsetSensors = null;
 
@@ -226,6 +228,8 @@ function saveValues()
         const wheelTypeComboBox = getElByClass(fieldset, 'wheel-type');
         const weightInput = getElByClass(fieldset, 'weight');
         const driverTypeComboBox = getElByClass(fieldset, 'driver-type');
+        
+        joint.weight = weightInput.value;
 
         if (jointTypeComboBox.value === 'none') {
             joint.driver = null;
