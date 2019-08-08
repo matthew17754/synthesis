@@ -100,9 +100,13 @@ Vector3<> Joint::getChildBasePoint() const
 	return Vector3<>(geometry->origin()->x(), geometry->origin()->y(), geometry->origin()->z());
 }
 
+void BXDJ::Joint::setWeight(double value) {
+	weight = value;
+}
+
 double BXDJ::Joint::getWeightData() const
 {
-	return 10;
+	return weight;
 }
 
 void Joint::setDriver(Driver driver)

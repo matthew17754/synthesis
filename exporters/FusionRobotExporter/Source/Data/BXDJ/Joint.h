@@ -55,6 +55,7 @@ namespace BXDJ
 		void setDriver(Driver); ///< Applies a Driver to this Joint.
 		void setNoDriver(); ///< Removes any Driver from this Joint.
 		std::unique_ptr<Driver> getDriver() const; ///< \return A copy of any Driver applied to this Joint. Returns nullptr the Joint has no Driver.
+		void setWeight(double value);
 
 		void addSensor(JointSensor); ///< Adds a JointSensor to this Joint.
 		void clearSensors(); ///< Removes all JointSensors from this Joint.
@@ -79,7 +80,7 @@ namespace BXDJ
 		std::shared_ptr<RigidNode> child; ///< The RigidNode that is a child of this Joint.
 		std::unique_ptr<Driver> driver; ///< The Driver applied to this Joint.
 		
-		
+		double weight;
 
 	};
 };
