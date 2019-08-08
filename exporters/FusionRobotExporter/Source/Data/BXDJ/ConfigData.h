@@ -114,6 +114,7 @@ namespace BXDJ
 			JointMotionType motion; ///< The limitation of the joint's motion.
 			std::unique_ptr<Driver> driver; ///< The driver assigned to the joint.
 			std::vector<std::shared_ptr<JointSensor>> sensors; /// The sensors assigned to the joint.
+			double weight;
 
 			///
 			/// Creates a nameless configuration without a driver.

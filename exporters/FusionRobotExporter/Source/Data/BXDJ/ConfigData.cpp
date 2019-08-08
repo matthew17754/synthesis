@@ -208,6 +208,7 @@ nlohmann::json ConfigData::getJSONObject() const
 		jointJSON["name"] = jointConfig.name;
 		jointJSON["asBuilt"] = jointConfig.asBuilt;
 		jointJSON["type"] = (int)jointConfig.motion;
+		jointJSON["weight"] = jointConfig.weight;
 		
 		// Driver Information
 		nlohmann::json driverJSON;
@@ -272,7 +273,9 @@ void ConfigData::loadJSONObject(nlohmann::json configJson)
 		if (joint["type"].is_number()) {
 			joints[jointID].motion = (ConfigData::JointMotionType)joint["type"].get<int>();
 		}
-
+		if (joint["weight"].is_number()) {
+			joints[jointID].weight = joint["weight"].get<double>();
+		}
 
 		if (joint["driver"].is_object()) {
 			Driver driver;
