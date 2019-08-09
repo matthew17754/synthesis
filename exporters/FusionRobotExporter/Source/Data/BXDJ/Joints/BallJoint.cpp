@@ -30,6 +30,8 @@ void BallJoint::applyConfig(const ConfigData & config)
 		setDriver(*driver);
 	}
 
+	setWeight(searchWeight(config));
+
 	// Ball joints do not support sensors
 }
 

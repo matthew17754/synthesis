@@ -59,6 +59,8 @@ void SliderJoint::applyConfig(const ConfigData & config)
 		setDriver(*driver);
 	}
 
+	setWeight(searchWeight(config));
+	
 	// Add sensors
 	std::vector<std::shared_ptr<JointSensor>> sensors = searchSensors(config);
 	for (std::shared_ptr<JointSensor> sensor : sensors)

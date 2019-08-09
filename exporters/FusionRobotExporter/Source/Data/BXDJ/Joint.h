@@ -67,7 +67,7 @@ namespace BXDJ
 
 		std::unique_ptr<Driver> searchDriver(const ConfigData &); ///< \return The Driver associated with this joint in a ConfigData.
 		std::vector<std::shared_ptr<JointSensor>> searchSensors(const ConfigData &); ///< \return The Sensors associated with this joint in a ConfigData.
-
+		double searchWeight(const ConfigData&); ///< \return The Sensors associated with this joint in a ConfigData.
 		OneTwo getParentOccNum() { return parentOcc; } ///< \return Which Fusion occurrence (One or Two) that the parent of this Joint is in the Fusion joint.
 		virtual void write(XmlWriter &) const; ///< This should be called by any derived Joint classes. Writes driver and sensors to the BXDJ file.
 		std::vector<std::shared_ptr<JointSensor>> sensors; ///< Contains any JointSensors attached to this Joint.

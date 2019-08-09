@@ -115,6 +115,26 @@ std::vector<std::shared_ptr<JointSensor>> ConfigData::getSensors(core::Ptr<fusio
 	return joints.at(id).sensors;
 }
 
+
+double ConfigData::getWeight(core::Ptr<fusion::Joint> joint) const
+{
+	std::string id = Utility::getUniqueJointID(joint);
+
+	if (joints.find(id) == joints.end() || joints.at(id).driver == nullptr)
+		return 10;
+
+	return joints.at(id).weight;
+}
+double ConfigData::getWeight(core::Ptr<fusion::AsBuiltJoint> joint) const
+{
+	std::string id = Utility::getUniqueJointID(joint);
+
+	if (joints.find(id) == joints.end() || joints.at(id).driver == nullptr)
+		return 10;
+
+	return joints.at(id).weight;
+}
+
 void ConfigData::filterJoints(std::vector<core::Ptr<fusion::Joint>> filterJoints)
 {
 	// Make list of IDs in filter while adding joints not yet present
@@ -186,10 +206,6 @@ nlohmann::json ConfigData::getJSONObject() const
 	configJSON["convex"] = (int)convexType;
 
 
-
-	configJSON["weight"] = weight;
-
-
 	configJSON["tempIconDir"] = tempIconDir;
 
 	// Joints
@@ -252,9 +268,7 @@ void ConfigData::loadJSONObject(nlohmann::json configJson)
 		convexType = (ConvexType)configJson["convex"];
 	}
 
-	if (configJson["weight"].is_number()) {
-		weight = configJson["weight"].get<double>();
-	}
+
 	
 	if (configJson["tempIconDir"].is_string()) {
 		tempIconDir = configJson["tempIconDir"].get<std::string>();

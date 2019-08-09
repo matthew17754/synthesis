@@ -80,6 +80,8 @@ namespace BXDJ
 
 		std::vector<std::shared_ptr<JointSensor>> getSensors(core::Ptr<fusion::Joint>) const; ///< \return A vector containing the sensors attached to a Fusion joint.
 		std::vector<std::shared_ptr<JointSensor>> getSensors(core::Ptr<fusion::AsBuiltJoint>) const; ///< \return A vector containing the sensors attached to a Fusion as-built joint.
+		double getWeight(core::Ptr<fusion::Joint>) const; ///< \return A vector containing the sensors attached to a Fusion joint.
+		double getWeight(core::Ptr<fusion::AsBuiltJoint>) const; ///< \return A vector containing the sensors attached to a Fusion as-built joint.
 
 		///
 		/// Ensures that the only documented joints are those listed in the given vector, and that all joints in that vector are documented.

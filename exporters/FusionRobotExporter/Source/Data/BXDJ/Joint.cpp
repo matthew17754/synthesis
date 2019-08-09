@@ -106,6 +106,7 @@ void BXDJ::Joint::setWeight(double value) {
 
 double BXDJ::Joint::getWeightData() const
 {
+	
 	return weight;
 }
 
@@ -136,7 +137,13 @@ void Joint::clearSensors()
 {
 	sensors.clear();
 }
-
+double Joint::searchWeight(const ConfigData& config)
+{
+	if (fusionJoint != nullptr)
+		return config.getWeight(fusionJoint);
+	else
+		return config.getWeight(fusionAsBuiltJoint);
+}
 std::unique_ptr<Driver> Joint::searchDriver(const ConfigData & config)
 {
 	if (fusionJoint != nullptr)

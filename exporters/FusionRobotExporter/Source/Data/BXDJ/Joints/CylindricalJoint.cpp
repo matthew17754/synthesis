@@ -83,7 +83,7 @@ void CylindricalJoint::applyConfig(const ConfigData & config)
 	{
 		setDriver(*driver);
 	}
-
+	setWeight(searchWeight(config));
 	// This joint does not currently support sensors
 }
 
