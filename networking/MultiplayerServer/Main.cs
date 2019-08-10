@@ -1,36 +1,33 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MultiplayerServer;
+using SynthesisMultiplayer.Server.Methods;
 using SynthesisMultiplayer.Server.UDP;
 using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Methods;
 using SynthesisMultiplayer.Util;
-using SynthesisMultiplayer.Threading.Message;
 
 namespace MultiplayerServer
 {
-    public class main
+    public class Application
     {
         public static void Main(string[] args)
         {
-            var (send, recv) = Channel<(string, AsyncCallHandle?)>.CreateMPSCChannel();
-            var test = new ListenerServer(send, recv);
-            ManagedTaskHelper.Run(test, new TaskContext());
-            int iterator = 0;
-            while (true)
+            var test1 = ManagedTaskHelper.Start(new ConnectionListener(), "listener");
+            var test2 = ManagedTaskHelper.Start(new LobbyHostBroadcaster(), "broadcaster");
+            ManagedTaskHelper.GetTask(test1).Call(Server.Serve);
+            ManagedTaskHelper.GetTask(test2).Call(Server.Serve);
+            while (Console.ReadKey(true).Key != ConsoleKey.Enter)
+            { }
+
+            ManagedTaskHelper.GetTask(test1).Do(Default.Task.Exit);
+            Console.WriteLine("Server Closing. Please wait...");
+            int counter = 0;
+            while (ManagedTaskHelper.GetTask(test1).GetStatus() != ManagedTaskStatus.Completed)
             {
-                if (iterator >= 1000)
+                if(counter % 50 == 0)
                 {
-                    test.Call(Default.Task.Exit);
+                    Console.Write(".");
                 }
-                if (test.GetState() != null && test.GetState() == Default.State.GracefulExit) {
-                    Console.WriteLine("Exited");
-                    while (Console.ReadKey(true).Key != ConsoleKey.Enter) { }
-                    break;
-                }
-                iterator++;
+                ++counter;
             }
         }
     }

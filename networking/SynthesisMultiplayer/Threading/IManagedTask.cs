@@ -1,14 +1,11 @@
-﻿using SynthesisMultiplayer.Util;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Threading
 {
 
-    public delegate void ManagedTaskCallback(ITaskContext context, AsyncCallHandle? handle = null);
+    public delegate void ManagedTaskCallback(ITaskContext context, AsyncCallHandle handle = null);
     public interface IManagedTask : IDisposable
     {
         bool IsAlive();
@@ -19,14 +16,24 @@ namespace SynthesisMultiplayer.Threading
         Task<dynamic> Call(string method, params dynamic[] args);
         Task Do(string method, params dynamic[] args);
 
-        void OnMessage(ITaskContext context, AsyncCallHandle? handle = null);
-        void OnCycle(ITaskContext context, AsyncCallHandle? handle = null);
+        Dictionary<string, dynamic> DumpState(Dictionary<string, dynamic> currentState);
+        void RestoreState(Dictionary<string, dynamic> state);
 
-        void OnStart(ITaskContext context, AsyncCallHandle? handle = null);
-        void OnResume(ITaskContext context, AsyncCallHandle? handle = null);
+        ManagedTaskStatus GetStatus();
 
-        void OnPause(ITaskContext context, AsyncCallHandle? handle = null);
-        void OnStop(ITaskContext context, AsyncCallHandle? handle = null);
-        void OnExit(ITaskContext context, AsyncCallHandle? handle = null);
+        void Initialize();
+        bool IsReady();
+
+        void OnMessage(ITaskContext context, AsyncCallHandle handle = null);
+        void OnCycle(ITaskContext context, AsyncCallHandle handle = null);
+
+        void OnStart(ITaskContext context, AsyncCallHandle handle = null);
+        void OnResume(ITaskContext context, AsyncCallHandle handle = null);
+
+        void OnPause(ITaskContext context, AsyncCallHandle handle = null);
+        void OnStop(ITaskContext context, AsyncCallHandle handle = null);
+        void OnExit(ITaskContext context, AsyncCallHandle handle = null);
+
+        void Cancel();
     }
 }

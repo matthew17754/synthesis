@@ -8,5 +8,12 @@ namespace Assets.Scripts.Network
 {
     class LANServer
     {
+        void Test()
+        {
+            
+        }
+        (int, string) test() {
+            return (3, "4");
+                }
     }
 }

@@ -19,6 +19,11 @@ message UDPValidatorMessage {
 	string job_id = 2;
 }
 
+message SessionBroadcastMessage {
+	string api = 1;
+	string lobby_id = 2;
+}
+
 message FindMatchRequest {
     string api = 1;
     string user_token = 2;

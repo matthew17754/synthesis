@@ -1,26 +1,26 @@
-﻿using SynthesisMultiplayer.Threading;
+﻿using SynthesisMultiplayer.Attribute;
+using SynthesisMultiplayer.Server;
+using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Util;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace SynthesisMultiplayer.Common
 {
-    public class ManagedUDPTask : ManagedTask
+    public abstract class ManagedUDPTask : ManagedTask, IServer
     {
-        bool disposed;
-        protected IPEndPoint Endpoint;
-        protected UdpClient Connection;
-        public ManagedUDPTask(Channel<(string, AsyncCallHandle?)> statusChannel,
-            Channel<(string, AsyncCallHandle?)> messageChannel,
-            IPAddress ip,
+        private bool disposed;
+        protected Mutex statusMutex;
+        [SavedState]
+        protected IPEndPoint Endpoint { get; set; }
+        protected UdpClient Connection { get; set; }
+        public ManagedUDPTask(IPAddress ip,
             int port = 33000) : base()
         {
-            StatusChannel = statusChannel;
-            MessageChannel = messageChannel;
+            statusMutex = new Mutex();
             Endpoint = new IPEndPoint(ip, port);
         }
-
         protected override void Dispose(bool disposing)
         {
             if (!disposed)
@@ -32,7 +32,11 @@ namespace SynthesisMultiplayer.Common
                     MessageChannel.Dispose();
                 }
                 disposed = true;
+                Dispose();
             }
         }
+        public abstract void Serve(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Restart(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Shutdown(ITaskContext context, AsyncCallHandle handle);
     }
 }

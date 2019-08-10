@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SynthesisMultiplayer.Common;
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,9 +8,12 @@ namespace SynthesisMultiplayer.Threading
 {
     public class ManagedTaskHelper
     {
-        public static Task Run(IManagedTask task, ITaskContext context)
+        internal static Task Run(IManagedTask task, ITaskContext context, Dictionary<string, dynamic> state = null)
         {
             ITaskContext taskContext;
+            task.Initialize();
+            if (state != null)
+                task.RestoreState(state);
             return Task.Factory.StartNew((c) =>
             {
                 if (c != null)
@@ -23,10 +28,19 @@ namespace SynthesisMultiplayer.Threading
                         return;
                     if (task.IsPaused())
                         Thread.Sleep(50);
+                    if (task.GetStatus() == ManagedTaskStatus.Canceled)
+                        return;
                     else
                         task.OnCycle(context: taskContext);
                 }
             }, context);
         }
+        public static Guid Start(IManagedTask task, string name = null)
+        {
+            return ManagedTaskRegistry.StartTask(task, name, new TaskContext());
+        }
+
+        public static void Restart(Guid taskId, bool doRestoreState = true) => ManagedTaskRegistry.RestartTask(taskId, doRestoreState);
+        public static IManagedTask GetTask(Guid taskId) => ManagedTaskRegistry.GetTaskObject(taskId);
     }
 }

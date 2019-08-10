@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Threading
 {
-    public struct AsyncCallHandle : IDisposable
+    public class AsyncCallHandle : IDisposable
     {
         public enum FaultType
         {
@@ -35,7 +35,10 @@ namespace SynthesisMultiplayer.Threading
         {
             Arguments.Clear();
         }
+
+        public void Done()
+        {
+            Ready = true;
+        }
     }
-
-
 }
