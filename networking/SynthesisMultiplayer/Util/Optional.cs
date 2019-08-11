@@ -9,41 +9,37 @@ namespace SynthesisMultiplayer.Util
     public class Optional<T>
     {
         T value;
-        bool valid;
+        public bool Valid { get; private set; }
 
         public Optional()
         {
-            valid = false;
+            Valid = false;
         }
 
         public Optional(T v)
         {
             value = v;
-            valid = true;
-        }
-        public bool IsValid()
-        {
-            return valid;
+            Valid = true;
         }
         public void Set(T v)
         {
             value = v;
-            valid = true;
+            Valid = true;
         }
         public void Invalidate()
         {
-            valid = false;
+            Valid = false;
         }
         public static implicit operator T(Optional<T> t) => t.Get();
         public T Get()
         {
-            if (valid) 
+            if (Valid) 
                 return value;
             throw new Exception("Attempt to get value from invalid optional");
         }
         public static Optional<R> Map<R>(Func<T, R> f, Optional<T> t)
         {
-            if (t.valid)
+            if (t.Valid)
                 return new Optional<R>(f(t));
             return new Optional<R>();
         }
@@ -51,7 +47,7 @@ namespace SynthesisMultiplayer.Util
         {
             return (Optional<T> t) =>
             {
-                if (t.valid)
+                if (t.Valid)
                     return new Optional<R>(f(t));
                 return new Optional<R>();
             };

@@ -102,12 +102,12 @@ namespace SynthesisMultiplayer.Common
 
         public static Guid StartTask(IManagedTask taskInstance, string name = null, ITaskContext context = null)
         {
-            if (taskInstance.GetStatus() != ManagedTaskStatus.Created)
+            if (taskInstance.Status != ManagedTaskStatus.Created)
             {
                 throw new Exception("Cannot start a task that is already running. Do not call OnStart or spawn tasks directly.");
             }
             context = context ?? new TaskContext();
-            var task = ManagedTaskHelper.Run(taskInstance, context);
+            var task = taskInstance.Run(context);
             var taskId = Guid.NewGuid();
             lock (Instance.TaskLock)
             {
@@ -130,13 +130,13 @@ namespace SynthesisMultiplayer.Common
         {
             var (task, process) = GetTask(taskId);
             Dictionary<string, dynamic> state = null;
-            task.Cancel();
+            task.Terminate();
             process.Wait();
             task.Dispose();
             if (doRestoreState)
-                state = task.DumpState(new Dictionary<string, dynamic>());
+                state = StateBackup.DumpState(task);
             process.Dispose();
-            process = ManagedTaskHelper.Run(task, new TaskContext());
+            process = task.Run(new TaskContext(), state: state);
             lock(Instance.TaskLock)
             {
                 Instance.Tasks[taskId] = new Either<(IManagedTask, Task), Guid>((task, process));

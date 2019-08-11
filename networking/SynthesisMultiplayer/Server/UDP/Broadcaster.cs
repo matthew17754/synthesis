@@ -20,9 +20,15 @@ namespace SynthesisMultiplayer.Server.UDP
         const int sendCallbackTimeout = 10000;
         [SavedState]
         Guid LobbyCode { get; set; }
-        EventWaitHandle eventWaitHandle;
+        [SavedState]
         readonly SessionBroadcastMessage message;
-        bool started = false;
+        EventWaitHandle eventWaitHandle;
+        bool Serving { get; set; }
+        bool initialized { get; set; }
+        public override bool Alive => initialized;
+
+        public override bool Initialized => initialized;
+
         public LobbyHostBroadcaster(int port = 33001) :
             base(IPAddress.Parse("255.255.255.255"), port)
         {
@@ -32,12 +38,13 @@ namespace SynthesisMultiplayer.Server.UDP
                 Api = "v1",
                 LobbyId = LobbyCode.ToString(),
             };
-            eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         }
 
         public override void Initialize()
         {
-            base.Initialize();
+            Connection = new UdpClient();
+            eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+            initialized = true;
         }
 
         private void SendCallback(IAsyncResult res)
@@ -54,25 +61,10 @@ namespace SynthesisMultiplayer.Server.UDP
                 Endpoint.Port, SendCallback, null);
         }
 
-        public override void OnCycle(ITaskContext context, AsyncCallHandle handle)
-        {
-            if (started)
-            {
-                Thread.Sleep(100);
-                eventWaitHandle.Set();
-                base.OnCycle(context, handle);
-            }
-            else
-            {
-                base.OnCycle(context, handle);
-            }
-        }
-
-        [Callback(methodName: Server.Methods.Server.Serve)]
+        [Callback(methodName: Methods.Server.Serve)]
         public override void Serve(ITaskContext context, AsyncCallHandle handle)
         {
-            Connection = new UdpClient();
-            started = true;
+            Serving = true;
             Console.WriteLine("Broadcaster started");
             var outputStream = new MemoryStream();
             message.WriteTo(outputStream);
@@ -83,13 +75,15 @@ namespace SynthesisMultiplayer.Server.UDP
                 outputData.Length, Endpoint.Address.ToString(),
                 Endpoint.Port, SendCallback, null);
             outputStream.Dispose();
+            handle.Ready = true;
+
         }
 
         [Callback(methodName: Methods.Server.Shutdown)]
         public override void Shutdown(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down broadcaster");
-            Call(Default.Task.Exit);
+            this.Call(Default.Task.Exit);
         }
 
         [Callback(methodName: Methods.Server.Restart)]
@@ -98,7 +92,20 @@ namespace SynthesisMultiplayer.Server.UDP
             throw new NotImplementedException();
         }
 
+        public override void Terminate(string reason = null, System.Collections.Generic.Dictionary<string, dynamic> state = null)
+        {
+            this.Call(Methods.Server.Shutdown).Wait();
+            Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
+        }
 
+        public override void Loop()
+        {
+            if (Serving)
+            {
+                Thread.Sleep(100);
+                eventWaitHandle.Set();
+            }
+        }
     }
 
 }

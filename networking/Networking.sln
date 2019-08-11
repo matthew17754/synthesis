@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiplayerServer", "Multip
 		{E9ACF3B2-E0DA-4EE1-8229-848959B0EC5A} = {E9ACF3B2-E0DA-4EE1-8229-848959B0EC5A}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SynthesisMultiplayer.Tests", "SynthesisMultiplayer.Tests\SynthesisMultiplayer.Tests.csproj", "{5EEBE19A-92C5-4BFF-B435-DCB5724E82FC}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,10 +40,6 @@ Global
 		{894AB6B7-3D6F-4CC2-822D-9C23E0FCEC55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{894AB6B7-3D6F-4CC2-822D-9C23E0FCEC55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{894AB6B7-3D6F-4CC2-822D-9C23E0FCEC55}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5EEBE19A-92C5-4BFF-B435-DCB5724E82FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5EEBE19A-92C5-4BFF-B435-DCB5724E82FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5EEBE19A-92C5-4BFF-B435-DCB5724E82FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5EEBE19A-92C5-4BFF-B435-DCB5724E82FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

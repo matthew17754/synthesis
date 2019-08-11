@@ -9,7 +9,7 @@ using SynthesisMultiplayer.Threading;
 
 namespace SynthesisMultiplayer.Server.gRPC
 {
-    class LobbyHandler : ManagedTask, ISupervisor
+    class LobbyHandler : IManagedTask
     {
 
         private class Job
@@ -55,6 +55,12 @@ namespace SynthesisMultiplayer.Server.gRPC
         Dictionary<string, IManagedTask> Children;
         LobbyGrpcServer Server;
 
+        public bool Alive => throw new NotImplementedException();
+
+        public bool Initialized => throw new NotImplementedException();
+
+        public ManagedTaskStatus Status => throw new NotImplementedException();
+
         public (IManagedTask, Task) GetChild(string name)
         {
             throw new NotImplementedException();
@@ -70,5 +76,34 @@ namespace SynthesisMultiplayer.Server.gRPC
             throw new NotImplementedException();
         }
 
+        public void SendMessage((string, AsyncCallHandle) message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Util.Optional<(string, AsyncCallHandle)> GetMessage()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Initialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Terminate(string reason = null, Dictionary<string, dynamic> state = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Loop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

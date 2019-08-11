@@ -8,20 +8,43 @@ using System.Threading;
 
 namespace SynthesisMultiplayer.Common
 {
-    public abstract class ManagedUDPTask : ManagedTask, IServer
+    public abstract class ManagedUDPTask : IManagedTask, IServer
     {
         private bool disposed;
         protected Mutex statusMutex;
         [SavedState]
         protected IPEndPoint Endpoint { get; set; }
         protected UdpClient Connection { get; set; }
-        public ManagedUDPTask(IPAddress ip,
-            int port = 33000) : base()
+        protected Channel<(string, AsyncCallHandle)> Messages;
+        public abstract bool Alive { get; }
+        public abstract bool Initialized { get; }
+        public ManagedTaskStatus Status { get; protected set; }
+
+        public void SendMessage((string, AsyncCallHandle) message)
+        {
+            Messages.Send(message);
+        }
+        public Optional<(string, AsyncCallHandle)> GetMessage()
+        {
+            return Messages.TryGet();
+        }
+
+        public abstract void Serve(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Restart(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Shutdown(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Initialize();
+        public abstract void Terminate(string reason = null, System.Collections.Generic.Dictionary<string, dynamic> state = null);
+        public abstract void Loop();
+
+        public ManagedUDPTask(IPAddress ip, int port = 33000)
         {
             statusMutex = new Mutex();
             Endpoint = new IPEndPoint(ip, port);
+            Messages = new Channel<(string, AsyncCallHandle)>();
+
         }
-        protected override void Dispose(bool disposing)
+
+        protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
             {
@@ -29,14 +52,13 @@ namespace SynthesisMultiplayer.Common
                 {
                     Connection.Close();
                     Connection.Dispose();
-                    MessageChannel.Dispose();
                 }
                 disposed = true;
-                Dispose();
             }
         }
-        public abstract void Serve(ITaskContext context, AsyncCallHandle handle);
-        public abstract void Restart(ITaskContext context, AsyncCallHandle handle);
-        public abstract void Shutdown(ITaskContext context, AsyncCallHandle handle);
+        public void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }

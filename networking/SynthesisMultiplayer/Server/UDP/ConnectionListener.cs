@@ -37,34 +37,44 @@ namespace SynthesisMultiplayer.Server.UDP
         ListenerServerData ServerData;
         bool disposed;
         Channel<byte[]> Channel;
-        bool started = false;
+        bool initialized { get; set; }
+        bool Serving { get; set; }
+
+        public override bool Alive => initialized; 
+        public override bool Initialized => initialized;
+
         public ConnectionListener(int port = 33000) :
-            base(IPAddress.Any, port) { }
+            base(IPAddress.Any, port)
+        {
+            Serving = false;
+        }
         private void ReceiveCallback(IAsyncResult result)
         {
-            var context = ((ConnectionListenerContext)(result.AsyncState));
-            var udpClient = context.client;
-            var peer = context.peer;
-            var receivedData = udpClient.EndReceive(result, ref context.peer);
-            ServerData.LastEndpoint = context.peer;
-            context.sender.Send(receivedData);
-            Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
-            context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
-            udpClient.BeginReceive(ReceiveCallback, context);
+            if (Serving)
+            {
+                var context = ((ConnectionListenerContext)(result.AsyncState));
+                var udpClient = context.client;
+                var peer = context.peer;
+                var receivedData = udpClient.EndReceive(result, ref context.peer);
+                ServerData.LastEndpoint = context.peer;
+                context.sender.Send(receivedData);
+                Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
+                context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
+                udpClient.BeginReceive(ReceiveCallback, context);
+            }
         }
         private IPEndPoint GetConnectionInfo(Guid id)
         {
             lock (ServerData.Mutex)
                 return ServerData.ConnectionInfo.ContainsKey(id) ? ServerData.ConnectionInfo[id] : null;
         }
-        public override void OnCycle(ITaskContext context, AsyncCallHandle handle)
+        public override void Loop()
         {
-            if (started)
+            if (Serving)
             {
                 var newData = Channel.TryGet();
-                if (!newData.IsValid())
+                if (!newData.Valid)
                 {
-                    base.OnCycle(context, handle);
                     return;
                 }
                 try
@@ -73,52 +83,54 @@ namespace SynthesisMultiplayer.Server.UDP
                     if (decodedData.Api != "v1")
                     {
                         Console.WriteLine("API version not recognized. Skipping");
-                        base.OnCycle(context, handle);
                         return;
                     }
                     ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
-                    base.OnCycle(context, handle);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("API version not recognized. Skipping");
-                    base.OnCycle(context, handle);
                     return;
                 }
-            } else
+            }
+            else
             {
                 Thread.Sleep(50);
-                base.OnCycle(context, handle);
             }
         }
 
-        [Callback(methodName: Server.Methods.Server.Serve)]
+        [Callback(methodName: Methods.Server.Serve)]
         public override void Serve(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
-            ServerData = new ListenerServerData();
-            Channel = new Channel<byte[]>();
-            Connection = new UdpClient(Endpoint);
             Connection.BeginReceive(ReceiveCallback, new ConnectionListenerContext
             {
                 client = Connection,
                 peer = Endpoint,
                 sender = Channel,
             });
-            started = true;
+            Serving = true;
+            handle.Ready = true;
         }
 
-        [Callback(methodName: Server.Methods.Server.Shutdown)]
+        [Callback(methodName: Methods.Server.Shutdown)]
         public override void Shutdown(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down listener");
-            Call(Default.Task.Exit);
+            Serving = false;
+            initialized = false;
+            handle.Ready = true;
+            Status = ManagedTaskStatus.Completed;
+            Dispose();
         }
 
-        [Callback(methodName: Server.Methods.Server.Restart)]
+        [Callback(methodName: Methods.Server.Restart)]
         public override void Restart(ITaskContext context, AsyncCallHandle handle)
         {
-            throw new NotImplementedException();
+            var state = handle.Arguments.Dequeue();
+            Dispose();
+            Initialize();
+            StateBackup.RestoreState(this, state);
         }
         protected override void Dispose(bool disposing)
         {
@@ -128,12 +140,26 @@ namespace SynthesisMultiplayer.Server.UDP
                 {
                     Connection.Close();
                     Connection.Dispose();
-                    MessageChannel.Dispose();
+                    Channel.Dispose();
                 }
                 disposed = true;
+                Serving = false;
                 Dispose();
             }
         }
 
+        public override void Initialize()
+        {
+            initialized = true;
+            ServerData = new ListenerServerData();
+            Channel = new Channel<byte[]>();
+            Connection = new UdpClient(Endpoint);
+        }
+
+        public override void Terminate(string reason = null, Dictionary<string, dynamic> state = null)
+        {
+            this.Call(Methods.Server.Shutdown).Wait();
+            Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
+        }
     }
 }

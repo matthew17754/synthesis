@@ -23,7 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>7.0</LangVersion>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,7 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <LangVersion>7.0</LangVersion>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -70,7 +70,6 @@
     <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Attribute\State.cs" />
     <Compile Include="Common\ManagedTaskRegistery.cs" />
-    <Compile Include="Server\ClientManager.cs" />
     <Compile Include="Server\IServer.cs" />
     <Compile Include="Common\ManagedUDPTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -78,25 +77,18 @@
     <Compile Include="Server\Methods\Server.cs" />
     <Compile Include="Server\ServerStatus.cs" />
     <Compile Include="Server\UDP\Broadcaster.cs" />
-    <Compile Include="Server\UDP\ClientListener.cs" />
-    <Compile Include="Server\UDP\ClientRebroadcaster.cs" />
     <Compile Include="Server\UDP\ConnectionListener.cs" />
-    <Compile Include="Threading\AsyncCallStatus.cs" />
+    <Compile Include="Threading\AsyncCallHandle.cs" />
     <Compile Include="Threading\ContextHelper.cs" />
-    <Compile Include="Threading\IEventLoop.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
-    <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ITaskContext.cs" />
-    <Compile Include="Threading\ManagedTask.cs" />
     <Compile Include="Threading\ManagedTaskHelper.cs" />
-    <Compile Include="Threading\ManagedTaskStatus.cs" />
     <Compile Include="Threading\Methods\Default.cs" />
-    <Compile Include="Threading\Supervisor.cs" />
     <Compile Include="Threading\TaskContext.cs" />
-    <Compile Include="Util\Cast.cs" />
     <Compile Include="Util\Channel.cs" />
     <Compile Include="Util\Either.cs" />
     <Compile Include="Util\Optional.cs" />
+    <Compile Include="Util\StateBackup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Client\gRPC\" />
