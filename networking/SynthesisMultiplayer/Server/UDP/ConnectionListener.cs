@@ -9,7 +9,17 @@ using SynthesisMultiplayer.Util;
 using MatchmakingService;
 using System.Text;
 using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Threading.Methods;
+
+namespace SynthesisMultiplayer.Common
+{
+    public partial class Methods
+    {
+        public class ConnectionListener
+        {
+            public const string GetConnectionInfo = "GET_CONNECTION_INFO";
+        }
+    }
+}
 
 namespace SynthesisMultiplayer.Server.UDP
 {
@@ -87,7 +97,7 @@ namespace SynthesisMultiplayer.Server.UDP
                     }
                     ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("API version not recognized. Skipping");
                     return;
@@ -100,7 +110,7 @@ namespace SynthesisMultiplayer.Server.UDP
         }
 
         [Callback(methodName: Methods.Server.Serve)]
-        public override void Serve(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
             Connection.BeginReceive(ReceiveCallback, new ConnectionListenerContext
@@ -114,24 +124,33 @@ namespace SynthesisMultiplayer.Server.UDP
         }
 
         [Callback(methodName: Methods.Server.Shutdown)]
-        public override void Shutdown(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
             initialized = false;
             handle.Ready = true;
+            Connection.Close();
             Status = ManagedTaskStatus.Completed;
-            Dispose();
         }
 
         [Callback(methodName: Methods.Server.Restart)]
-        public override void Restart(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
         {
             var state = handle.Arguments.Dequeue();
-            Dispose();
-            Initialize();
+            Terminate();
+            Initialize(Id);
             StateBackup.RestoreState(this, state);
         }
+
+        [Callback(methodName: Methods.ConnectionListener.GetConnectionInfo)]
+        public void GetConnectionInfoCallback(ITaskContext context, AsyncCallHandle handle)
+        {
+            var jobId = handle.Arguments.Dequeue();
+            handle.Result = GetConnectionInfo(jobId);
+            handle.Ready = true;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (!disposed)
@@ -148,8 +167,9 @@ namespace SynthesisMultiplayer.Server.UDP
             }
         }
 
-        public override void Initialize()
+        public override void Initialize(Guid taskId)
         {
+            Id = taskId;
             initialized = true;
             ServerData = new ListenerServerData();
             Channel = new Channel<byte[]>();

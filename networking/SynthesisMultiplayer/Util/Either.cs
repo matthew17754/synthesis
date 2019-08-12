@@ -32,18 +32,23 @@ namespace SynthesisMultiplayer.Util
             right = r;
         }
 
-        public TLeft Left()
+        public TLeft Left
         {
-            if (state == State.Left)
-                return left;
-            throw new Exception("Attempt to get Left, while value is " + Enum.GetName(typeof(State), state));
+            get
+            {
+                if (state == State.Left)
+                    return left;
+                throw new Exception("Attempt to get Left, while value is " + Enum.GetName(typeof(State), state));
+            }
         }
-
-        public TRight Right()
+        public TRight Right
         {
-            if (state == State.Right)
-                return right;
-            throw new Exception("Attempt to get Right, while value is " + Enum.GetName(typeof(State), state));
+            get
+            {
+                if (state == State.Right)
+                    return right;
+                throw new Exception("Attempt to get Right, while value is " + Enum.GetName(typeof(State), state));
+            }
         }
 
         public State GetState()
@@ -51,8 +56,8 @@ namespace SynthesisMultiplayer.Util
             return state;
         }
 
-        public static implicit operator TLeft(Either<TLeft, TRight> t) => t.Left();
-        public static implicit operator TRight(Either<TLeft, TRight> t) => t.Right();
+        public static implicit operator TLeft(Either<TLeft, TRight> t) => t.Left;
+        public static implicit operator TRight(Either<TLeft, TRight> t) => t.Right;
 
         public static Either<R, U> Bimap<R, U>(Func<TLeft, R> f, Func<TRight, U> g, Either<TLeft, TRight> e)
         {

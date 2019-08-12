@@ -18,12 +18,10 @@ namespace SynthesisMultiplayer.Threading
 
         bool Alive { get; }
         bool Initialized { get; }
+        Guid Id { get; }
         ManagedTaskStatus Status { get; }
 
-        void SendMessage((string, AsyncCallHandle) message);
-        Optional<(string, AsyncCallHandle)> GetMessage();
-
-        void Initialize();
+        void Initialize(Guid id);
         void Terminate(string reason = null, StateData state = null);
 
         void Loop();
@@ -42,21 +40,21 @@ namespace SynthesisMultiplayer.Threading
 
     public static class IManagedTaskMethods
     {
-        public static Task Run(this IManagedTask task, ITaskContext context = null, int loopTime = 50, StateData state = null)
+        public static Task Run(this IManagedTask task, Guid taskId, Channel<(string, AsyncCallHandle)> channel, ITaskContext context = null, int loopTime = 50, StateData state = null)
         {
             context = context ?? new TaskContext();
             Callbacks callbacks = GenerateCallbackList(task);
             TaskMethods taskMethods = GenerateMethodList(task);
             return Task.Factory.StartNew((c) =>
             {
-                task.Initialize();
+                task.Initialize(taskId);
                 if (state != null)
                     StateBackup.RestoreState(task, state);
                 while (task.Alive)
                 {
                     if (task.Initialized)
                     {
-                        var message = task.GetMessage();
+                        var message = channel.TryGet();
                         if (message.Valid)
                         {
                             var (callback, handle) = message.Get();
@@ -82,7 +80,7 @@ namespace SynthesisMultiplayer.Threading
             return Task<dynamic>.Factory.StartNew(() =>
             {
                 var handle = new AsyncCallHandle(args);
-                task.SendMessage((method, handle));
+                ManagedTaskHelper.Send(task.Id, (method, handle));
                 while (!handle.Ready)
                 {
                     if (handle.Fault)
@@ -104,7 +102,7 @@ namespace SynthesisMultiplayer.Threading
             return Task.Factory.StartNew(() =>
             {
                 var handle = new AsyncCallHandle(args);
-                task.SendMessage((method, handle));
+                ManagedTaskHelper.Send(task.Id, (method, handle));
                 while (!handle.Ready)
                 {
                     if (handle.Fault)

@@ -22,7 +22,7 @@ namespace SynthesisMultiplayer.Threading
             {
                 return GetType().GetProperty(key).GetValue(this, null);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (Data.ContainsKey(key))
                 {
@@ -38,7 +38,7 @@ namespace SynthesisMultiplayer.Threading
             {
                 GetType().GetProperty(key).SetValue(this, value, null);
             } 
-            catch(Exception e)
+            catch(Exception)
             {
                 Data[key] = value;
             }

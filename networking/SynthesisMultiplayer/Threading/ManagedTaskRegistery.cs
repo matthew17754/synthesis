@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 using TaskEntry =
     SynthesisMultiplayer.Util.Either<
         (
-            SynthesisMultiplayer.Threading.IManagedTask,
-            System.Threading.Tasks.Task
+            SynthesisMultiplayer.Threading.IManagedTask Task,
+            System.Threading.Tasks.Task Process,
+            SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.AsyncCallHandle)> Channel
         ),
         System.Guid>;
-namespace SynthesisMultiplayer.Common
+using MessageChannel = SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.AsyncCallHandle)>;
+namespace SynthesisMultiplayer.Threading
 {
     internal class ManagedTaskRegistry
     {
@@ -34,7 +36,8 @@ namespace SynthesisMultiplayer.Common
 
         public static (IManagedTask, Task) GetTask(Guid taskId)
         {
-            return getTaskImpl(taskId);
+            var taskInfo = getTaskImpl(taskId);
+            return (taskInfo.Left.Task, taskInfo.Left.Process);
         }
         public static (IManagedTask, Task) GetTask(string taskName)
         {
@@ -44,13 +47,14 @@ namespace SynthesisMultiplayer.Common
                 {
                     return (null, null);
                 }
-                return getTaskImpl(Instance.TaskNames[taskName]);
+                var taskInfo = getTaskImpl(Instance.TaskNames[taskName]);
+                return (taskInfo.Left.Task, taskInfo.Left.Process);
             }
         }
 
         public static Task GetProcess(Guid taskId)
         {
-            return getTaskImpl(taskId).Left().Item2;
+            return getTaskImpl(taskId).Left.Process;
         }
         public static Task GetProcess(string taskName)
         {
@@ -60,12 +64,12 @@ namespace SynthesisMultiplayer.Common
                 {
                     return null;
                 }
-                return getTaskImpl(Instance.TaskNames[taskName]).Left().Item2;
+                return getTaskImpl(Instance.TaskNames[taskName]).Left.Process;
             }
         }
         public static IManagedTask GetTaskObject(Guid taskId)
         {
-            return getTaskImpl(taskId).Left().Item1;
+            return getTaskImpl(taskId).Left.Task;
         }
         public static IManagedTask GetTaskObject(string taskName)
         {
@@ -75,9 +79,26 @@ namespace SynthesisMultiplayer.Common
                 {
                     return null;
                 }
-                return getTaskImpl(Instance.TaskNames[taskName]).Left().Item1;
+                return getTaskImpl(Instance.TaskNames[taskName]).Left.Task;
             }
         }
+
+        public static MessageChannel GetChannel(Guid taskId)
+        {
+            return getTaskImpl(taskId).Left.Channel;
+        }
+        public static MessageChannel GetChannel(string taskName)
+        {
+            lock (Instance.TaskLock)
+            {
+                if (!Instance.TaskNames.ContainsKey(taskName))
+                {
+                    return null;
+                }
+                return getTaskImpl(Instance.TaskNames[taskName]).Left.Channel;
+            }
+        }
+
         // Recurses through 
         private static TaskEntry getTaskImpl(Guid taskId)
         {
@@ -106,9 +127,10 @@ namespace SynthesisMultiplayer.Common
             {
                 throw new Exception("Cannot start a task that is already running. Do not call OnStart or spawn tasks directly.");
             }
-            context = context ?? new TaskContext();
-            var task = taskInstance.Run(context);
             var taskId = Guid.NewGuid();
+            context = context ?? new TaskContext();
+            var channel = new MessageChannel();
+            var task = taskInstance.Run(taskId, channel, context);
             lock (Instance.TaskLock)
             {
                 if (Instance.Tasks.ContainsKey(taskId))
@@ -119,7 +141,7 @@ namespace SynthesisMultiplayer.Common
                 {
                     throw new Exception("Task with name '" + name + "' already registered.");
                 }
-                Instance.Tasks[taskId] = new TaskEntry((taskInstance, task));
+                Instance.Tasks[taskId] = new TaskEntry((taskInstance, task, channel));
                 if (name != null)
                     Instance.TaskNames[name] = taskId;
             }
@@ -129,18 +151,53 @@ namespace SynthesisMultiplayer.Common
         public static void RestartTask(Guid taskId, bool doRestoreState = false)
         {
             var (task, process) = GetTask(taskId);
+            var messageChannel = GetChannel(taskId);
             Dictionary<string, dynamic> state = null;
             task.Terminate();
             process.Wait();
-            task.Dispose();
             if (doRestoreState)
                 state = StateBackup.DumpState(task);
             process.Dispose();
-            process = task.Run(new TaskContext(), state: state);
-            lock(Instance.TaskLock)
+            process = task.Run(taskId, messageChannel, context: new TaskContext(), state: state);
+            lock (Instance.TaskLock)
             {
-                Instance.Tasks[taskId] = new Either<(IManagedTask, Task), Guid>((task, process));
+                Instance.Tasks[taskId] = new TaskEntry((task, process, messageChannel));
             }
+        }
+
+        public static void RestartTask(string taskName, bool doRestoreState = false)
+        {
+            var (task, process) = GetTask(taskName);
+            var messageChannel = GetChannel(taskName);
+            Dictionary<string, dynamic> state = null;
+            task.Terminate();
+            process.Wait();
+            task.Terminate();
+            if (doRestoreState)
+                state = StateBackup.DumpState(task);
+            process.Dispose();
+            process = task.Run(GetTaskObject(taskName).Id, messageChannel, context: new TaskContext(), state: state);
+            lock (Instance.TaskLock)
+            {
+                Instance.Tasks[task.Id] = new TaskEntry((task, process, messageChannel));
+            }
+        }
+
+        public static void Send(Guid taskId, (string, AsyncCallHandle) message)
+        {
+            if (GetTask(taskId).Item1 == null || GetTask(taskId).Item2 == null)
+            {
+                throw new Exception("No task found with id '" + taskId.ToString() + "'");
+            }
+            GetChannel(taskId).Send(message);
+        }
+        public static void Send(string taskName, (string, AsyncCallHandle) message)
+        {
+            if (GetTask(taskName).Item1 == null || GetTask(taskName).Item2 == null)
+            {
+                throw new Exception("No task found with name '" + taskName + "'");
+            }
+            GetChannel(taskName).Send(message);
         }
     }
 }

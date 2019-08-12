@@ -2,13 +2,14 @@
 using SynthesisMultiplayer.Server;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Util;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
 namespace SynthesisMultiplayer.Common
 {
-    public abstract class ManagedUDPTask : IManagedTask, IServer
+    public abstract class ManagedUDPTask : IServer
     {
         private bool disposed;
         protected Mutex statusMutex;
@@ -19,6 +20,7 @@ namespace SynthesisMultiplayer.Common
         public abstract bool Alive { get; }
         public abstract bool Initialized { get; }
         public ManagedTaskStatus Status { get; protected set; }
+        public Guid Id { get; protected set; }
 
         public void SendMessage((string, AsyncCallHandle) message)
         {
@@ -29,10 +31,10 @@ namespace SynthesisMultiplayer.Common
             return Messages.TryGet();
         }
 
-        public abstract void Serve(ITaskContext context, AsyncCallHandle handle);
-        public abstract void Restart(ITaskContext context, AsyncCallHandle handle);
-        public abstract void Shutdown(ITaskContext context, AsyncCallHandle handle);
-        public abstract void Initialize();
+        public abstract void ServeCallback(ITaskContext context, AsyncCallHandle handle);
+        public abstract void RestartCallback(ITaskContext context, AsyncCallHandle handle);
+        public abstract void ShutdownCallback(ITaskContext context, AsyncCallHandle handle);
+        public abstract void Initialize(Guid taskId);
         public abstract void Terminate(string reason = null, System.Collections.Generic.Dictionary<string, dynamic> state = null);
         public abstract void Loop();
 

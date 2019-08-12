@@ -1,8 +1,6 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Methods;
-using SynthesisMultiplayer.Util;
 using System;
 using System.Net;
 using System.Threading;
@@ -40,8 +38,9 @@ namespace SynthesisMultiplayer.Server.UDP
             };
         }
 
-        public override void Initialize()
+        public override void Initialize(Guid taskId)
         {
+            Id = taskId;
             Connection = new UdpClient();
             eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
             initialized = true;
@@ -61,8 +60,9 @@ namespace SynthesisMultiplayer.Server.UDP
                 Endpoint.Port, SendCallback, null);
         }
 
+
         [Callback(methodName: Methods.Server.Serve)]
-        public override void Serve(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = true;
             Console.WriteLine("Broadcaster started");
@@ -80,16 +80,16 @@ namespace SynthesisMultiplayer.Server.UDP
         }
 
         [Callback(methodName: Methods.Server.Shutdown)]
-        public override void Shutdown(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down broadcaster");
-            this.Call(Default.Task.Exit);
         }
 
         [Callback(methodName: Methods.Server.Restart)]
-        public override void Restart(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            throw new NotImplementedException();
+            Terminate();
+            Initialize(Id);
         }
 
         public override void Terminate(string reason = null, System.Collections.Generic.Dictionary<string, dynamic> state = null)

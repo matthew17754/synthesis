@@ -52,29 +52,13 @@ namespace SynthesisMultiplayer.Server.gRPC
             }
         }
 
-        Dictionary<string, IManagedTask> Children;
-        LobbyGrpcServer Server;
-
         public bool Alive => throw new NotImplementedException();
 
         public bool Initialized => throw new NotImplementedException();
 
         public ManagedTaskStatus Status => throw new NotImplementedException();
 
-        public (IManagedTask, Task) GetChild(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RestartChild(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string SpawnChild(IManagedTask taskObject, string name = "")
-        {
-            throw new NotImplementedException();
-        }
+        public Guid Id => throw new NotImplementedException();
 
         public void SendMessage((string, AsyncCallHandle) message)
         {
@@ -86,7 +70,7 @@ namespace SynthesisMultiplayer.Server.gRPC
             throw new NotImplementedException();
         }
 
-        public void Initialize()
+        public void Initialize(Guid taskId)
         {
             throw new NotImplementedException();
         }

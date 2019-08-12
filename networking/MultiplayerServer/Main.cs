@@ -1,11 +1,7 @@
 ﻿using System;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Server.Methods;
 using SynthesisMultiplayer.Server.UDP;
 using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Methods;
-using SynthesisMultiplayer.Util;
-
+using SynthesisMultiplayer.Common;
 namespace MultiplayerServer
 {
     public class Application
@@ -14,8 +10,8 @@ namespace MultiplayerServer
         {
             var test1 = ManagedTaskHelper.Start(new ConnectionListener(), "listener");
             var test2 = ManagedTaskHelper.Start(new LobbyHostBroadcaster(), "broadcaster");
-            ManagedTaskHelper.GetTask("listener").Call(Server.Serve);
-            ManagedTaskHelper.GetTask("broadcaster").Call(Server.Serve);
+            ManagedTaskHelper.GetTask("listener").Call(Methods.Server.Serve);
+            ManagedTaskHelper.GetTask("broadcaster").Call(Methods.Server.Serve);
             while (Console.ReadKey(true).Key != ConsoleKey.Enter)
             { }
             ManagedTaskHelper.Restart(test1);

@@ -9,10 +9,37 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Common
 {
-    public interface IServer
+
+    public partial class Methods
     {
-        void Serve(ITaskContext context, AsyncCallHandle handle);
-        void Restart(ITaskContext context, AsyncCallHandle handle);
-        void Shutdown(ITaskContext context, AsyncCallHandle handle);
+        public static class Server
+        {
+            public const string Serve = "SERVE";
+            public const string Restart = "RESTART";
+            public const string Shutdown = "SHUTDOWN";
+
+        }
+    }
+
+    public interface IServer : IManagedTask
+    {
+        void ServeCallback(ITaskContext context, AsyncCallHandle handle);
+        void RestartCallback(ITaskContext context, AsyncCallHandle handle);
+        void ShutdownCallback(ITaskContext context, AsyncCallHandle handle);
+    }
+    public static class IServerMethods
+    {
+        public static void Serve(this IServer server)
+        {
+            server.Do(Methods.Server.Serve).Wait();
+        }
+        public static void Restart(this IServer server)
+        {
+            server.Do(Methods.Server.Restart).Wait();
+        }
+        public static void Shutdown(this IServer server)
+        {
+            server.Do(Methods.Server.Shutdown).Wait();
+        }
     }
 }
