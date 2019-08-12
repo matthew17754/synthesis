@@ -132,15 +132,23 @@ namespace SynthesisMultiplayer.Server.UDP
             handle.Ready = true;
             Connection.Close();
             Status = ManagedTaskStatus.Completed;
+            handle.Ready = true;
         }
 
         [Callback(methodName: Methods.Server.Restart)]
         public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            var state = handle.Arguments.Dequeue();
+            if(handle.Arguments.Dequeue() == true)
+            {
+                var state = StateBackup.DumpState(this);
+                Terminate();
+                Initialize(Id);
+                StateBackup.RestoreState(this, state);
+            }
             Terminate();
             Initialize(Id);
-            StateBackup.RestoreState(this, state);
+            handle.Ready = true;
+
         }
 
         [Callback(methodName: Methods.ConnectionListener.GetConnectionInfo)]
@@ -178,7 +186,7 @@ namespace SynthesisMultiplayer.Server.UDP
 
         public override void Terminate(string reason = null, Dictionary<string, dynamic> state = null)
         {
-            this.Call(Methods.Server.Shutdown).Wait();
+            this.Do(Methods.Server.Shutdown).Wait();
             Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
     }

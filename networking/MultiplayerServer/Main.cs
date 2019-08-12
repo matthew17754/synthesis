@@ -2,26 +2,29 @@
 using SynthesisMultiplayer.Server.UDP;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Common;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
 namespace MultiplayerServer
 {
     public class Application
     {
         public static void Main(string[] args)
         {
-            var test1 = ManagedTaskHelper.Start(new ConnectionListener(), "listener");
-            var test2 = ManagedTaskHelper.Start(new LobbyHostBroadcaster(), "broadcaster");
-            ManagedTaskHelper.GetTask("listener").Call(Methods.Server.Serve);
-            ManagedTaskHelper.GetTask("broadcaster").Call(Methods.Server.Serve);
+            Start(new ConnectionListener(), "listener");
+            Start(new LobbyHostBroadcaster(), "broadcaster");
+            ConnectionListener listener = (ConnectionListener)GetTask("listener");
+            LobbyHostBroadcaster broadcast  = (LobbyHostBroadcaster)GetTask("broadcaster");
+            listener.Serve();
+            broadcast.Serve();
             while (Console.ReadKey(true).Key != ConsoleKey.Enter)
             { }
-            ManagedTaskHelper.Restart(test1);
+            listener.Restart(false);
             while (Console.ReadKey(true).Key != ConsoleKey.Enter)
             { }
-            ManagedTaskHelper.GetTask(test1).Terminate();
+            listener.Terminate();
 
             Console.WriteLine("Server Closing. Please wait...");
             int counter = 0;
-            while (ManagedTaskHelper.GetTask(test1).Status != ManagedTaskStatus.Completed)
+            while (listener.Status != ManagedTaskStatus.Completed)
             {
                 if(counter % 50 == 0)
                 {

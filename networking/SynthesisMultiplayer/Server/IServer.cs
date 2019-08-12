@@ -29,17 +29,17 @@ namespace SynthesisMultiplayer.Common
     }
     public static class IServerMethods
     {
-        public static void Serve(this IServer server)
+        public static void Serve(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Serve).Wait();
+            server.Do(Methods.Server.Serve, args: args).Wait();
         }
-        public static void Restart(this IServer server)
+        public static void Restart(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Restart).Wait();
+            server.Do(Methods.Server.Restart, args: args).Wait();
         }
-        public static void Shutdown(this IServer server)
+        public static void Shutdown(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Shutdown).Wait();
+            server.Do(Methods.Server.Shutdown, args: args).Wait();
         }
     }
 }
