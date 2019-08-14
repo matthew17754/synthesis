@@ -386,6 +386,12 @@ namespace Synthesis.GUI
             tabStateMachine.ChangeState(new EmulationToolbarState());
         }
 
+        public void OnMultiplayerTab()
+        {
+            currentTab = "MultiplayerTab";
+            tabStateMachine.ChangeState(new MultiplayerToolbarState());
+        }
+
         public void ShowError(string msg)
         {
             GameObject errorScreen = Auxiliary.FindGameObject("ErrorScreen");
@@ -846,6 +852,7 @@ namespace Synthesis.GUI
             LinkToolbar<ScoringToolbarState>("ScoringToolbar");
             LinkToolbar<SensorToolbarState>("SensorToolbar");
             LinkToolbar<EmulationToolbarState>("EmulationToolbar");
+            LinkToolbar<MultiplayerToolbarState>("MultiplayerToolbar");
         }
 
         /// <summary>
