@@ -13,7 +13,7 @@ namespace MultiplayerServer
     {
         public static void Main(string[] args)
         {
-            Start(new ConnectionListener(), "listener");
+            Start(new ConnectionListener(33003), "listener");
             Start(new LobbyHostBroadcaster(), "broadcaster");
             var listener = (ConnectionListener) GetTask("listener");
             var broadcast  = (LobbyHostBroadcaster) GetTask("broadcaster");

@@ -38,7 +38,7 @@ namespace SynthesisMultiplayer.Service
         public FanoutService(int listenerPort, Guid connectionListenerPid)
         {
             Senders = new List<Guid>();
-            ClientListener = Start(new ClientListener(listenerPort));
+            ClientListener = Start(new FanoutListener(listenerPort));
             ConnectionListener = connectionListenerPid;
         }
 
@@ -75,7 +75,7 @@ namespace SynthesisMultiplayer.Service
                 var outputData = new StreamReader(outputStream).ReadToEnd();
                 foreach (var sender in Senders)
                 {
-                    ((ClientSender)GetTask(sender)).Send(outputData);
+                    ((FanoutSender)GetTask(sender)).Send(outputData);
                 }
             }
         }
@@ -95,7 +95,7 @@ namespace SynthesisMultiplayer.Service
             catch (Exception)
             {
             }
-            var newSender = Start(new ClientSender(ip, port));
+            var newSender = Start(new FanoutSender(ip, port));
             while (!GetTask(newSender).Initialized) { }
             ((IServer)GetTask(newSender)).Serve();
             Senders.Add(newSender);
@@ -139,7 +139,7 @@ namespace SynthesisMultiplayer.Service
         public List<(Guid taskId, Type type)> Children() =>
             Senders.Select(s =>
             {
-                return (s, typeof(ClientSender));
-            }).Concat(new[] { (ClientListener, typeof(ClientListener)) }).ToList();
+                return (s, typeof(FanoutSender));
+            }).Concat(new[] { (ClientListener, typeof(FanoutListener)) }).ToList();
     }
 }

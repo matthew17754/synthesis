@@ -25,7 +25,7 @@ namespace SynthesisMultiplayer.Common
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    public class ClientListener : ManagedUDPTask
+    public class FanoutListener : ManagedUDPTask
     {
         protected class ConnectionListenerContext : TaskContext
         {
@@ -55,7 +55,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override bool Alive => initialized;
         public override bool Initialized => initialized;
 
-        public ClientListener(int port = 33000) :
+        public FanoutListener(int port = 33000) :
             base(IPAddress.Any, port)
         {
             Serving = false;

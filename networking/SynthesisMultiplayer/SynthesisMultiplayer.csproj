@@ -69,9 +69,10 @@
   <ItemGroup>
     <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Attribute\State.cs" />
-    <Compile Include="Server\UDP\ClientListener.cs" />
-    <Compile Include="Server\UDP\ClientSender.cs" />
+    <Compile Include="Server\UDP\FanoutListener.cs" />
+    <Compile Include="Server\UDP\FanoutBroadcaster.cs" />
     <Compile Include="Service\FanoutService.cs" />
+    <Compile Include="Service\IService.cs" />
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ManagedTaskRegistery.cs" />
     <Compile Include="Server\IServer.cs" />
@@ -79,7 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\gRPC\LobbyHandler.cs" />
     <Compile Include="Server\ServerStatus.cs" />
-    <Compile Include="Server\UDP\Broadcaster.cs" />
+    <Compile Include="Server\UDP\LobbyHostBroadcaster.cs" />
     <Compile Include="Server\UDP\ConnectionListener.cs" />
     <Compile Include="Threading\AsyncCallHandle.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
@@ -99,14 +100,14 @@
     <Folder Include="Server\TCP\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\MultiplayerNetworking\MultiplayerNetworking.csproj">
       <Project>{e9acf3b2-e0da-4ee1-8229-848959b0ec5a}</Project>
       <Name>MultiplayerNetworking</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

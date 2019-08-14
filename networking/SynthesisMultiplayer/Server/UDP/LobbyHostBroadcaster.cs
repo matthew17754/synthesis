@@ -1,43 +1,41 @@
-﻿using Google.Protobuf;
-using SynthesisMultiplayer.Attribute;
+﻿using MatchmakingService;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Util;
 using System;
-using System.IO;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-
-namespace SynthesisMultiplayer.Common
-{
-    public partial class Methods
-    {
-        public class ClientSender
-        {
-            public const string Send = "SEND";
-        }
-    }
-}
+using Google.Protobuf;
+using System.IO;
+using System.Net.Sockets;
+using SynthesisMultiplayer.Attribute;
+using System.Text;
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    public class ClientSender : ManagedUDPTask
+    public class LobbyHostBroadcaster : ManagedUDPTask
     {
+
         const int sendCallbackTimeout = 10000;
+        [SavedState]
+        Guid LobbyCode { get; set; }
+        [SavedState]
+        readonly SessionBroadcastMessage message;
         EventWaitHandle eventWaitHandle;
         bool Serving { get; set; }
         bool initialized { get; set; }
-        Channel<byte[]> sendQueue;
         public override bool Alive => initialized;
 
         public override bool Initialized => initialized;
 
-        public ClientSender(IPAddress ip, int port = 33001) :
-            base(ip, port)
+        public LobbyHostBroadcaster(int port = 33001) :
+            base(IPAddress.Parse("255.255.255.255"), port)
         {
-            sendQueue = new Channel<byte[]>();
+            LobbyCode = Guid.NewGuid();
+            message = new SessionBroadcastMessage
+            {
+                Api = "v1",
+                LobbyId = LobbyCode.ToString(),
+            };
         }
 
         public override void Initialize(Guid taskId)
@@ -48,35 +46,20 @@ namespace SynthesisMultiplayer.Server.UDP
             initialized = true;
         }
 
-        public void Send(string data)
-        {
-            this.Call(Methods.ClientSender.Send, Encoding.ASCII.GetBytes(data)).Wait();
-        }
-
         private void UDPSendCallback(IAsyncResult res)
         {
             if (Serving)
             {
-                using (var message = sendQueue.TryGet())
-                {
-                    if (message.Valid)
-                    {
-                        var outputData = message.Get();
-                        var bytesSent = Connection.EndSend(res);
-                        eventWaitHandle.WaitOne(sendCallbackTimeout);
-                        Connection.BeginSend(outputData,
-                            outputData.Length, Endpoint.Address.ToString(),
-                            Endpoint.Port, UDPSendCallback, null);
-                    }
-                }
+                var bytesSent = Connection.EndSend(res);
+                eventWaitHandle.WaitOne(sendCallbackTimeout);
+                var outputStream = new MemoryStream();
+                message.WriteTo(outputStream);
+                outputStream.Position = 0;
+                var outputData = new StreamReader(outputStream).ReadToEnd();
+                Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
+                    outputData.Length, Endpoint.Address.ToString(),
+                    Endpoint.Port, UDPSendCallback, null);
             }
-        }
-
-        [Callback(methodName: Methods.ClientSender.Send)]
-        public void SendCallback(ITaskContext context, AsyncCallHandle handle)
-        {
-            sendQueue.Send(handle.Arguments.Dequeue());
-            handle.Done();
         }
 
         [Callback(methodName: Methods.Server.Serve)]
@@ -84,10 +67,17 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Serving = true;
             Console.WriteLine("Broadcaster started");
-            Connection.BeginSend(new byte[] { },
-                0, Endpoint.Address.ToString(),
+            var outputStream = new MemoryStream();
+            message.WriteTo(outputStream);
+            outputStream.Position = 0;
+            var outputData = new StreamReader(outputStream).ReadToEnd();
+            Console.WriteLine("Sending: " + outputData);
+            Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
+                outputData.Length, Endpoint.Address.ToString(),
                 Endpoint.Port, UDPSendCallback, null);
+            outputStream.Dispose();
             handle.Done();
+
         }
 
         [Callback(methodName: Methods.Server.Shutdown)]
@@ -123,6 +113,5 @@ namespace SynthesisMultiplayer.Server.UDP
                 eventWaitHandle.Set();
             }
         }
-
     }
 }
