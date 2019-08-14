@@ -233,7 +233,7 @@ public class AnalyticsManager : MonoBehaviour {
                 }
             }
 
-            Debug.Log(result);
+            // Debug.Log(result);
         });
     }
 

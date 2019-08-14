@@ -65,6 +65,7 @@ namespace Synthesis.Camera
 
         private void Update()
         {
+            if (!SimUI.BotLoaded) return;
             //SelectingNode is enabled, users can pick the node for camera attachment
             if (SelectingNode)
             {

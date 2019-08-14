@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -78,6 +78,9 @@ namespace Synthesis.GUI
         private bool oppositeSide = false;
         public static bool inputPanelOn = false;
         public static bool changeAnalytics = true;
+        public static bool BotLoaded = false;
+
+        private static Queue<Tuple<Action, Action>> mainThreadQueue;
 
         private StateMachine tabStateMachine;
         string currentTab;
@@ -96,6 +99,12 @@ namespace Synthesis.GUI
         public delegate void EntryChanged(int a);
 
         public event EntryChanged OnResolutionSelection, OnScreenmodeSelection, OnQualitySelection;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            mainThreadQueue = new Queue<Tuple<Action, Action>>();
+        }
 
         private void Start()
         {
@@ -1100,5 +1109,24 @@ namespace Synthesis.GUI
                 + "Autodesk" + Path.DirectorySeparatorChar + "Synthesis" + Path.DirectorySeparatorChar + "MixAndMatch" + Path.DirectorySeparatorChar
                 + "DriveBases");
         }
+
+        public static void QueueOnMain(Action a, Action b)
+        {
+            mainThreadQueue.Enqueue(new Tuple<Action, Action>(a, b));
+        }
+
+        public static void QueueOnMain(Action a, bool wait)
+        {
+            if (wait) {
+                bool b = false;
+                QueueOnMain(() => a(), () => b = true);
+                while (!b) { }
+            } else
+            {
+                QueueOnMain(() => a(), () => { });
+            }
+        }
+
+        public static ref Queue<Tuple<Action, Action>> getMainThreadQueue() { return ref mainThreadQueue; }
     }
 }
