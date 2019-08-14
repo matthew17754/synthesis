@@ -34,23 +34,34 @@ namespace SynthesisMultiplayer.Client.UDP
             public UdpClient client;
             public IPEndPoint peer;
 
-            public Channel<byte[]> sender;
+            public Channel<(IPAddress Peer, byte[] Data)> sender;
         }
         private class LobbyConnectionData
         {
             public LobbyConnectionData()
             {
                 Mutex = new Mutex();
-                Lobbies = new Dictionary<Guid, (string Name, int Capacity, string Version, SessionStatus Status)>();
+                Lobbies = new List<SessionBroadcastMessage>();
+                LobbyConnectionInfo = new Dictionary<Guid, IPAddress>();
             }
             public Mutex Mutex;
-            public Dictionary<Guid, (string Name, int Capacity, string Version, SessionStatus Status)> Lobbies;
+            public List<SessionBroadcastMessage> Lobbies;
+            public Dictionary<Guid, IPAddress> LobbyConnectionInfo;
             public IPEndPoint LastEndpoint;
+            public bool HasLobby(string lobbyId)
+            {
+                foreach(var lobby in Lobbies)
+                {
+                    if (lobby.LobbyId == lobbyId)
+                        return true;
+                }
+                return false;
+            }
         }
         [SavedState]
         LobbyConnectionData LobbyData;
         bool disposed;
-        Channel<byte[]> Channel;
+        Channel<(IPAddress Peer, byte[] Data)> Channel;
         bool initialized { get; set; }
         bool Serving { get; set; }
 
@@ -71,11 +82,12 @@ namespace SynthesisMultiplayer.Client.UDP
                 var peer = context.peer;
                 var receivedData = udpClient.EndReceive(result, ref context.peer);
                 LobbyData.LastEndpoint = context.peer;
-                context.sender.Send(receivedData);
+                context.sender.Send((peer.Address, receivedData));
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveCallback, context);
             }
         }
+
         public override void Loop()
         {
             if (Serving)
@@ -87,15 +99,20 @@ namespace SynthesisMultiplayer.Client.UDP
                 }
                 try
                 {
-                    SessionBroadcastMessage decodedData = SessionBroadcastMessage.Parser.ParseFrom(newData);
-                    Console.WriteLine(decodedData.ToString());
-                    if (decodedData.Api != "v1")
+                    var (peer, data) = newData.Get();
+                    SessionBroadcastMessage decodedData = SessionBroadcastMessage.Parser.ParseFrom(data);
+                    if (!LobbyData.HasLobby(decodedData.LobbyId))
                     {
-                        Console.WriteLine("API version not recognized. Skipping");
-                        return;
+
+                        if (decodedData.Api != "v1")
+                        {
+                            Console.WriteLine("API version not recognized. Skipping");
+                            return;
+                        }
+                        Console.WriteLine("New lobby found: '{0}'. Lobby Id: '{1}'", peer.ToString(), decodedData.LobbyId);
+                        LobbyData.Lobbies.Add(decodedData);
+                        LobbyData.LobbyConnectionInfo[new Guid(decodedData.LobbyId)] = peer;
                     }
-                    LobbyData.Lobbies[new Guid(decodedData.LobbyId)] = 
-                        (decodedData.LobbyName, decodedData.Capacity, decodedData.Version, decodedData.Status);
                 }
                 catch (Exception)
                 {
@@ -177,7 +194,7 @@ namespace SynthesisMultiplayer.Client.UDP
             Id = taskId;
             initialized = true;
             LobbyData = new LobbyConnectionData();
-            Channel = new Channel<byte[]>();
+            Channel = new Channel<(IPAddress, byte[])>();
             Connection = new UdpClient(Endpoint);
         }
 

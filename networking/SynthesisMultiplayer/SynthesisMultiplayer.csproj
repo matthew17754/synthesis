@@ -68,10 +68,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attribute\Callback.cs" />
-    <Compile Include="Attribute\State.cs" />
+    <Compile Include="Attribute\SavedState.cs" />
     <Compile Include="Client\UDP\LobbyBroadcastListener.cs" />
     <Compile Include="Server\UDP\FanoutListener.cs" />
-    <Compile Include="Server\UDP\FanoutBroadcaster.cs" />
+    <Compile Include="Server\UDP\FanoutSender.cs" />
     <Compile Include="Service\FanoutService.cs" />
     <Compile Include="Service\IService.cs" />
     <Compile Include="Threading\ISupervisor.cs" />

@@ -28,7 +28,6 @@ namespace SynthesisMultiplayer.Server.UDP
 {
     public class LobbyBroadcaster : ManagedUdpTask
     {
-
         const int sendCallbackTimeout = 10000;
         [SavedState]
         Guid LobbyId { get; set; }

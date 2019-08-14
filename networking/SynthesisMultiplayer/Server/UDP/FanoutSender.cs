@@ -83,7 +83,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = true;
-            Console.WriteLine("Broadcaster started");
+            Console.WriteLine("Fanout sender started");
             Connection.BeginSend(new byte[] { },
                 0, Endpoint.Address.ToString(),
                 Endpoint.Port, UDPSendCallback, null);

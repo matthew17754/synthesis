@@ -4,6 +4,8 @@ package matchmaking;
 option go_package = "v1";
 option csharp_namespace = "MatchmakingService";
 
+import "google/protobuf/timestamp.proto";
+
 message SessionBroadcastMessage {
 	enum SessionStatus {
 		STARTING = 0;
@@ -16,9 +18,10 @@ message SessionBroadcastMessage {
 	string lobby_id = 2;
 	string lobby_name = 3;
 	int32 capacity = 4;
-	string version = 5;
-	repeated string tags = 6;
-	SessionStatus status = 7;
+	int32 current_users = 5;
+	string version = 6;
+	repeated string tags = 7;
+	SessionStatus status = 8;
 }
 
 message UDPValidatorMessage {
@@ -26,12 +29,35 @@ message UDPValidatorMessage {
 	string job_id = 2;
 }
 
-message ClientDataMessage {
+message ClientDataFrame {
 	enum MessageType {
 		DATA = 0;
 		CLOSE = 1;
+		SYNC = 2;
+		COMMAND = 3;
+	}
+	enum CommandType {
+		OUT_OF_SYNC = 0;
+		DISCONNECT = 1;
 	}
 	string api = 1;
 	string data = 2;
-	MessageType message_type = 3; 
+	CommandType command = 3;
+	google.protobuf.Timestamp client_send_time = 4;
+	google.protobuf.Timestamp server_send_time = 5;
+	MessageType message_type = 6; 
+}
+
+message ServerDataFrame {
+	enum MessageType {
+		DATA = 0;
+		CLOSE = 1;
+		SYNC = 2;
+		COMMAND = 3;
+	}
+	enum CommandType {
+		OUT_OF_SYNC = 0;
+		DISCONNECT = 1;
+	}
+	
 }
