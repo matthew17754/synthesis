@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Util
 {
-    public class Optional<T>
+    public class Optional<T> : IDisposable
     {
+        bool disposedValue = false;
         T value;
         public bool Valid { get; private set; }
 
@@ -51,6 +52,22 @@ namespace SynthesisMultiplayer.Util
                     return new Optional<R>(f(t));
                 return new Optional<R>();
             };
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+
+                }
+                disposedValue = true;
+            }
+        }
+        public void Dispose()
+        {
+            Dispose(true);
         }
     }
 }

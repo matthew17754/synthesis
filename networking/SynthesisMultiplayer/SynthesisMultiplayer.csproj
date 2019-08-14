@@ -69,6 +69,10 @@
   <ItemGroup>
     <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Attribute\State.cs" />
+    <Compile Include="Server\UDP\ClientListener.cs" />
+    <Compile Include="Server\UDP\ClientSender.cs" />
+    <Compile Include="Service\FanoutService.cs" />
+    <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ManagedTaskRegistery.cs" />
     <Compile Include="Server\IServer.cs" />
     <Compile Include="Common\ManagedUDPTask.cs" />
@@ -82,6 +86,7 @@
     <Compile Include="Threading\ITaskContext.cs" />
     <Compile Include="Threading\ManagedTaskHelper.cs" />
     <Compile Include="Threading\TaskContext.cs" />
+    <Compile Include="Util\Cast.cs" />
     <Compile Include="Util\Channel.cs" />
     <Compile Include="Util\Either.cs" />
     <Compile Include="Util\Optional.cs" />

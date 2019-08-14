@@ -1,29 +1,31 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Net;
-using System.Collections.Generic;
-using System.Threading;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Util;
-using MatchmakingService;
-using System.Text;
+﻿using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
+using SynthesisMultiplayer.Common;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Util;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Common
 {
     public partial class Methods
     {
-        public class ConnectionListener
+        public class ClientListener
         {
-            public const string GetConnectionInfo = "GET_CONNECTION_INFO";
+            public const string GetClientData = "GET_CLIENT_DATA";
         }
     }
 }
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    public class ConnectionListener : ManagedUDPTask
+    public class ClientListener : ManagedUDPTask
     {
         protected class ConnectionListenerContext : TaskContext
         {
@@ -32,31 +34,33 @@ namespace SynthesisMultiplayer.Server.UDP
 
             public Channel<byte[]> sender;
         }
-        private class ListenerServerData
+        private class ClientListenerData
         {
-            public ListenerServerData()
+            public ClientListenerData()
             {
+                Data = new Queue<byte[]>();
                 Mutex = new Mutex();
-                ConnectionInfo = new Dictionary<Guid, IPEndPoint>();
             }
             public Mutex Mutex;
-            public Dictionary<Guid, IPEndPoint> ConnectionInfo;
+            public Queue<byte[]> Data;
             public IPEndPoint LastEndpoint;
         }
         [SavedState]
-        ListenerServerData ServerData;
+        ClientListenerData ClientData;
         bool disposed;
         Channel<byte[]> Channel;
         bool initialized { get; set; }
         bool Serving { get; set; }
 
-        public override bool Alive => initialized; 
+        public override bool Alive => initialized;
         public override bool Initialized => initialized;
 
-        public ConnectionListener(int port = 33000) :
+        public ClientListener(int port = 33000) :
             base(IPAddress.Any, port)
         {
             Serving = false;
+            ClientData = new ClientListenerData();
+            Channel = new Channel<byte[]>();
         }
         private void ReceiveCallback(IAsyncResult result)
         {
@@ -66,15 +70,18 @@ namespace SynthesisMultiplayer.Server.UDP
                 var udpClient = context.client;
                 var peer = context.peer;
                 var receivedData = udpClient.EndReceive(result, ref context.peer);
-                ServerData.LastEndpoint = context.peer;
+                ClientData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
                 Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveCallback, context);
             }
         }
-        public IPEndPoint GetConnectionInfo(Guid id) =>
-            this.Call(Methods.ConnectionListener.GetConnectionInfo).Result;
+        public IPEndPoint PeekClientData(Guid id) =>
+            this.Call(Methods.ClientListener.GetClientData, false).Result;
+        public IPEndPoint GetClientData(Guid id) =>
+            this.Call(Methods.ClientListener.GetClientData, true).Result;
+
         public override void Loop()
         {
             if (Serving)
@@ -86,13 +93,13 @@ namespace SynthesisMultiplayer.Server.UDP
                 }
                 try
                 {
-                    var decodedData = UDPValidatorMessage.Parser.ParseFrom(newData);
+                    var decodedData = ClientDataMessage.Parser.ParseFrom(newData);
                     if (decodedData.Api != "v1")
                     {
                         Console.WriteLine("API version not recognized. Skipping");
                         return;
                     }
-                    ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
+                    ClientData.Data.Enqueue(Encoding.ASCII.GetBytes(decodedData.Data));
                 }
                 catch (Exception)
                 {
@@ -134,7 +141,7 @@ namespace SynthesisMultiplayer.Server.UDP
         [Callback(methodName: Methods.Server.Restart)]
         public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            if(handle.Arguments.Dequeue() == true)
+            if (handle.Arguments.Dequeue() == true)
             {
                 var state = StateBackup.DumpState(this);
                 Terminate();
@@ -147,12 +154,29 @@ namespace SynthesisMultiplayer.Server.UDP
 
         }
 
-        [Callback(methodName: Methods.ConnectionListener.GetConnectionInfo)]
-        public void GetConnectionInfoCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(methodName: Methods.ClientListener.GetClientData)]
+        public void GetClientDataCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            var jobId = handle.Arguments.Dequeue();
-            lock (ServerData.Mutex)
-                handle.Result = ServerData.ConnectionInfo.ContainsKey(jobId) ? ServerData.ConnectionInfo[jobId] : null;
+            var doBlock = handle.Arguments.Dequeue();
+            if (doBlock)
+            {
+                while (true)
+                {
+                    lock (ClientData.Mutex)
+                    {
+                        if (ClientData.Data.Count >= 1)
+                            handle.Result = ClientData.Data.Dequeue();
+                    }
+                    Thread.Sleep(50);
+                }
+            } else
+            {
+                lock(ClientData.Mutex)
+                {
+                    handle.Result = ClientData.Data.Count >= 1 ? ClientData.Data.Dequeue() : null;
+                    handle.Done();
+                }
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -175,7 +199,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Id = taskId;
             initialized = true;
-            ServerData = new ListenerServerData();
+            ClientData = new ClientListenerData();
             Channel = new Channel<byte[]>();
             Connection = new UdpClient(Endpoint);
         }
@@ -185,5 +209,6 @@ namespace SynthesisMultiplayer.Server.UDP
             this.Do(Methods.Server.Shutdown).Wait();
             Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
+
     }
 }

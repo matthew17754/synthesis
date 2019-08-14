@@ -1,5 +1,4 @@
 ﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Server;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Util;
 using System;
@@ -22,20 +21,11 @@ namespace SynthesisMultiplayer.Common
         public ManagedTaskStatus Status { get; protected set; }
         public Guid Id { get; protected set; }
 
-        public void SendMessage((string, AsyncCallHandle) message)
-        {
-            Messages.Send(message);
-        }
-        public Optional<(string, AsyncCallHandle)> GetMessage()
-        {
-            return Messages.TryGet();
-        }
-
         public abstract void ServeCallback(ITaskContext context, AsyncCallHandle handle);
         public abstract void RestartCallback(ITaskContext context, AsyncCallHandle handle);
         public abstract void ShutdownCallback(ITaskContext context, AsyncCallHandle handle);
         public abstract void Initialize(Guid taskId);
-        public abstract void Terminate(string reason = null, System.Collections.Generic.Dictionary<string, dynamic> state = null);
+        public abstract void Terminate(string reason = null, params dynamic[] args);
         public abstract void Loop();
 
         public ManagedUDPTask(IPAddress ip, int port = 33000)

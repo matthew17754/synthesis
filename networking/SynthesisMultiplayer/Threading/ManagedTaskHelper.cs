@@ -1,4 +1,5 @@
 ﻿using SynthesisMultiplayer.Common;
+using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,6 +20,7 @@ namespace SynthesisMultiplayer.Threading
         public static Task<dynamic> Call(string taskName, string method, params dynamic[] args) => GetTask(taskName).Call(method, args: args);
         public static Task Do(Guid taskId, string method, params dynamic[] args) => GetTask(taskId).Do(method, args: args);
         public static Task Do(string taskName, string method, params dynamic[] args) => GetTask(taskName).Do(method, args: args);
-
+        public static void Terminate(Guid taskId, params dynamic[] args) => ManagedTaskRegistry.TerminateTask(taskId, args);
+        public static void Terminate(string taskName, params dynamic[] args) => ManagedTaskRegistry.TerminateTask(taskName, args);
     }
 }

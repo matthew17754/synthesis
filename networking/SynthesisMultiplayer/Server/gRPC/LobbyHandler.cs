@@ -6,6 +6,9 @@ using Grpc;
 using System.Threading.Tasks;
 using SynthesisMultiplayer.Server.UDP;
 using SynthesisMultiplayer.Threading;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using Grpc.Core;
+using System.Threading;
 
 namespace SynthesisMultiplayer.Server.gRPC
 {
@@ -28,27 +31,49 @@ namespace SynthesisMultiplayer.Server.gRPC
 
         private class LobbyGrpcServer : ServerHost.ServerHostBase
         {
-            ConnectionListener ConnectionListener;
+            Guid ListenerPid;
             Dictionary<Guid, Job> Jobs;
 
-            public LobbyGrpcServer(ConnectionListener listener)
+            public LobbyGrpcServer(Guid listener)
             {
-                ConnectionListener = listener;
+                ListenerPid = listener;
                 Jobs = new Dictionary<Guid, Job>();
             }
 
-            public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest req, Grpc.Core.ServerCallContext context)
+            public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest req, ServerCallContext context)
             {
-                var job = new Job();
-                job.JobId = new Guid();
-                job.jobStatus = Job.Status.Started;
-                job.uri = new Uri(context.Host);
+                var job = new Job
+                {
+                    JobId = new Guid(),
+                    jobStatus = Job.Status.Started,
+                    uri = new Uri(context.Host)
+                };
                 Jobs.Add(job.JobId, job);
                 return Task.FromResult(new JoinLobbyResponse
                 {
                     Api = "v1",
                     JobId = job.JobId.ToString()
                 });
+            }
+
+            public override async Task JoinLobbyStatus(IAsyncStreamReader<JoinLobbyStatusRequest> requestStream, IServerStreamWriter<JoinLobbyStatusResponse> responseStream, ServerCallContext context)
+            {
+                while (await requestStream.MoveNext())
+                {
+                    var listener = (ConnectionListener) GetTask(ListenerPid);
+                    var connInfo = listener.GetConnectionInfo(new Guid(requestStream.Current.JobId));
+                    if (connInfo != null)
+                    {
+                        if (connInfo.Address == null)
+                        {
+                            await responseStream.WriteAsync(new JoinLobbyStatusResponse
+                            {
+                                Api = "v1",
+                            });
+                        }
+                        Thread.Sleep(50);
+                    }
+                }
             }
         }
 
@@ -60,34 +85,21 @@ namespace SynthesisMultiplayer.Server.gRPC
 
         public Guid Id => throw new NotImplementedException();
 
-        public void SendMessage((string, AsyncCallHandle) message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Util.Optional<(string, AsyncCallHandle)> GetMessage()
-        {
-            throw new NotImplementedException();
-        }
-
         public void Initialize(Guid taskId)
         {
             throw new NotImplementedException();
         }
 
-        public void Terminate(string reason = null, Dictionary<string, dynamic> state = null)
+        public void Terminate(string reason = null, params dynamic[] args)
         {
             throw new NotImplementedException();
         }
 
-        public void Loop()
-        {
-            throw new NotImplementedException();
-        }
+        public void Loop() { }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+
         }
     }
 }

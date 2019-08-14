@@ -144,12 +144,29 @@ message GetNewClientsResponse {
     repeated ConnectionInfo connection_info = 2;
     ErrorCode error_code = 3;
 }
+
+message ClientDataMessage {
+	enum MessageType {
+		DATA = 0;
+		CLOSE = 1;
+	}
+	string api = 1;
+	string data = 2;
+	MessageType message_type = 3; 
+}
+
+message HeartbeatMessage {
+	string api = 1;
+	string client_id = 2;
+}
+
 service ServerHost {
     rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse) {}
     rpc JoinLobbyStatus(stream JoinLobbyStatusRequest) returns (stream JoinLobbyStatusResponse) {}
 
     rpc RejoinLobby(RejoinLobbyRequest) returns (RejoinLobbyResponse) {}
     rpc RejoinLobbyStatus(stream RejoinLobbyStatusRequest) returns (stream RejoinLobbyStatusResponse) {}
+	rpc Heartbeat(stream HeartbeatMessage) returns (stream HeartbeatMessage) {}
 }
 service Matchmaker {
     rpc FindMatch(FindMatchRequest) returns (FindMatchResponse) {}

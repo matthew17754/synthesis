@@ -22,7 +22,7 @@ namespace SynthesisMultiplayer.Threading
         ManagedTaskStatus Status { get; }
 
         void Initialize(Guid id);
-        void Terminate(string reason = null, StateData state = null);
+        void Terminate(string reason = null, params dynamic[] args);
 
         void Loop();
     }
@@ -42,7 +42,6 @@ namespace SynthesisMultiplayer.Threading
     {
         public static Task Run(this IManagedTask task, Guid taskId, Channel<(string, AsyncCallHandle)> channel, ITaskContext context = null, int loopTime = 50, StateData state = null)
         {
-            context = context ?? new TaskContext();
             Callbacks callbacks = GenerateCallbackList(task);
             TaskMethods taskMethods = GenerateMethodList(task);
             return Task.Factory.StartNew((c) =>
@@ -60,18 +59,16 @@ namespace SynthesisMultiplayer.Threading
                             var (callback, handle) = message.Get();
                             if (!taskMethods.ContainsKey(callback))
                                 throw new Exception("Unknown callback: '" + callback + "'");
-                            callbacks[taskMethods[callback]](context, handle);
+                            callbacks[taskMethods[callback]](context ?? new TaskContext(), handle);
                         }
                         task.Loop();
-                        Thread.Sleep(loopTime);
-                        continue;
                     }
                     Thread.Sleep(loopTime);
                 }
             }, context);
         }
 
-        public static Task<dynamic> Call(this IManagedTask task, string method, int methodCallWaitPeriod = 50, params dynamic[] args)
+        public static Task<dynamic> Call(this IManagedTask task, string method, params dynamic[] args)
         {
             if (!task.Initialized)
             {
@@ -81,16 +78,7 @@ namespace SynthesisMultiplayer.Threading
             {
                 var handle = new AsyncCallHandle(args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
-                while (!handle.Ready)
-                {
-                    if (handle.Fault)
-                    {
-                        return null;
-                    }
-                    Thread.Sleep(methodCallWaitPeriod);
-                }
                 return handle.Result;
-
             });
         }
         public static Task Do(this IManagedTask task, string method, int methodCallWaitPeriod = 50, params dynamic[] args)
@@ -103,16 +91,8 @@ namespace SynthesisMultiplayer.Threading
             {
                 var handle = new AsyncCallHandle(args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
-                while (!handle.Ready)
-                {
-                    if (handle.Fault)
-                    {
-                        return;
-                    }
-                    Thread.Sleep(methodCallWaitPeriod);
-                }
+                handle.Wait();
                 return;
-
             });
         }
 

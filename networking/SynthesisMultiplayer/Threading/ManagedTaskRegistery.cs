@@ -27,6 +27,7 @@ namespace SynthesisMultiplayer.Threading
             TaskNames = new Dictionary<string, Guid>();
             TaskLock = new Mutex();
         }
+
         public static ManagedTaskRegistry Instance { get { return Internal.instance; } }
         private class Internal
         {
@@ -183,6 +184,25 @@ namespace SynthesisMultiplayer.Threading
             }
         }
 
+        public static void TerminateTask(Guid taskId, params dynamic[] args)
+        {
+            lock (Instance.TaskLock)
+            {
+                var (task, proc) = GetTask(taskId);
+                task.Terminate(args: args);
+                GetChannel(taskId).Close();
+            }
+        }
+
+        public static void TerminateTask(string taskName, params dynamic[] args)
+        {
+            lock (Instance.TaskLock)
+            {
+                var (task, proc) = GetTask(taskName);
+                task.Terminate(args: args);
+                GetChannel(taskName).Close();
+            }
+        }
         public static void Send(Guid taskId, (string, AsyncCallHandle) message)
         {
             if (GetTask(taskId).Item1 == null || GetTask(taskId).Item2 == null)
