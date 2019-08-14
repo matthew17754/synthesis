@@ -23,7 +23,7 @@ namespace SynthesisMultiplayer.Common
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    public class ConnectionListener : ManagedUDPTask
+    public class ConnectionListener : ManagedUdpTask
     {
         protected class ConnectionListenerContext : TaskContext
         {

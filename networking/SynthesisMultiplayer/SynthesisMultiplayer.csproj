@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Attribute\State.cs" />
+    <Compile Include="Client\UDP\LobbyBroadcastListener.cs" />
     <Compile Include="Server\UDP\FanoutListener.cs" />
     <Compile Include="Server\UDP\FanoutBroadcaster.cs" />
     <Compile Include="Service\FanoutService.cs" />
@@ -76,11 +77,11 @@
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ManagedTaskRegistery.cs" />
     <Compile Include="Server\IServer.cs" />
-    <Compile Include="Common\ManagedUDPTask.cs" />
+    <Compile Include="Common\ManagedUdpTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\gRPC\LobbyHandler.cs" />
     <Compile Include="Server\ServerStatus.cs" />
-    <Compile Include="Server\UDP\LobbyHostBroadcaster.cs" />
+    <Compile Include="Server\UDP\LobbyBroadcaster.cs" />
     <Compile Include="Server\UDP\ConnectionListener.cs" />
     <Compile Include="Threading\AsyncCallHandle.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
@@ -96,7 +97,6 @@
   <ItemGroup>
     <Folder Include="Client\gRPC\" />
     <Folder Include="Client\TCP\" />
-    <Folder Include="Client\UDP\" />
     <Folder Include="Server\TCP\" />
   </ItemGroup>
   <ItemGroup>

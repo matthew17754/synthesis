@@ -1,5 +1,0 @@
-syntax = "proto3";
-package matchmaking;
-
-option go_package = "v1";
-option csharp_namespace = "MatchmakingService";

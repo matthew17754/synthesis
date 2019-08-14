@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace SynthesisMultiplayer.Common
 {
-    public abstract class ManagedUDPTask : IServer
+    public abstract class ManagedUdpTask : IServer
     {
         private bool disposed;
         protected Mutex statusMutex;
@@ -28,7 +28,7 @@ namespace SynthesisMultiplayer.Common
         public abstract void Terminate(string reason = null, params dynamic[] args);
         public abstract void Loop();
 
-        public ManagedUDPTask(IPAddress ip, int port = 33000)
+        public ManagedUdpTask(IPAddress ip, int port = 33000)
         {
             statusMutex = new Mutex();
             Endpoint = new IPEndPoint(ip, port);

@@ -11,21 +11,23 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static MatchmakingService.SessionBroadcastMessage.Types;
 
 namespace SynthesisMultiplayer.Common
 {
     public partial class Methods
     {
-        public class ClientListener
+        public class LobbyBroadcastListener
         {
-            public const string GetClientData = "GET_CLIENT_DATA";
+            public const string GetLobbyList = "GET_LOBBY_LIST";
         }
     }
 }
 
-namespace SynthesisMultiplayer.Server.UDP
+
+namespace SynthesisMultiplayer.Client.UDP
 {
-    public class FanoutListener : ManagedUdpTask
+    public class LobbyBroadcastListener : ManagedUdpTask
     {
         protected class ConnectionListenerContext : TaskContext
         {
@@ -34,19 +36,19 @@ namespace SynthesisMultiplayer.Server.UDP
 
             public Channel<byte[]> sender;
         }
-        private class ClientListenerData
+        private class LobbyConnectionData
         {
-            public ClientListenerData()
+            public LobbyConnectionData()
             {
-                Data = new Queue<byte[]>();
                 Mutex = new Mutex();
+                Lobbies = new Dictionary<Guid, (string Name, int Capacity, string Version, SessionStatus Status)>();
             }
             public Mutex Mutex;
-            public Queue<byte[]> Data;
+            public Dictionary<Guid, (string Name, int Capacity, string Version, SessionStatus Status)> Lobbies;
             public IPEndPoint LastEndpoint;
         }
         [SavedState]
-        ClientListenerData ClientData;
+        LobbyConnectionData LobbyData;
         bool disposed;
         Channel<byte[]> Channel;
         bool initialized { get; set; }
@@ -55,12 +57,10 @@ namespace SynthesisMultiplayer.Server.UDP
         public override bool Alive => initialized;
         public override bool Initialized => initialized;
 
-        public FanoutListener(int port = 33000) :
+        public LobbyBroadcastListener(int port = 33001) :
             base(IPAddress.Any, port)
         {
             Serving = false;
-            ClientData = new ClientListenerData();
-            Channel = new Channel<byte[]>();
         }
         private void ReceiveCallback(IAsyncResult result)
         {
@@ -70,18 +70,12 @@ namespace SynthesisMultiplayer.Server.UDP
                 var udpClient = context.client;
                 var peer = context.peer;
                 var receivedData = udpClient.EndReceive(result, ref context.peer);
-                ClientData.LastEndpoint = context.peer;
+                LobbyData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
-                Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveCallback, context);
             }
         }
-        public IPEndPoint PeekClientData(Guid id) =>
-            this.Call(Methods.ClientListener.GetClientData, false).Result;
-        public IPEndPoint GetClientData(Guid id) =>
-            this.Call(Methods.ClientListener.GetClientData, true).Result;
-
         public override void Loop()
         {
             if (Serving)
@@ -93,13 +87,15 @@ namespace SynthesisMultiplayer.Server.UDP
                 }
                 try
                 {
-                    var decodedData = ClientDataMessage.Parser.ParseFrom(newData);
+                    SessionBroadcastMessage decodedData = SessionBroadcastMessage.Parser.ParseFrom(newData);
+                    Console.WriteLine(decodedData.ToString());
                     if (decodedData.Api != "v1")
                     {
                         Console.WriteLine("API version not recognized. Skipping");
                         return;
                     }
-                    ClientData.Data.Enqueue(Encoding.ASCII.GetBytes(decodedData.Data));
+                    LobbyData.Lobbies[new Guid(decodedData.LobbyId)] = 
+                        (decodedData.LobbyName, decodedData.Capacity, decodedData.Version, decodedData.Status);
                 }
                 catch (Exception)
                 {
@@ -151,32 +147,13 @@ namespace SynthesisMultiplayer.Server.UDP
             Terminate();
             Initialize(Id);
             handle.Done();
-
         }
 
-        [Callback(methodName: Methods.ClientListener.GetClientData)]
-        public void GetClientDataCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(methodName: Methods.LobbyBroadcastListener.GetLobbyList)]
+        public void GetLobbyListCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            var doBlock = handle.Arguments.Dequeue();
-            if (doBlock)
-            {
-                while (true)
-                {
-                    lock (ClientData.Mutex)
-                    {
-                        if (ClientData.Data.Count >= 1)
-                            handle.Result = ClientData.Data.Dequeue();
-                    }
-                    Thread.Sleep(50);
-                }
-            } else
-            {
-                lock(ClientData.Mutex)
-                {
-                    handle.Result = ClientData.Data.Count >= 1 ? ClientData.Data.Dequeue() : null;
-                    handle.Done();
-                }
-            }
+            lock (LobbyData.Mutex)
+                handle.Result = LobbyData.Lobbies;
         }
 
         protected override void Dispose(bool disposing)
@@ -199,7 +176,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Id = taskId;
             initialized = true;
-            ClientData = new ClientListenerData();
+            LobbyData = new LobbyConnectionData();
             Channel = new Channel<byte[]>();
             Connection = new UdpClient(Endpoint);
         }
@@ -209,6 +186,5 @@ namespace SynthesisMultiplayer.Server.UDP
             this.Do(Methods.Server.Shutdown).Wait();
             Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
-
     }
 }

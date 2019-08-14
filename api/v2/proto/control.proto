@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+option go_package = "v2";
+option csharp_namespace = "EmulationCommunication";
+
+import "google/protobuf/any.proto";
+
+// General input type
+message Input {
+    string name  = 1;
+    string type  = 2;
+    string class = 3;
+
+}
+
+// Controls info
+message UserInput {
+    string type  = 1;
+    string class = 2;
+    oneof input {
+        BooleanInput bool_value = 3;
+        IntegerInput int_value  = 4;
+        FloatValue float_value  = 5;
+        Vec2iInput vec2i_input  = 6;
+        Vec2fInput vec2f_input  = 7;
+        Vec3iInput vec3i_input  = 8;
+        Vec3fInput vec3f_input  = 9;
+    }
+}
+
+// Sensors, DIO, PWM, any physical inputs to the control system
+message HardwareInput {
+    string name = 1;
+    string type = 2;
+    string class = 3;
+    Any value = 4;
+}
+
+message BooleanInput {
+    bool value = 1;
+}
+
+message IntegerInput {
+    int value = 1;
+}
+
+message FloatInput {
+    float32 value = 1;
+}
+
+message Vec3iInput {
+    int x = 1;
+    int y = 2;
+    int z = 3;
+}
+
+message Vec3fInput {
+    float32 x = 1;
+    float32 y = 2;
+    float32 z = 3;
+}
+
+message Vec2iInput {
+    int x = 1;
+    int y = 2;
+}
+ 
+message Vec2fInput {
+    float32 x = 1;
+    float32 y = 2;
+}
+
+message InputData {
+    map<string, UserInput> data = 1;
+}
+message Output {
+    string type     = 1;
+    string class    = 2;
+    string encoding = 3;
+    oneof output {
+        BoolOutput bool_output = 4;
+        IntegerOutput int_output = 5;
+        FloatOutput float_output = 6;
+        BytestreamOutput bytestream_output = 7;
+    }
+}
+
+message BytestreamOutput {
+    bytes value = 1;
+}
+
+message IntegerOutput {
+    sint64 value = 1;
+}
+
+message BoolOutput {
+    bool value = 1;
+}
+
+message FloatOutput {
+    double value = 1;
+}
+
+message OutputData {
+    map<string, Output> data = 1;
+}

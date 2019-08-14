@@ -3,3 +3,35 @@ package matchmaking;
 
 option go_package = "v1";
 option csharp_namespace = "MatchmakingService";
+
+message SessionBroadcastMessage {
+	enum SessionStatus {
+		STARTING = 0;
+		SERVING = 1;
+		FULL = 2;
+		CLOSED = 3;
+		NOT_SERVING = 4;
+	}
+	string api = 1;
+	string lobby_id = 2;
+	string lobby_name = 3;
+	int32 capacity = 4;
+	string version = 5;
+	repeated string tags = 6;
+	SessionStatus status = 7;
+}
+
+message UDPValidatorMessage {
+	string api = 1;
+	string job_id = 2;
+}
+
+message ClientDataMessage {
+	enum MessageType {
+		DATA = 0;
+		CLOSE = 1;
+	}
+	string api = 1;
+	string data = 2;
+	MessageType message_type = 3; 
+}

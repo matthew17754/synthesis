@@ -23,7 +23,7 @@ namespace SynthesisMultiplayer.Common
 
 namespace SynthesisMultiplayer.Server.UDP
 {
-    public class FanoutSender : ManagedUDPTask
+    public class FanoutSender : ManagedUdpTask
     {
         const int sendCallbackTimeout = 10000;
         EventWaitHandle eventWaitHandle;

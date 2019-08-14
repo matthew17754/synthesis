@@ -27,10 +27,10 @@ namespace SynthesisMultiplayer.Service
 {
     public class FanoutService : IManagedTask, ISupervisor
     {
-        bool initialized { get; set; }
-        Guid taskId { get; set; }
-        public bool Alive => initialized;
-        public bool Initialized => initialized;
+        bool IsInitialized { get; set; }
+        Guid TaskId { get; set; }
+        public bool Alive => IsInitialized;
+        public bool Initialized => IsInitialized;
 
         Guid ClientListener, ConnectionListener;
         List<Guid> Senders;
@@ -42,7 +42,7 @@ namespace SynthesisMultiplayer.Service
             ConnectionListener = connectionListenerPid;
         }
 
-        public Guid Id => taskId;
+        public Guid Id => TaskId;
 
         public ManagedTaskStatus Status { get; protected set; }
 
@@ -53,9 +53,9 @@ namespace SynthesisMultiplayer.Service
 
         public void Initialize(Guid id)
         {
-            taskId = id;
+            TaskId = id;
             Status = ManagedTaskStatus.Running;
-            initialized = true;
+            IsInitialized = true;
         }
 
         public void Loop()

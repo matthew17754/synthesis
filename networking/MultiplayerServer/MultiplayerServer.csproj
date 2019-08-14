@@ -63,6 +63,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MultiplayerNetworking\MultiplayerNetworking.csproj">
+      <Project>{e9acf3b2-e0da-4ee1-8229-848959b0ec5a}</Project>
+      <Name>MultiplayerNetworking</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SynthesisMultiplayer\SynthesisMultiplayer.csproj">
       <Project>{c7689d11-d5be-4e0f-9268-42b96000e7d4}</Project>
       <Name>SynthesisMultiplayer</Name>

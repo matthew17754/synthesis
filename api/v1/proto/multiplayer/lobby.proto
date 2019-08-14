@@ -1,0 +1,71 @@
+syntax = "proto3";
+package matchmaking;
+
+option go_package = "v1";
+option csharp_namespace = "MatchmakingService";
+
+message JoinLobbyRequest {
+    string api = 1;
+    string lobby_key = 2;
+}
+
+message JoinLobbyResponse {
+	enum ErrorCode {
+		INTERNAL_ERROR = 0;
+	}
+    string api = 1;
+    string job_id = 2;
+	ErrorCode error_code = 3;
+}
+
+message JoinLobbyStatusRequest {
+	string api = 1;
+	string job_id = 2;
+}
+message JoinLobbyStatusResponse {
+	enum ErrorCode {
+		INTERNAL_ERROR = 0;
+	}
+
+	string api = 1;
+	ErrorCode error_code = 2;
+}
+
+message RejoinLobbyRequest {
+	string api = 1;
+}
+message RejoinLobbyResponse {
+	enum ErrorCode {
+		INTERNAL_ERROR = 0;
+	}
+
+	string api = 1;
+	ErrorCode error_code = 2;
+}
+
+message RejoinLobbyStatusRequest {
+	string api = 1;
+	string job_id = 2;
+}
+message RejoinLobbyStatusResponse {
+	enum ErrorCode {
+		INTERNAL_ERROR = 0;
+	}
+
+	string api = 1;
+	ErrorCode error_code = 2;
+}
+
+message HeartbeatMessage {
+	string api = 1;
+	string client_id = 2;
+}
+
+service ServerHost {
+    rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse) {}
+    rpc JoinLobbyStatus(stream JoinLobbyStatusRequest) returns (stream JoinLobbyStatusResponse) {}
+
+    rpc RejoinLobby(RejoinLobbyRequest) returns (RejoinLobbyResponse) {}
+    rpc RejoinLobbyStatus(stream RejoinLobbyStatusRequest) returns (stream RejoinLobbyStatusResponse) {}
+	rpc Heartbeat(stream HeartbeatMessage) returns (stream HeartbeatMessage) {}
+}

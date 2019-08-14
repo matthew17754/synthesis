@@ -26,6 +26,7 @@ namespace SynthesisMultiplayer.Threading
             set
             {
                 result = value;
+                ready = true;
             }
         }
         public Queue<dynamic> Arguments { get; set; }

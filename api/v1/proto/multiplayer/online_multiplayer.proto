@@ -4,6 +4,8 @@ package matchmaking;
 option go_package = "v1";
 option csharp_namespace = "MatchmakingService";
 
+import "lobby.proto";
+
 message UserInfo {
     string username = 1;
 }
@@ -12,16 +14,6 @@ message ConnectionInfo {
     string public_ip = 1;
     string port = 2;
     UserInfo user_info = 3;
-}
-
-message UDPValidatorMessage {
-	string api = 1;
-	string job_id = 2;
-}
-
-message SessionBroadcastMessage {
-	string api = 1;
-	string lobby_id = 2;
 }
 
 message FindMatchRequest {
@@ -62,59 +54,6 @@ message FindMatchStatusResponse {
     ErrorCode error_code = 4;
 }
 
-message JoinLobbyRequest {
-    string api = 1;
-    string lobby_key = 2;
-    ConnectionInfo connection_info = 3;
-}
-
-message JoinLobbyResponse {
-	enum ErrorCode {
-		INTERNAL_ERROR = 0;
-	}
-    string api = 1;
-    string job_id = 2;
-	ErrorCode error_code = 3;
-}
-
-message JoinLobbyStatusRequest {
-	string api = 1;
-	string job_id = 2;
-}
-message JoinLobbyStatusResponse {
-	enum ErrorCode {
-		INTERNAL_ERROR = 0;
-	}
-
-	string api = 1;
-	ErrorCode error_code = 2;
-}
-
-message RejoinLobbyRequest {
-	string api = 1;
-}
-message RejoinLobbyResponse {
-	enum ErrorCode {
-		INTERNAL_ERROR = 0;
-	}
-
-	string api = 1;
-	ErrorCode error_code = 2;
-}
-
-message RejoinLobbyStatusRequest {
-	string api = 1;
-	string job_id = 2;
-}
-message RejoinLobbyStatusResponse {
-	enum ErrorCode {
-		INTERNAL_ERROR = 0;
-	}
-
-	string api = 1;
-	ErrorCode error_code = 2;
-}
-
 message HostLobbyRequest {
     string api = 1;
     string session_token = 2;
@@ -145,29 +84,6 @@ message GetNewClientsResponse {
     ErrorCode error_code = 3;
 }
 
-message ClientDataMessage {
-	enum MessageType {
-		DATA = 0;
-		CLOSE = 1;
-	}
-	string api = 1;
-	string data = 2;
-	MessageType message_type = 3; 
-}
-
-message HeartbeatMessage {
-	string api = 1;
-	string client_id = 2;
-}
-
-service ServerHost {
-    rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse) {}
-    rpc JoinLobbyStatus(stream JoinLobbyStatusRequest) returns (stream JoinLobbyStatusResponse) {}
-
-    rpc RejoinLobby(RejoinLobbyRequest) returns (RejoinLobbyResponse) {}
-    rpc RejoinLobbyStatus(stream RejoinLobbyStatusRequest) returns (stream RejoinLobbyStatusResponse) {}
-	rpc Heartbeat(stream HeartbeatMessage) returns (stream HeartbeatMessage) {}
-}
 service Matchmaker {
     rpc FindMatch(FindMatchRequest) returns (FindMatchResponse) {}
     rpc FindMatchStatus(stream FindMatchStatusRequest) returns (stream FindMatchResponse) {}
