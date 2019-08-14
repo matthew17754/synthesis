@@ -45,6 +45,8 @@ namespace Synthesis.GUI
 
             public GameObject gameObject;
 
+            private int maxCapacity = HostGameProperties.MAX_CAPACITY;
+
             public ServerEntry(string nameValue, string idValue, int capacityValue, string versionValue, string tagsValue, string statusValue)
             {
                 gameObject = Instantiate(Instance.ServerEntryPrefab, Instance.serverViewport.transform);
@@ -55,12 +57,23 @@ namespace Synthesis.GUI
                 id = Auxiliary.FindObject(gameObject, "ID").GetComponent<InputField>();
                 id.text = idValue;
                 capacity = Auxiliary.FindObject(gameObject, "Capacity").GetComponent<InputField>();
-                capacity.text = capacityValue.ToString();
+                maxCapacity = Math.Min(Math.Max(capacityValue, 0), HostGameProperties.MAX_CAPACITY);
+                SetCurrentUserCount(0);
                 version = Auxiliary.FindObject(gameObject, "Version").GetComponent<InputField>();
                 version.text = versionValue;
                 tags = Auxiliary.FindObject(gameObject, "Tags").GetComponent<InputField>();
                 tags.text = tagsValue;
                 status = Auxiliary.FindObject(gameObject, "Status").GetComponent<InputField>();
+                UpdateStatus(statusValue);
+            }
+
+            public void SetCurrentUserCount(int count)
+            {
+                capacity.text = count.ToString() + "/" + maxCapacity.ToString();
+            }
+
+            public void UpdateStatus(string statusValue)
+            {
                 status.text = statusValue;
             }
         }
@@ -112,7 +125,7 @@ namespace Synthesis.GUI
                 return addedChar;
             };
 
-            AddServerEntry("", "", 1, "", "", ""); // TODO - for testing
+            AddServerEntry("Test Lobby", "12334", 12, States.MainState.CurrentVersion, "test-field", "Connecting"); // TODO - for testing
         }
 
         public void Update()
@@ -153,6 +166,7 @@ namespace Synthesis.GUI
         {
             if (!lastSetPixelRect.Equals(UnityEngine.Camera.main.pixelRect) || forceUpdate)
             {
+                // TODO
             }
         }
 
