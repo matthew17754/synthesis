@@ -20,7 +20,7 @@ namespace Synthesis.GUI
         private GameObject joinPanel;
         private GameObject serverViewport;
 
-        public GameObject ServerInfoPrefab;
+        public GameObject ServerEntryPrefab;
 
         public struct HostGameProperties
         {
@@ -29,36 +29,43 @@ namespace Synthesis.GUI
             public InputField password;
             public InputField capactiy;
             public InputField tags;
-            public const int MAX_CAPACITY = 6;
+            public const int MAX_CAPACITY = 12;
             public const int MIN_CAPACITY = 1;
         }
 
-        public class ServerInfo
+        public class ServerEntry
         {
             public InputField name;
             public InputField id;
-            public InputField capactiy;
+            public InputField capacity;
             public InputField version;
             public InputField tags;
             public InputField status;
 
             public GameObject gameObject;
 
-            public ServerInfo()
+            public ServerEntry(string nameValue, string idValue, int capacityValue, string versionValue, string tagsValue, string statusValue)
             {
-                gameObject = Instantiate(Instance.ServerInfoPrefab, Instance.serverViewport.transform);
+                gameObject = Instantiate(Instance.ServerEntryPrefab, Instance.serverViewport.transform);
+                gameObject.name = "Server Entry";
 
                 name = Auxiliary.FindObject(gameObject, "Name").GetComponent<InputField>();
+                name.text = nameValue;
                 id = Auxiliary.FindObject(gameObject, "ID").GetComponent<InputField>();
-                capactiy = Auxiliary.FindObject(gameObject, "Capacity").GetComponent<InputField>();
+                id.text = idValue;
+                capacity = Auxiliary.FindObject(gameObject, "Capacity").GetComponent<InputField>();
+                capacity.text = capacityValue.ToString();
                 version = Auxiliary.FindObject(gameObject, "Version").GetComponent<InputField>();
+                version.text = versionValue;
                 tags = Auxiliary.FindObject(gameObject, "Tags").GetComponent<InputField>();
+                tags.text = tagsValue;
                 status = Auxiliary.FindObject(gameObject, "Status").GetComponent<InputField>();
+                status.text = statusValue;
             }
         }
 
         private HostGameProperties hostGameProperties;
-        private List<ServerInfo> serverList = new List<ServerInfo>();
+        private List<ServerEntry> serverList = new List<ServerEntry>();
 
         private Rect lastSetPixelRect;
         private Assets.Scripts.GUI.MultiplayerToolbarState.TabState? lastTabState;
@@ -98,13 +105,13 @@ namespace Synthesis.GUI
                 if (int.Parse(input + addedChar) < HostGameProperties.MIN_CAPACITY) // Ensure is in valid range
                 {
                     hostGameProperties.capactiy.text = HostGameProperties.MIN_CAPACITY.ToString();
-                    UserMessageManager.Dispatch("Maximum capacity is " + HostGameProperties.MIN_CAPACITY, 3);
+                    UserMessageManager.Dispatch("Minimum capacity is " + HostGameProperties.MIN_CAPACITY, 3);
                     return '\0';
                 }
                 return addedChar;
             };
 
-            AddServerInfo(); // TODO - for testing
+            AddServerEntry("", "", 1, "", "", ""); // TODO - for testing
         }
 
         public void Update()
@@ -141,9 +148,9 @@ namespace Synthesis.GUI
             }
         }
 
-        private void AddServerInfo()
+        private void AddServerEntry(string name, string id, int capacity, string version, string tags, string status)
         {
-            serverList.Add(new ServerInfo()); // TODO
+            serverList.Add(new ServerEntry(name, id, capacity, version, tags, status)); // TODO
         }
     }
 }

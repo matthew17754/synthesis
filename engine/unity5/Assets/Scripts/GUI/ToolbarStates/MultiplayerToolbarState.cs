@@ -35,8 +35,8 @@ namespace Assets.Scripts.GUI
             hostButton = Auxiliary.FindObject(multiplayerToolbar, "HostMultiplayerButton");
             joinButton = Auxiliary.FindObject(multiplayerToolbar, "JoinMultiplayerButton");
 
-            selectedButtonImage = localButton.GetComponent<Button>().spriteState.highlightedSprite;
-            unselectedButtonImage = localButton.GetComponent<Button>().image.sprite;
+            selectedButtonImage = Resources.Load<Sprite>("Images/New Textures/greenButton");
+            unselectedButtonImage = Resources.Load<Sprite>("Images/New Textures/TopbarHighlight");
 
             tabState = TabState.Local;
         }
