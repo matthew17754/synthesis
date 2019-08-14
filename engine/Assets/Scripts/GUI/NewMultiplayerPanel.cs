@@ -1,5 +1,6 @@
 ﻿using Synthesis.Input;
 using Synthesis.Utils;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -116,7 +117,14 @@ namespace Synthesis.GUI
 
         public void Update()
         {
-            mainPanel.SetActive(SimUI.getSimUI().getTabStateMachine().CurrentState is Assets.Scripts.GUI.MultiplayerToolbarState);
+            try
+            {
+                mainPanel.SetActive(SimUI.getSimUI().getTabStateMachine().CurrentState is Assets.Scripts.GUI.MultiplayerToolbarState);
+            }
+            catch(Exception)
+            {
+                mainPanel.SetActive(false);
+            }
 
             InputControl.freeze = mainPanel.activeSelf; // TODO not all controls use InputControl (can be freezed)
             DynamicCamera.ControlEnabled = !mainPanel.activeSelf;
