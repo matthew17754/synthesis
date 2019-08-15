@@ -20,6 +20,7 @@ using Assets.Scripts.GUI;
 using Synthesis.Field;
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Synthesis.GUI
 {
@@ -73,12 +74,15 @@ namespace Synthesis.GUI
         GameObject tabs;
         GameObject emulationTab;
 
+        public static readonly object mainQueueObj = new object();
+
         private bool freeroamWindowClosed = false;
         private bool overviewWindowClosed = false;
         private bool oppositeSide = false;
         public static bool inputPanelOn = false;
         public static bool changeAnalytics = true;
         public static bool BotLoaded = false;
+        public static bool FieldLoaded = false;
 
         private static Queue<Tuple<Action, Action>> mainThreadQueue;
 
@@ -456,8 +460,7 @@ namespace Synthesis.GUI
                 robotCameraManager.DetachCamerasFromRobot(State.ActiveRobot);
                 sensorManager.RemoveSensorsFromRobot(State.ActiveRobot);
 
-                State.ChangeRobot(directory, false);
-                RobotTypeManager.IsMixAndMatch = false;
+                State.ChangeRobotAsync(directory, false, result => { RobotTypeManager.IsMixAndMatch = false; });
             }
             else
             {
@@ -479,15 +482,18 @@ namespace Synthesis.GUI
             if (mamRobot != null && mamRobot.RobotHasManipulator)
                 State.DeleteManipulatorNodes();
 
-            if (!State.ChangeRobot(robotDirectory, true)) {
-                AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
-            }
-
-            //If the new robot has a manipulator, load the manipulator
-            if (RobotTypeManager.HasManipulator)
-                State.LoadManipulator(manipulatorDirectory);
-            else if (mamRobot != null)
-                mamRobot.RobotHasManipulator = false;
+            State.ChangeRobotAsync(robotDirectory, true, r => {
+                if (!r)
+                {
+                    AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
+                } else
+                {
+                    if (RobotTypeManager.HasManipulator)
+                        State.LoadManipulator(manipulatorDirectory);
+                    else if (mamRobot != null)
+                        mamRobot.RobotHasManipulator = false;
+                }
+            });
         }
 
         public void ToggleChangeRobotPanel()
@@ -940,6 +946,8 @@ namespace Synthesis.GUI
         /// </summary>
         private void UpdateSpawnpointWindow()
         {
+            if (State.ActiveRobot == null) return;
+
             if (State.ActiveRobot.IsResetting)
             {
                 spawnpointPanel.SetActive(true);
@@ -1112,7 +1120,10 @@ namespace Synthesis.GUI
 
         public static void QueueOnMain(Action a, Action b)
         {
-            mainThreadQueue.Enqueue(new Tuple<Action, Action>(a, b));
+            lock (mainQueueObj)
+            {
+                mainThreadQueue.Enqueue(new Tuple<Action, Action>(a, b));
+            }
         }
 
         public static void QueueOnMain(Action a, bool wait)

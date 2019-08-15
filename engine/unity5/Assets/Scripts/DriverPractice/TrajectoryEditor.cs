@@ -57,7 +57,7 @@ namespace Synthesis.DriverPractice
 
         void Update()
         {
-            if (!SimUI.BotLoaded) return;
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
 
             if (mainState == null)
                 mainState = StateMachine.SceneGlobal.FindState<MainState>();

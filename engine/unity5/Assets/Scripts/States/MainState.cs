@@ -27,6 +27,7 @@ using System.Net.Security;
 using Newtonsoft.Json;
 using Assets.Scripts;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Synthesis.States
 {
@@ -60,7 +61,9 @@ namespace Synthesis.States
         /// Used for accessing the active robot in this state.
         /// </summary>
         /// <returns></returns>
-        public GameObject Robot => ActiveRobot.transform.GetChild(0).gameObject ?? ActiveRobot.gameObject;
+        public GameObject Robot => ActiveRobot.transform.GetChild(0).gameObject ?? (ActiveRobot.gameObject ?? null);
+
+        public GameObject loadingPanel;
 
         /// <summary>
         /// True if the robot is not resetting.
@@ -98,6 +101,8 @@ namespace Synthesis.States
         //public bool isEmulationDownloaded = true;
 
         bool reset;
+
+        private Action postLoad;
 
         public static List<List<GameObject>> spawnedGamepieces = new List<List<GameObject>>() { new List<GameObject>(), new List<GameObject>() };
         /// <summary>
@@ -155,11 +160,18 @@ namespace Synthesis.States
             physicsWorld = BPhysicsWorld.Get();
             ((DynamicsWorld)physicsWorld.world).SetInternalTickCallback(BPhysicsTickListener.Instance.PhysicsTick);
             lastFrameCount = physicsWorld.frameCount;
-            physicsWorld.gravity = Vector3.zero;
+            //physicsWorld.gravity = Vector3.zero;
 
             //setting up raycast robot tick callback
             BPhysicsTickListener.Instance.OnTick -= BRobotManager.Instance.UpdateRaycastRobots;
             BPhysicsTickListener.Instance.OnTick += BRobotManager.Instance.UpdateRaycastRobots;
+
+            postLoad = () =>
+            {
+                physicsWorld.gravity = new Vector3(0, -9.8f, 0);
+                physicsWorld.gameObject.SetActive(false);
+                physicsWorld.gameObject.SetActive(true);
+            };
 
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
             string selectedReplay = PlayerPrefs.GetString("simSelectedReplay");
@@ -168,24 +180,29 @@ namespace Synthesis.States
             {
                 Tracking = true;
 
-                // FIELD
-
                 if (timesLoaded > 0)
                 {
-                    if (!LoadField(PlayerPrefs.GetString("simSelectedField")))
+                    //loadingPanel = Auxiliary.FindObject("LoadingPanel");
+                    //loadingPanel.SetActive(true);
+
+                    LoadFieldAsync(PlayerPrefs.GetString("simSelectedField"), r =>
                     {
-                        AppModel.ErrorToMenu("Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
-                        return;
-                    }
-                    else
-                    {
-                        MovePlane();
-                    }
+                        if (!r)
+                        {
+                            AppModel.ErrorToMenu("Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
+                        } else
+                        {
+                            MovePlane();
+                        }
+                    });
                 }
                 else
                 {
                     timesLoaded++;
+                    SimUI.FieldLoaded = true;
                 }
+
+                // ROBOT
 
                 try
                 {
@@ -199,11 +216,6 @@ namespace Synthesis.States
                             {
                                 Debug.Log(LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
                             }
-
-                            dynamicCamera = DynamicCameraObject.AddComponent<DynamicCamera>();
-                            DynamicCamera.ControlEnabled = true;
-
-                            physicsWorld.gravity = new Vector3(0, -9.8f, 0);
 
                             SimUI.BotLoaded = true;
                             GameObject.Find("RobotCameraList").GetComponent<RobotCameraManager>().enabled = true;
@@ -226,8 +238,8 @@ namespace Synthesis.States
 
             //initializes the dynamic camera
             DynamicCameraObject = GameObject.Find("Main Camera");
-            //dynamicCamera = DynamicCameraObject.AddComponent<DynamicCamera>();
-            //DynamicCamera.ControlEnabled = true;
+            dynamicCamera = DynamicCameraObject.AddComponent<DynamicCamera>();
+            DynamicCamera.ControlEnabled = true;
 
             sensorManager = GameObject.Find("SensorManager").GetComponent<SensorManager>();
             sensorManagerGUI = StateMachine.gameObject.GetComponent<SensorManagerGUI>();
@@ -267,11 +279,38 @@ namespace Synthesis.States
         {
             // PROCESS QUEUE
 
-            if (SimUI.getMainThreadQueue().Count > 0)
+            float start = Time.realtimeSinceStartup;
+            float maxFrame = (1f / 30f);
+
+            //Debug.Log((start + maxFrame) - Time.unscaledTime);
+
+            while (start + maxFrame > Time.realtimeSinceStartup)
             {
-                Tuple<Action, Action> act = SimUI.getMainThreadQueue().Dequeue();
+                Tuple<Action, Action> act = null;
+                lock (SimUI.mainQueueObj)
+                {
+                    if (SimUI.getMainThreadQueue().Count > 0)
+                    {
+                        act = SimUI.getMainThreadQueue().Dequeue();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
                 act.Item1();
                 act.Item2();
+
+                //Debug.Log(((start + maxFrame) - Time.realtimeSinceStartup) + " Time left to work");
+            }
+
+            if (postLoad != null)
+            {
+                if (SimUI.FieldLoaded && SimUI.BotLoaded)
+                {
+                    postLoad();
+                    postLoad = null;
+                }
             }
 
             if (ActiveRobot == null)
@@ -432,6 +471,44 @@ namespace Synthesis.States
             return fieldDefinition.CreateMesh(directory + Path.DirectorySeparatorChar + "mesh.bxda");
         }
 
+        public async void LoadFieldAsync(string directory, Action<bool> result)
+        {
+            await Task.Factory.StartNew(() =>
+            {
+                SimUI.FieldLoaded = false;
+
+                fieldPath = directory;
+
+                SimUI.QueueOnMain(() => fieldObject = new GameObject("Field"), true);
+
+                FieldDefinition.Factory = delegate (Guid guid, string name)
+                {
+                    return new UnityFieldDefinition(guid, name);
+                };
+
+                if (!File.Exists(directory + Path.DirectorySeparatorChar + "definition.bxdf")) { SimUI.QueueOnMain(() => result(false), false); return; }
+
+                FieldDataHandler.Load(fieldPath);
+                timesLoaded++;
+
+                SimUI.QueueOnMain(() =>
+                {
+                    Controls.Load();
+                    Controls.UpdateFieldControls();
+                    if (!Controls.HasBeenSaved())
+                        Controls.Save();
+                }, true);
+
+                fieldDefinition = (UnityFieldDefinition)BXDFProperties.ReadProperties(directory + Path.DirectorySeparatorChar + "definition.bxdf", out string loadResult);
+                Debug.Log(loadResult);
+                SimUI.QueueOnMain(() => fieldDefinition.CreateTransform(fieldObject.transform), true);
+                bool createRes = fieldDefinition.CreateMeshAsync(directory + Path.DirectorySeparatorChar + "mesh.bxda");
+                SimUI.QueueOnMain(() => result(createRes), false);
+                SimUI.FieldLoaded = true;
+                return;
+            });
+        }
+
         /// <summary>
         /// Loads a new robot from a given directory
         /// </summary>
@@ -530,6 +607,11 @@ namespace Synthesis.States
         public async void LoadRobotAsync(string directory, bool isMixAndMatch, Action<bool> results)
         {
             await Task.Factory.StartNew(() => {
+
+                SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
+                SimUI.BotLoaded = false;
+                physicsWorld.gravity = Vector3.zero;
+
                 bool b = true;
 
                 if (!Directory.Exists(directory))
@@ -565,7 +647,8 @@ namespace Synthesis.States
                     if (isMixAndMatch)
                     {
                         robotPath = RobotTypeManager.RobotPath;
-                        MaMRobot mamRobot = robotObject.AddComponent<MaMRobot>();
+                        MaMRobot mamRobot = null;
+                        SimUI.QueueOnMain(() => mamRobot = robotObject.AddComponent<MaMRobot>(), true);
                         mamRobot.RobotHasManipulator = false; // Defaults to false
                         robot = mamRobot;
 
@@ -627,12 +710,20 @@ namespace Synthesis.States
                     }, false);
 
                     SimUI.QueueOnMain(() => results(true), false);
-                    return;
                 }
                 else
                 {
                     SimUI.QueueOnMain(() => results(false), false);
                 }
+
+                physicsWorld.gravity = new Vector3(0, -9.8f, 0);
+                SimUI.BotLoaded = true;
+
+                SimUI.QueueOnMain(() => {
+                    dynamicCamera.GetComponent<DynamicCamera>().SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
+                    DynamicCamera.ControlEnabled = true;
+                    loadingPanel.SetActive(false);
+                }, true);
             });
         }
 
@@ -657,6 +748,29 @@ namespace Synthesis.States
             }
 
             return false;
+        }
+
+        public void ChangeRobotAsync(string directory, bool isMixAndMatch, Action<bool> result)
+        {
+            sensorManager.RemoveSensorsFromRobot(ActiveRobot);
+            sensorManagerGUI.ShiftOutputPanels();
+            sensorManagerGUI.EndProcesses();
+
+            SimUI.BotLoaded = false;
+            RemoveRobot(SpawnedRobots.IndexOf(ActiveRobot));
+            //ActiveRobot = null;
+
+            LoadRobotAsync(directory, isMixAndMatch, r =>
+            {
+                if (r)
+                {
+                    DynamicCamera.ControlEnabled = true;
+                    result(true);
+                } else
+                {
+                    result(false);
+                }
+            });
         }
 
         /// <summary>

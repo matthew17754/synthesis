@@ -81,6 +81,17 @@ namespace Synthesis.Robot
         protected override void OnInitializeRobot()
         {
             //Detach and destroy all sensors on the original robot
+            SensorManager sensorManager = GameObject.Find("SensorManager").GetComponent<SensorManager>();
+            sensorManager.ResetSensorLists();
+
+            //Removes Driver Practice component if it exists
+            if (dpmRobot != null)
+                Destroy(dpmRobot);
+        }
+
+        protected override void OnInitializeRobotAsync()
+        {
+            //Detach and destroy all sensors on the original robot
             SensorManager sensorManager = null; // GameObject.Find("SensorManager").GetComponent<SensorManager>();
             SimUI.QueueOnMain(
                 () => sensorManager = GameObject.Find("SensorManager").GetComponent<SensorManager>(),

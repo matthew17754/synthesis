@@ -6,6 +6,7 @@ using Synthesis.Input;
 using Synthesis.Camera;
 using Synthesis.States;
 using Synthesis.Robot;
+using Synthesis.GUI;
 
 public class DynamicCamera : MonoBehaviour
 {
@@ -104,6 +105,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             lookingRotation = Quaternion.LookRotation(RobotProvider.Robot.transform.position - Mono.transform.position);
             currentRotation = Quaternion.Lerp(startRotation, lookingRotation, 0.5f);
 
@@ -150,6 +153,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (RobotProvider.Robot == null)
                 return;
 
@@ -269,6 +274,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (ControlEnabled && RobotProvider.RobotActive && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             {
                 if (InputControl.GetMouseButton(0))
@@ -361,6 +368,8 @@ public class DynamicCamera : MonoBehaviour
         }
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             float change = Input.GetAxis("Mouse Y");
             if (Input.GetMouseButton(1) && positionVector.y + change > fieldVector.y + 1)
                 positionVector.y += change;
@@ -393,6 +402,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (RobotProvider.Robot != null && RobotProvider.Robot.transform.childCount > 0)
                 targetPosition = RobotProvider.Robot.transform.position;
 
@@ -429,6 +440,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (target != null && target.transform.childCount > 0)
             {
                 targetPosition = target.transform.GetChild(0).transform.position;
@@ -480,6 +493,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (target != null)
             {
                 targetVector = target.transform.position;

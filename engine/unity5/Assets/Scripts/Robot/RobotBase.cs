@@ -109,7 +109,7 @@ namespace Synthesis.Robot
         /// </summary>
         void Update()
         {
-            if (!SimUI.BotLoaded) return;
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
 
             UpdateTransform();
         }
@@ -119,7 +119,7 @@ namespace Synthesis.Robot
         /// </summary>
         public void FixedUpdate()
         {
-            if (!SimUI.BotLoaded) return;
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
 
             if (RootNode != null)
                 UpdateMotors();
@@ -231,7 +231,7 @@ namespace Synthesis.Robot
             if (!File.Exists(directory + Path.DirectorySeparatorChar + "skeleton.bxdj") && !File.Exists(directory + Path.DirectorySeparatorChar + "skeleton.json"))
                 return false;
 
-            OnInitializeRobot();
+            OnInitializeRobotAsync();
 
             //Loads the node and skeleton data
             RigidNode_Base.NODE_FACTORY = delegate (Guid guid) { return new RigidNode(guid); };
@@ -501,6 +501,8 @@ namespace Synthesis.Robot
         /// Called when the robot is initialized, before robot generation.
         /// </summary>
         protected virtual void OnInitializeRobot() { }
+
+        protected virtual void OnInitializeRobotAsync() { }
 
         /// <summary>
         /// Called when the robot is setup, after robot generation.
