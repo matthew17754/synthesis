@@ -160,7 +160,7 @@ namespace Synthesis.States
             physicsWorld = BPhysicsWorld.Get();
             ((DynamicsWorld)physicsWorld.world).SetInternalTickCallback(BPhysicsTickListener.Instance.PhysicsTick);
             lastFrameCount = physicsWorld.frameCount;
-            //physicsWorld.gravity = Vector3.zero;
+            physicsWorld.gravity = Vector3.zero;
 
             //setting up raycast robot tick callback
             BPhysicsTickListener.Instance.OnTick -= BRobotManager.Instance.UpdateRaycastRobots;
@@ -169,8 +169,8 @@ namespace Synthesis.States
             postLoad = () =>
             {
                 physicsWorld.gravity = new Vector3(0, -9.8f, 0);
-                physicsWorld.gameObject.SetActive(false);
-                physicsWorld.gameObject.SetActive(true);
+                //physicsWorld.gameObject.SetActive(false);
+                //physicsWorld.gameObject.SetActive(true);
             };
 
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
@@ -280,7 +280,7 @@ namespace Synthesis.States
             // PROCESS QUEUE
 
             float start = Time.realtimeSinceStartup;
-            float maxFrame = (1f / 30f);
+            float maxFrame = (1f / 15f);
 
             //Debug.Log((start + maxFrame) - Time.unscaledTime);
 
@@ -608,7 +608,7 @@ namespace Synthesis.States
         {
             await Task.Factory.StartNew(() => {
 
-                SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
+                //SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
                 SimUI.BotLoaded = false;
                 physicsWorld.gravity = Vector3.zero;
 
@@ -716,13 +716,13 @@ namespace Synthesis.States
                     SimUI.QueueOnMain(() => results(false), false);
                 }
 
-                physicsWorld.gravity = new Vector3(0, -9.8f, 0);
+                //physicsWorld.gravity = new Vector3(0, -9.8f, 0);
                 SimUI.BotLoaded = true;
 
                 SimUI.QueueOnMain(() => {
                     dynamicCamera.GetComponent<DynamicCamera>().SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
                     DynamicCamera.ControlEnabled = true;
-                    loadingPanel.SetActive(false);
+                    //loadingPanel.SetActive(false);
                 }, true);
             });
         }

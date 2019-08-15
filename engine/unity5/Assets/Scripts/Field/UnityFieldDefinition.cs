@@ -272,8 +272,11 @@ namespace Synthesis.Field
             //foreach (NetworkElement ne in Resources.FindObjectsOfTypeAll<NetworkElement>())
             //    networkElements[ne.NodeID] = ne;
 
+            int nodeCount = 0;
+
             foreach (FieldNode node in NodeGroup.EnumerateAllLeafFieldNodes())
             {
+                nodeCount++;
                 SimUI.QueueOnMain(() =>
                 {
                     PropertySet? propertySet = null;
@@ -407,9 +410,13 @@ namespace Synthesis.Field
                         meshObject.transform.parent = unityObject.transform;
                     }
 
+                    nodeCount--;
+
                 }, false);
                 
             }
+
+            while (nodeCount != 0) { }
 
             //if (!host)
             //    foreach (NetworkElement ne in networkElements.Values)
