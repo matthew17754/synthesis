@@ -93,7 +93,7 @@ namespace SynthesisMultiplayer.Server.UDP
                 }
                 try
                 {
-                    var decodedData = ClientDataMessage.Parser.ParseFrom(newData);
+                    var decodedData = ClientDataFrame.Parser.ParseFrom(newData);
                     if (decodedData.Api != "v1")
                     {
                         Console.WriteLine("API version not recognized. Skipping");

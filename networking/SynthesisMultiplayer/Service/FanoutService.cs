@@ -63,11 +63,12 @@ namespace SynthesisMultiplayer.Service
             var newData = Call(ClientListener, Methods.ClientListener.GetClientData, false).Result;
             if (newData != null)
             {
-                var message = new ClientDataMessage
+                var message = new ServerDataFrame
                 {
                     Api = "v1",
                     Data = Encoding.ASCII.GetString(newData),
-                    MessageType = ClientDataMessage.Types.MessageType.Data,
+                    MessageType = ServerDataFrame.Types.MessageType.Data,
+                    ServerSendTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(DateTime.Now),
                 };
                 var outputStream = new MemoryStream();
                 message.WriteTo(outputStream);
@@ -99,7 +100,7 @@ namespace SynthesisMultiplayer.Service
             while (!GetTask(newSender).Initialized) { }
             ((IServer)GetTask(newSender)).Serve();
             Senders.Add(newSender);
-            Console.WriteLine("New Listener '" + newSender.ToString() + "' added");
+            Console.WriteLine("New Sender '" + newSender.ToString() + "' added");
             handle.Done();
         }
 

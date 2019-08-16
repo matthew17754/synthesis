@@ -44,8 +44,7 @@ message ClientDataFrame {
 	string data = 2;
 	CommandType command = 3;
 	google.protobuf.Timestamp client_send_time = 4;
-	google.protobuf.Timestamp server_send_time = 5;
-	MessageType message_type = 6; 
+	MessageType message_type = 5;
 }
 
 message ServerDataFrame {
@@ -59,5 +58,10 @@ message ServerDataFrame {
 		OUT_OF_SYNC = 0;
 		DISCONNECT = 1;
 	}
-	
+	string api = 1;
+	string data = 2;
+	CommandType command = 3;
+	google.protobuf.Timestamp client_send_time = 4;
+	google.protobuf.Timestamp server_send_time = 5;
+	MessageType message_type = 6; 
 }

@@ -62,11 +62,11 @@ namespace SynthesisMultiplayer.Client.UDP
         LobbyConnectionData LobbyData;
         bool disposed;
         Channel<(IPAddress Peer, byte[] Data)> Channel;
-        bool initialized { get; set; }
+        bool IsInitialized { get; set; }
         bool Serving { get; set; }
 
-        public override bool Alive => initialized;
-        public override bool Initialized => initialized;
+        public override bool Alive => IsInitialized;
+        public override bool Initialized => IsInitialized;
 
         public LobbyBroadcastListener(int port = 33001) :
             base(IPAddress.Any, port)
@@ -145,7 +145,7 @@ namespace SynthesisMultiplayer.Client.UDP
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
-            initialized = false;
+            IsInitialized = false;
             Connection.Close();
             Status = ManagedTaskStatus.Completed;
             handle.Done();
@@ -192,7 +192,7 @@ namespace SynthesisMultiplayer.Client.UDP
         public override void Initialize(Guid taskId)
         {
             Id = taskId;
-            initialized = true;
+            IsInitialized = true;
             LobbyData = new LobbyConnectionData();
             Channel = new Channel<(IPAddress, byte[])>();
             Connection = new UdpClient(Endpoint);

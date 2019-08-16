@@ -25,16 +25,16 @@ namespace SynthesisMultiplayer.Server.UDP
 {
     public class ConnectionListener : ManagedUdpTask
     {
-        protected class ConnectionListenerContext : TaskContext
+        protected class ConnectionListenerClient : TaskContext
         {
             public UdpClient client;
             public IPEndPoint peer;
 
             public Channel<byte[]> sender;
         }
-        private class ListenerServerData
+        private class ConnectionListenerData
         {
-            public ListenerServerData()
+            public ConnectionListenerData()
             {
                 Mutex = new Mutex();
                 ConnectionInfo = new Dictionary<Guid, IPEndPoint>();
@@ -44,7 +44,7 @@ namespace SynthesisMultiplayer.Server.UDP
             public IPEndPoint LastEndpoint;
         }
         [SavedState]
-        ListenerServerData ServerData;
+        ConnectionListenerData ServerData;
         bool disposed;
         Channel<byte[]> Channel;
         bool initialized { get; set; }
@@ -62,7 +62,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             if (Serving)
             {
-                var context = ((ConnectionListenerContext)(result.AsyncState));
+                var context = ((ConnectionListenerClient)(result.AsyncState));
                 var udpClient = context.client;
                 var peer = context.peer;
                 var receivedData = udpClient.EndReceive(result, ref context.peer);
@@ -110,7 +110,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
-            Connection.BeginReceive(ReceiveCallback, new ConnectionListenerContext
+            Connection.BeginReceive(ReceiveCallback, new ConnectionListenerClient
             {
                 client = Connection,
                 peer = Endpoint,
@@ -175,7 +175,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Id = taskId;
             initialized = true;
-            ServerData = new ListenerServerData();
+            ServerData = new ConnectionListenerData();
             Channel = new Channel<byte[]>();
             Connection = new UdpClient(Endpoint);
         }
