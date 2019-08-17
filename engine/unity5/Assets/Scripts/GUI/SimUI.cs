@@ -22,6 +22,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
+using UnityAsyncCallback = System.Action<Synthesis.Threading.AsyncCallHandle>;
+using Synthesis.Threading;
+
 namespace Synthesis.GUI
 {
     /// <summary>
@@ -84,7 +87,7 @@ namespace Synthesis.GUI
         public static bool BotLoaded = false;
         public static bool FieldLoaded = false;
 
-        private static Queue<Tuple<Action, Action>> mainThreadQueue;
+        private static Queue<(Action, Action)> mainThreadQueue;
 
         private StateMachine tabStateMachine;
         string currentTab;
@@ -107,7 +110,7 @@ namespace Synthesis.GUI
         protected override void Awake()
         {
             base.Awake();
-            mainThreadQueue = new Queue<Tuple<Action, Action>>();
+            mainThreadQueue = new Queue<(Action, Action)>();
         }
 
         private void Start()
@@ -1118,26 +1121,13 @@ namespace Synthesis.GUI
                 + "DriveBases");
         }
 
-        public static void QueueOnMain(Action a, Action b)
+        public static void QueueOnMain(UnityAsyncCallback callback, AsyncCallHandle handle)
         {
             lock (mainQueueObj)
             {
-                mainThreadQueue.Enqueue(new Tuple<Action, Action>(a, b));
+                mainThreadQueue.Enqueue((callback, handle));
             }
         }
-
-        public static void QueueOnMain(Action a, bool wait)
-        {
-            if (wait) {
-                bool b = false;
-                QueueOnMain(() => a(), () => b = true);
-                while (!b) { }
-            } else
-            {
-                QueueOnMain(() => a(), () => { });
-            }
-        }
-
-        public static ref Queue<Tuple<Action, Action>> getMainThreadQueue() { return ref mainThreadQueue; }
+        public static ref Queue<(Action, Action)> getMainThreadQueue() { return ref mainThreadQueue; }
     }
 }

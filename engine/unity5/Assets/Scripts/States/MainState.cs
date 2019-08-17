@@ -171,26 +171,30 @@ namespace Synthesis.States
                 physicsWorld.gravity = new Vector3(0, -9.8f, 0);
                 //physicsWorld.gameObject.SetActive(false);
                 //physicsWorld.gameObject.SetActive(true);
+                loadingPanel.SetActive(false);
             };
 
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
             string selectedReplay = PlayerPrefs.GetString("simSelectedReplay");
 
+            GameObject canvas = Auxiliary.FindObject("Canvas");
+            loadingPanel = Auxiliary.FindObject(canvas, "LoadingPanel");
+
             if (string.IsNullOrEmpty(selectedReplay))
             {
                 Tracking = true;
 
+                loadingPanel.SetActive(true);
+
                 if (timesLoaded > 0)
                 {
-                    //loadingPanel = Auxiliary.FindObject("LoadingPanel");
-                    //loadingPanel.SetActive(true);
-
                     LoadFieldAsync(PlayerPrefs.GetString("simSelectedField"), r =>
                     {
                         if (!r)
                         {
                             AppModel.ErrorToMenu("Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
-                        } else
+                        }
+                        else
                         {
                             MovePlane();
                         }
@@ -225,7 +229,8 @@ namespace Synthesis.States
                             AppModel.ErrorToMenu("ROBOT_SELECT|Could not find the selected robot");
                         }
                     });
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     AppModel.ErrorToMenu("ROBOT_SELECT|Error while loading the selected bot");
                 }
@@ -280,26 +285,19 @@ namespace Synthesis.States
             // PROCESS QUEUE
 
             float start = Time.realtimeSinceStartup;
-            float maxFrame = (1f / 15f);
+            float maxFrame = (1f /  60f);
 
             //Debug.Log((start + maxFrame) - Time.unscaledTime);
-
-            while (start + maxFrame > Time.realtimeSinceStartup)
+            (Action, Action) act = (null, null);
+            while (start + maxFrame > Time.realtimeSinceStartup && SimUI.getMainThreadQueue().Count > 0)
             {
-                Tuple<Action, Action> act = null;
                 lock (SimUI.mainQueueObj)
                 {
-                    if (SimUI.getMainThreadQueue().Count > 0)
-                    {
-                        act = SimUI.getMainThreadQueue().Dequeue();
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    act = SimUI.getMainThreadQueue().Dequeue();
                 }
                 act.Item1();
                 act.Item2();
+                act = (null, null);
 
                 //Debug.Log(((start + maxFrame) - Time.realtimeSinceStartup) + " Time left to work");
             }
@@ -606,7 +604,8 @@ namespace Synthesis.States
 
         public async void LoadRobotAsync(string directory, bool isMixAndMatch, Action<bool> results)
         {
-            await Task.Factory.StartNew(() => {
+            await Task.Factory.StartNew(() =>
+            {
 
                 //SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
                 SimUI.BotLoaded = false;
@@ -719,7 +718,8 @@ namespace Synthesis.States
                 //physicsWorld.gravity = new Vector3(0, -9.8f, 0);
                 SimUI.BotLoaded = true;
 
-                SimUI.QueueOnMain(() => {
+                SimUI.QueueOnMain(() =>
+                {
                     dynamicCamera.GetComponent<DynamicCamera>().SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
                     DynamicCamera.ControlEnabled = true;
                     //loadingPanel.SetActive(false);
@@ -766,7 +766,8 @@ namespace Synthesis.States
                 {
                     DynamicCamera.ControlEnabled = true;
                     result(true);
-                } else
+                }
+                else
                 {
                     result(false);
                 }

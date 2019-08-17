@@ -9,6 +9,7 @@ using Synthesis.Utils;
 using UnityEngine.Networking;
 using Synthesis.Network;
 using Synthesis.GUI;
+using Synthesis.Threading;
 
 namespace Synthesis.Field
 {
@@ -252,15 +253,18 @@ namespace Synthesis.Field
             List<KeyValuePair<BXDAMesh.BXDASubMesh, Mesh>> submeshes = new List<KeyValuePair<BXDAMesh.BXDASubMesh, Mesh>>();
             List<KeyValuePair<BXDAMesh.BXDASubMesh, Mesh>> colliders = new List<KeyValuePair<BXDAMesh.BXDASubMesh, Mesh>>();
 
+            AsyncCallHandle handle = new AsyncCallHandle();
+
             // Create all submesh objects
-            SimUI.QueueOnMain(() =>
+            SimUI.QueueOnMain((callbackHandle) =>
             {
                 Auxiliary.ReadMeshSet(mesh.meshes, delegate (int id, BXDAMesh.BXDASubMesh sub, Mesh meshu)
                 {
                     submeshes.Add(new KeyValuePair<BXDAMesh.BXDASubMesh, Mesh>(sub, meshu));
                 });
-            }, true);
-
+                callbackHandle.Done();
+            }, handle);
+            handle.Wait();
             // Create all collider objects
             Auxiliary.ReadMeshSet(mesh.colliders, delegate (int id, BXDAMesh.BXDASubMesh sub, Mesh meshu)
             {
@@ -277,7 +281,7 @@ namespace Synthesis.Field
             foreach (FieldNode node in NodeGroup.EnumerateAllLeafFieldNodes())
             {
                 nodeCount++;
-                SimUI.QueueOnMain(() =>
+                SimUI.QueueOnMain((handle) =>
                 {
                     PropertySet? propertySet = null;
 
@@ -285,7 +289,6 @@ namespace Synthesis.Field
                         propertySet = GetPropertySets()[node.PropertySetID];
 
                     GameObject subObject = null;
-
                     GameObject meshObject = null;
 
                     subObject = new GameObject(node.NodeID);
@@ -295,17 +298,14 @@ namespace Synthesis.Field
 
                     if (node.SubMeshID != -1)
                     {
-                        KeyValuePair<BXDAMesh.BXDASubMesh, Mesh> currentSubMesh = submeshes[node.SubMeshID];
+                        var currentSubMesh = submeshes[node.SubMeshID];
 
                         BXDAMesh.BXDASubMesh sub = currentSubMesh.Key;
                         Mesh meshu = currentSubMesh.Value;
 
                         meshObject.AddComponent<MeshFilter>().mesh = meshu;
-
-
                         meshObject.AddComponent<MeshRenderer>();
                         Material[] matls = new Material[meshu.subMeshCount];
-
                         for (int i = 0; i < matls.Length; i++)
                         {
                             matls[i] = sub.surfaces[i].AsMaterial();
