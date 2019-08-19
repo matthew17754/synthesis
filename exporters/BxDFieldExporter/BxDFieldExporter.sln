@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BxDFieldExporter", "BxDFieldExporter\BxDFieldExporter.csproj", "{3DC284CE-6572-439D-ADA3-E703FF8498B6}"
 EndProject
@@ -32,18 +32,21 @@ Global
 		{3DC284CE-6572-439D-ADA3-E703FF8498B6}.Release|x86.ActiveCfg = Release|Any CPU
 		{3DC284CE-6572-439D-ADA3-E703FF8498B6}.Release|x86.Build.0 = Release|Any CPU
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Debug|Any CPU.Build.0 = Debug|Win32
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Debug|x86.ActiveCfg = Debug|Win32
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Debug|x86.Build.0 = Debug|Win32
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Release|Any CPU.ActiveCfg = Release|Win32
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Release|x86.ActiveCfg = Release|Win32
 		{41A5DDC9-6BA3-446B-B1C0-5515F20D6EC1}.Release|x86.Build.0 = Release|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Debug|Any CPU.Build.0 = Debug|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Debug|x86.ActiveCfg = Debug|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Debug|x86.Build.0 = Debug|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Release|Any CPU.ActiveCfg = Release|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Release|x86.ActiveCfg = Release|Win32
 		{CAC8B4CC-70F1-438C-95AC-B996E658DDEB}.Release|x86.Build.0 = Release|Win32
 		{5664C026-F538-4745-A042-13927CE3259F}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{5664C026-F538-4745-A042-13927CE3259F}.Debug|Any CPU.Build.0 = Debug|Win32
 		{5664C026-F538-4745-A042-13927CE3259F}.Debug|x86.ActiveCfg = Debug|Win32
 		{5664C026-F538-4745-A042-13927CE3259F}.Debug|x86.Build.0 = Debug|Win32
 		{5664C026-F538-4745-A042-13927CE3259F}.Release|Any CPU.ActiveCfg = Release|Win32
@@ -68,5 +71,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5665F624-9748-4423-8804-C04C1C0A9A5B}
 	EndGlobalSection
 EndGlobal
