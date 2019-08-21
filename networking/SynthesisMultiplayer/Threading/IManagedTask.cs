@@ -65,15 +65,11 @@ namespace SynthesisMultiplayer.Threading
                     }
                     Thread.Sleep(loopTime);
                 }
-            }, context);
+            }, context, TaskCreationOptions.LongRunning);
         }
 
         public static Task<dynamic> Call(this IManagedTask task, string method, params dynamic[] args)
         {
-            if (!task.Initialized)
-            {
-                throw new Exception("Attempt to interact with Managed task that is not ready.");
-            }
             return Task<dynamic>.Factory.StartNew(() =>
             {
                 var handle = new AsyncCallHandle(args);
@@ -83,10 +79,6 @@ namespace SynthesisMultiplayer.Threading
         }
         public static Task Do(this IManagedTask task, string method, int methodCallWaitPeriod = 50, params dynamic[] args)
         {
-            if (!task.Initialized)
-            {
-                throw new Exception("Attempt to interact with Managed task that is not ready.");
-            }
             return Task.Factory.StartNew(() =>
             {
                 var handle = new AsyncCallHandle(args);

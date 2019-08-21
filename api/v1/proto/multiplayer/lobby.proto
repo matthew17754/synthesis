@@ -11,7 +11,8 @@ message JoinLobbyRequest {
 
 message JoinLobbyResponse {
 	enum ErrorCode {
-		INTERNAL_ERROR = 0;
+		NONE = 0;
+		INTERNAL_ERROR = 1;
 	}
     string api = 1;
     string job_id = 2;
@@ -22,13 +23,19 @@ message JoinLobbyStatusRequest {
 	string api = 1;
 	string job_id = 2;
 }
+
 message JoinLobbyStatusResponse {
 	enum ErrorCode {
-		INTERNAL_ERROR = 0;
+		NONE = 0;
+		INTERNAL_ERROR = 1;
 	}
-
+	enum Status {
+		CONNECTING = 0;
+		CONNECTED = 1;
+	}
 	string api = 1;
-	ErrorCode error_code = 2;
+	Status status = 2;
+	ErrorCode error_code = 3;
 }
 
 message RejoinLobbyRequest {

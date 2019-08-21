@@ -32,14 +32,13 @@ namespace SynthesisMultiplayer.Service
         public bool Alive => IsInitialized;
         public bool Initialized => IsInitialized;
 
-        Guid ClientListener, ConnectionListener;
+        Guid ClientListener;
         List<Guid> Senders;
 
-        public FanoutService(int listenerPort, Guid connectionListenerPid)
+        public FanoutService(int listenerPort)
         {
             Senders = new List<Guid>();
             ClientListener = Start(new FanoutListener(listenerPort));
-            ConnectionListener = connectionListenerPid;
         }
 
         public Guid Id => TaskId;

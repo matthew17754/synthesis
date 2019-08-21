@@ -9,6 +9,8 @@ using SynthesisMultiplayer.Client.UDP;
 using MatchmakingService;
 using System.Collections.Generic;
 using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using SynthesisMultiplayer.Server.gRPC;
+using SynthesisMultiplayer.Client.gRPC;
 
 namespace MultiplayerServer
 {
@@ -16,32 +18,21 @@ namespace MultiplayerServer
     {
         public static void Main(string[] args)
         {
-            Start(new ConnectionListener(33003), "listener");
-            Start(new LobbyBroadcaster(lobbyName: "Test Lobby"), "broadcaster");
+            var lobby = Start(new LobbyService());
             Start(new LobbyBroadcastListener(), "broadcast_listener");
-            var listener = (ConnectionListener) GetTask("listener");
-            var broadcast  = (LobbyBroadcaster) GetTask("broadcaster");
-            var broadcastListener = (LobbyBroadcastListener)GetTask("broadcast_listener");
-            Start(new FanoutService(50054, listener.Id), "fanout");
-            listener.Serve();
-            broadcast.Serve();
-            broadcastListener.Serve();
+            Start(new LobbyClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 33005)), "lobby_client");
+            var LobbyService = (LobbyService)GetTask(lobby);
+            while(!LobbyService.Initialized) { }
+            var lobbyClient = (LobbyClient)GetTask("lobby_client");
+            LobbyService.Serve();
+            lobbyClient.JoinLobby();
             Thread.Sleep(500);
-            var Lobbies = (List<SessionBroadcastMessage>) Call(broadcastListener.Id, Methods.LobbyBroadcastListener.GetLobbyList).Result;
-            foreach(var lobby in Lobbies)
-            {
-                Console.WriteLine("Lobby: {0} LobbyName: {1}", lobby.LobbyId, lobby.LobbyName);
-            }
-            var fanout = (FanoutService)GetTask("fanout");
-            fanout.AddListener(IPAddress.Parse("127.0.0.1"), 5000);
             while(Console.ReadKey(true).Key != ConsoleKey.Escape) { }
-            broadcast.Terminate();
-            listener.Terminate();
-            broadcastListener.Terminate();
+            LobbyService.Terminate();
 
             Console.WriteLine("Server Closing. Please wait...");
             int counter = 0;
-            while (broadcast.Status != ManagedTaskStatus.Completed)
+            while (LobbyService.Status != ManagedTaskStatus.Completed)
             {
                 if(counter % 50 == 0)
                 {

@@ -69,12 +69,15 @@
   <ItemGroup>
     <Compile Include="Attribute\Callback.cs" />
     <Compile Include="Attribute\SavedState.cs" />
+    <Compile Include="Client\gRPC\LobbyClient.cs" />
     <Compile Include="Client\UDP\LobbyBroadcastListener.cs" />
+    <Compile Include="Client\UDP\LobbyRegistrar.cs" />
     <Compile Include="Server\UDP\FanoutListener.cs" />
     <Compile Include="Server\UDP\FanoutSender.cs" />
     <Compile Include="Server\UDP\ConnectionListener.cs" />
     <Compile Include="Service\FanoutService.cs" />
     <Compile Include="Service\IService.cs" />
+    <Compile Include="Service\LobbyService.cs" />
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ManagedTaskRegistery.cs" />
     <Compile Include="Server\IServer.cs" />
@@ -95,11 +98,7 @@
     <Compile Include="Util\Optional.cs" />
     <Compile Include="Util\StateBackup.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Client\gRPC\" />
-    <Folder Include="Client\TCP\" />
-    <Folder Include="Server\TCP\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />

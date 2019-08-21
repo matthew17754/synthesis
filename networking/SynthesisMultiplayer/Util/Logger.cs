@@ -17,7 +17,7 @@ namespace SynthesisMultiplayer.Util
             Error,
             Fatal
         }
-
+        private static void skip() { }
         Dictionary<LogLevel, LoggerFunc> Loggers;
         public static Logger Instance { get { return Internal.instance; } }
         private Logger()
@@ -55,7 +55,7 @@ namespace SynthesisMultiplayer.Util
 #if DEBUG || DEBUG_LOGGING
             Log(LogLevel.Info, message);
 #else
-            return;
+            skip();
 #endif
         public static void LogWarning(object message) => Log(LogLevel.Info, message);
         public static void LogError(object message) => Log(LogLevel.Info, message);

@@ -24,7 +24,6 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-
 namespace SynthesisMultiplayer.Client.UDP
 {
     public class LobbyBroadcastListener : ManagedUdpTask
@@ -80,8 +79,8 @@ namespace SynthesisMultiplayer.Client.UDP
                 var context = ((ConnectionListenerContext)(result.AsyncState));
                 var udpClient = context.client;
                 var peer = context.peer;
-                var receivedData = udpClient.EndReceive(result, ref context.peer);
-                LobbyData.LastEndpoint = context.peer;
+                var receivedData = udpClient.EndReceive(result, ref peer);
+                LobbyData.LastEndpoint = peer;
                 context.sender.Send((peer.Address, receivedData));
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveCallback, context);
@@ -103,7 +102,7 @@ namespace SynthesisMultiplayer.Client.UDP
                     SessionBroadcastMessage decodedData = SessionBroadcastMessage.Parser.ParseFrom(data);
                     if (!LobbyData.HasLobby(decodedData.LobbyId))
                     {
-
+                        Console.WriteLine(decodedData.ToString());
                         if (decodedData.Api != "v1")
                         {
                             Console.WriteLine("API version not recognized. Skipping");

@@ -74,7 +74,7 @@ namespace SynthesisMultiplayer.Server.UDP
             }
         }
         public IPEndPoint GetConnectionInfo(Guid id) =>
-            this.Call(Methods.ConnectionListener.GetConnectionInfo).Result;
+            this.Call(Methods.ConnectionListener.GetConnectionInfo, id).Result;
         public override void Loop()
         {
             if (Serving)
