@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace SynthesisMultiplayer.Threading
+namespace SynthesisMultiplayer.Threading.Execution
 {
     public class AsyncCallHandle : IDisposable
     {
-        public struct NoneType { }
         public enum FaultType
         {
             None,

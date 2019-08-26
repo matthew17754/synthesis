@@ -1,7 +1,7 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Execution;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -23,9 +23,9 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Server.UDP
+namespace SynthesisMultiplayer.Common.UDP
 {
-    public class FanoutListener : ManagedUdpTask
+    public class StreamListener : ManagedUdpTask
     {
         protected class ConnectionListenerContext : TaskContext
         {
@@ -49,14 +49,14 @@ namespace SynthesisMultiplayer.Server.UDP
         ClientListenerData ClientData;
         bool disposed;
         Channel<byte[]> Channel;
-        bool initialized { get; set; }
+        bool IsInitialized { get; set; }
         bool Serving { get; set; }
 
-        public override bool Alive => initialized;
-        public override bool Initialized => initialized;
+        public override bool Alive => IsInitialized;
+        public override bool Initialized => IsInitialized;
 
-        public FanoutListener(int port = 33000) :
-            base(IPAddress.Any, port)
+        public StreamListener(IPAddress ip, int port = 33000) :
+            base(ip, port)
         {
             Serving = false;
             ClientData = new ClientListenerData();
@@ -69,11 +69,11 @@ namespace SynthesisMultiplayer.Server.UDP
                 var context = ((ConnectionListenerContext)(result.AsyncState));
                 var udpClient = context.client;
                 var peer = context.peer;
-                var receivedData = udpClient.EndReceive(result, ref context.peer);
+                var receivedData = udpClient.EndReceive(result, ref peer);
                 ClientData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
                 Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
-                context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
+                context.peer = new IPEndPoint(Endpoint.Address, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveCallback, context);
             }
         }
@@ -132,7 +132,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
-            initialized = false;
+            IsInitialized = false;
             Connection.Close();
             Status = ManagedTaskStatus.Completed;
             handle.Done();
@@ -198,7 +198,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override void Initialize(Guid taskId)
         {
             Id = taskId;
-            initialized = true;
+            IsInitialized = true;
             ClientData = new ClientListenerData();
             Channel = new Channel<byte[]>();
             Connection = new UdpClient(Endpoint);

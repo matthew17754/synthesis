@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading
+namespace SynthesisMultiplayer.Threading.Execution
 {
     public interface ISupervisor : IManagedTask
     {

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
 namespace SynthesisMultiplayer.Service
 {
-    public class LobbyService : IManagedTask, IServer
+    public class LobbyHostService : IManagedTask, IServer
     {
 
         public bool Initialized { get; private set; }
@@ -25,16 +25,15 @@ namespace SynthesisMultiplayer.Service
         protected int ListenerPort;
         protected int LobbyPort;
         protected int BroadcastPort;
-        public LobbyService(int broadcastPort = 33002, int grpcPort = 33005, int listenerPort = 33006, int lobbyPort = 33007)
+
+        private bool disposedValue = false; // To detect redundant calls
+
+        public LobbyHostService(int broadcastPort = 33002, int grpcPort = 33005, int listenerPort = 33006, int lobbyPort = 33007)
         {
             BroadcastPort = broadcastPort;
             GrpcPort = grpcPort;
             ListenerPort = listenerPort;
             LobbyPort = lobbyPort;
-        }
-
-        public void Dispose()
-        {
         }
 
         public void Initialize(Guid id)
@@ -87,6 +86,22 @@ namespace SynthesisMultiplayer.Service
             ManagedTaskHelper.Terminate(FanoutService);
             ManagedTaskHelper.Terminate(Lobby);
             handle.Done();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
     }
 }

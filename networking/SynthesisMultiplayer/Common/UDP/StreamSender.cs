@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Execution;
 using SynthesisMultiplayer.Util;
 using System;
 using System.IO;
@@ -21,9 +21,9 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Server.UDP
+namespace SynthesisMultiplayer.Common.UDP
 {
-    public class FanoutSender : ManagedUdpTask
+    public class StreamSender : ManagedUdpTask
     {
         const int sendCallbackTimeout = 10000;
         EventWaitHandle eventWaitHandle;
@@ -34,7 +34,7 @@ namespace SynthesisMultiplayer.Server.UDP
 
         public override bool Initialized => initialized;
 
-        public FanoutSender(IPAddress ip, int port = 33001) :
+        public StreamSender(IPAddress ip, int port = 33001) :
             base(ip, port)
         {
             sendQueue = new Channel<byte[]>();

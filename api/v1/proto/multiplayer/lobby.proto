@@ -63,6 +63,20 @@ message RejoinLobbyStatusResponse {
 	ErrorCode error_code = 2;
 }
 
+message DisconnectRequest {
+    string api = 1;
+    string lobby_key = 2;
+}
+
+message DisconnectResponse {
+	enum ErrorCode {
+		NONE = 0;
+		INTERNAL_ERROR = 1;
+	}
+    string api = 1;
+    string job_id = 2;
+	ErrorCode error_code = 3;
+}
 message HeartbeatMessage {
 	string api = 1;
 	string client_id = 2;
@@ -72,7 +86,10 @@ service ServerHost {
     rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse) {}
     rpc JoinLobbyStatus(stream JoinLobbyStatusRequest) returns (stream JoinLobbyStatusResponse) {}
 
+	rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {}
+
     rpc RejoinLobby(RejoinLobbyRequest) returns (RejoinLobbyResponse) {}
     rpc RejoinLobbyStatus(stream RejoinLobbyStatusRequest) returns (stream RejoinLobbyStatusResponse) {}
+
 	rpc Heartbeat(stream HeartbeatMessage) returns (stream HeartbeatMessage) {}
 }

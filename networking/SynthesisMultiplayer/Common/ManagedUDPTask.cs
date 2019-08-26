@@ -1,5 +1,5 @@
 ﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Execution;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Net;

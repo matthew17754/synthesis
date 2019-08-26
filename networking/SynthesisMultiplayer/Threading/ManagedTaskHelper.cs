@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading
+namespace SynthesisMultiplayer.Threading.Execution
 {
     public class ManagedTaskHelper
     {

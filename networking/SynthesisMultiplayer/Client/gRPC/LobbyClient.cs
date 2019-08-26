@@ -2,7 +2,7 @@
 using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Execution;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,6 +21,11 @@ namespace SynthesisMultiplayer.Common
         {
             public const string JoinLobby = "JOIN_LOBBY";
             public const string JoinLobbyStatus = "JOIN_LOBBY_STATUS";
+
+            public const string RejoinLobby = "REJOIN_LOBBY";
+            public const string RejoinLobbyStatus = "REJOIN_LOBBY_STATUS";
+
+            public const string Disconnect = "DISCONNECT";
         }
     }
 }
@@ -29,21 +34,20 @@ namespace SynthesisMultiplayer.Client.gRPC
 {
     public class LobbyClient : IManagedTask
     {
+        public bool Connected { get; private set; }
         public bool Initialized { get; private set; }
         public bool Alive { get; private set; }
         public Guid Id { get; private set; }
         public ManagedTaskStatus Status { get; private set; }
-        public Grpc.Core.Channel Channel;
-        protected IPEndPoint Endpoint;
-        protected MatchmakingService.ServerHost.ServerHostClient Client;
-        public LobbyClient(IPEndPoint lobbyAddress)
-        {
-            Endpoint = lobbyAddress;
-        }
+        public LobbyClient() { }
 
         [Callback(methodName: Methods.LobbyClient.JoinLobby)]
         public void JoinLobbyCallback(ITaskContext context, AsyncCallHandle handle)
         {
+            var endpoint = handle.Arguments.Dequeue();
+            var timeout = handle.Arguments.Count() > 0 ? handle.Arguments.Dequeue() : -1;
+            var Channel = new Grpc.Core.Channel(endpoint.ToString(), Grpc.Core.ChannelCredentials.Insecure);
+            var Client = new ServerHost.ServerHostClient(Channel);
             var res = Client.JoinLobby(new JoinLobbyRequest
             {
                 Api = "v1"
@@ -66,9 +70,10 @@ namespace SynthesisMultiplayer.Client.gRPC
                 outputStream.Position = 0;
                 var outputData = new StreamReader(outputStream).ReadToEnd();
                 var asyncHandle = new AsyncCallHandle();
-                var responseTask = Task.Factory.StartNew(() =>
+                var cancellationToken = new CancellationTokenSource();
+                var responseTask = Task.Factory.StartNew(token =>
                 {
-                    while (call.ResponseStream.MoveNext().Result)
+                    while (!((CancellationToken)token).IsCancellationRequested && call.ResponseStream.MoveNext().Result)
                     {
                         udpClient.Send(Encoding.ASCII.GetBytes(outputData), outputData.Length);
                         var resp = call.ResponseStream.Current;
@@ -82,27 +87,45 @@ namespace SynthesisMultiplayer.Client.gRPC
                         }
                     }
                     asyncHandle.Done();
-                });
-
+                }, cancellationToken.Token);
+                var deadline = timeout != -1 ? DateTime.Now.AddSeconds(timeout) : DateTime.Now.AddMinutes(5);
                 while (!asyncHandle.Ready)
                 {
-                    call.RequestStream.WriteAsync(new JoinLobbyStatusRequest
+                    if (DateTime.Now <= deadline)
                     {
-                        Api = "v1",
-                        JobId = res.JobId,
-                    }).Wait();
-                    Thread.Sleep(50);
+                        call.RequestStream.WriteAsync(new JoinLobbyStatusRequest
+                        {
+                            Api = "v1",
+                            JobId = res.JobId,
+                        }).Wait();
+                        Thread.Sleep(50);
+                    } else
+                    {
+                        Connected = false;
+                        cancellationToken.Cancel();
+                        Console.WriteLine("Failed to connect within time limit");
+                        handle.Done();
+                        return;
+                    }
                 }
                 Console.WriteLine("Done");
                 call.RequestStream.CompleteAsync();
                 responseTask.Wait();
+                Channel.ShutdownAsync().Wait();
+                Connected = true;
+                Channel = null;
+                Client = null;
                 handle.Done();
             }
         }
-        public void JoinLobby()
-        {
-            this.Call(Methods.LobbyClient.JoinLobby).Wait();
-        }
+        public void JoinLobby(IPEndPoint endpoint) =>
+            this.Call(Methods.LobbyClient.JoinLobby, endpoint).Wait();
+         public void JoinLobby(string Ip) =>
+            this.Call(Methods.LobbyClient.JoinLobby, 
+                new IPEndPoint(IPAddress.Parse(
+                    Ip.Substring(0, Ip.IndexOf(':'))), 
+                    int.Parse(Ip.Substring(Ip.IndexOf(':')))))
+            .Wait();
         public void Dispose()
         {
             throw new NotImplementedException();
@@ -111,8 +134,6 @@ namespace SynthesisMultiplayer.Client.gRPC
         public void Initialize(Guid id)
         {
             Id = id;
-            Channel = new Grpc.Core.Channel(Endpoint.ToString(), Grpc.Core.ChannelCredentials.Insecure);
-            Client = new MatchmakingService.ServerHost.ServerHostClient(Channel);
             Initialized = true;
             Alive = true;
             Status = ManagedTaskStatus.Initialized;
@@ -124,8 +145,6 @@ namespace SynthesisMultiplayer.Client.gRPC
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
-            Client = null;
-            Channel.ShutdownAsync().Wait();
         }
     }
 }

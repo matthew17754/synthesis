@@ -7,10 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using TaskMethods = System.Collections.Generic.Dictionary<string, string>;
-using Callbacks = System.Collections.Generic.Dictionary<string, SynthesisMultiplayer.Threading.ManagedTaskCallback>;
+using Callbacks = System.Collections.Generic.Dictionary<string, SynthesisMultiplayer.Threading.Execution.ManagedTaskCallback>;
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
 
-namespace SynthesisMultiplayer.Threading
+namespace SynthesisMultiplayer.Threading.Execution
 {
     public delegate void ManagedTaskCallback(ITaskContext context, AsyncCallHandle handle = null);
     public interface IManagedTask : IDisposable
