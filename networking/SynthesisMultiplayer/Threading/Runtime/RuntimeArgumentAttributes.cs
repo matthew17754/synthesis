@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading.Execution
+namespace SynthesisMultiplayer.Threading.Runtime
 {
-    public enum ArgumentAttributes
+    public enum RuntimeArgumentAttributes
     {
         Optional,
-        HasDefaultValue,
-        Nullable
+        Nullable,
+        HasDefault
     }
 }

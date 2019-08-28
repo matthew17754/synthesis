@@ -5,14 +5,15 @@ using System;
 using Grpc;
 using System.Threading.Tasks;
 using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading.Execution;
-using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
+using SynthesisMultiplayer.Threading.Runtime;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
 using Grpc.Core;
 using System.Threading;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Attribute;
 using System.Net;
 using SynthesisMultiplayer.Util;
+using SynthesisMultiplayer.Threading;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -118,13 +119,12 @@ namespace SynthesisMultiplayer.Server.gRPC
             }
         }
 
-        [Callback(methodName: Methods.LobbyHandler.GetLatestConnection)]
-        public void GetLatestConnectionCallback(ITaskContext context, AsyncCallHandle handle) =>
+        [Callback(name: Methods.LobbyHandler.GetLatestConnection)]
+        public void GetLatestConnectionMethod(ITaskContext context, AsyncCallHandle handle) =>
             handle.Result = CompletedJobs.TryGet();
-        [Callback(methodName: Methods.Server.Serve)]
-        public void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
-
             Server = new Grpc.Core.Server
             {
                 Services = { ServerHost.BindService(new LobbyGrpcServer(ListenerPid, CompletedJobs)) },
@@ -135,14 +135,14 @@ namespace SynthesisMultiplayer.Server.gRPC
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
             throw new NotImplementedException();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Server.KillAsync().Wait();
             Server = null;
@@ -165,8 +165,6 @@ namespace SynthesisMultiplayer.Server.gRPC
 
         public void Dispose()
         {
-
         }
-
     }
 }

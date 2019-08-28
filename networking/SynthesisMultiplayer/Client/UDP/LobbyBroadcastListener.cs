@@ -1,7 +1,8 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static MatchmakingService.SessionBroadcastMessage.Types;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -57,7 +59,7 @@ namespace SynthesisMultiplayer.Client.UDP
                 return false;
             }
         }
-        [SavedState]
+        [SavedStateAttribute]
         LobbyConnectionData LobbyData;
         bool disposed;
         Channel<(IPAddress Peer, byte[] Data)> Channel;
@@ -72,7 +74,7 @@ namespace SynthesisMultiplayer.Client.UDP
         {
             Serving = false;
         }
-        private void ReceiveCallback(IAsyncResult result)
+        private void ReceiveMethod(IAsyncResult result)
         {
             if (Serving)
             {
@@ -83,7 +85,7 @@ namespace SynthesisMultiplayer.Client.UDP
                 LobbyData.LastEndpoint = peer;
                 context.sender.Send((peer.Address, receivedData));
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
-                udpClient.BeginReceive(ReceiveCallback, context);
+                udpClient.BeginReceive(ReceiveMethod, context);
             }
         }
 
@@ -125,11 +127,11 @@ namespace SynthesisMultiplayer.Client.UDP
             }
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
-            Connection.BeginReceive(ReceiveCallback, new ConnectionListenerContext
+            Connection.BeginReceive(ReceiveMethod, new ConnectionListenerContext
             {
                 client = Connection,
                 peer = Endpoint,
@@ -139,8 +141,8 @@ namespace SynthesisMultiplayer.Client.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
@@ -150,10 +152,11 @@ namespace SynthesisMultiplayer.Client.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            if (handle.Arguments.Dequeue() == true)
+            var doBackup = GetArgs<bool>(handle);
+            if (doBackup)
             {
                 var state = StateBackup.DumpState(this);
                 Terminate();
@@ -165,8 +168,8 @@ namespace SynthesisMultiplayer.Client.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.LobbyBroadcastListener.GetLobbyList)]
-        public void GetLobbyListCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.LobbyBroadcastListener.GetLobbyList)]
+        public void GetLobbyListMethod(ITaskContext context, AsyncCallHandle handle)
         {
             lock (LobbyData.Mutex)
                 handle.Result = LobbyData.Lobbies;

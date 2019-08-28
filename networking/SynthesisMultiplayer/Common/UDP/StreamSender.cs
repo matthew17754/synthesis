@@ -1,7 +1,8 @@
 ﻿using Google.Protobuf;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.IO;
@@ -25,7 +26,7 @@ namespace SynthesisMultiplayer.Common.UDP
 {
     public class StreamSender : ManagedUdpTask
     {
-        const int sendCallbackTimeout = 10000;
+        const int sendMethodTimeout = 10000;
         EventWaitHandle eventWaitHandle;
         bool Serving { get; set; }
         bool initialized { get; set; }
@@ -53,7 +54,7 @@ namespace SynthesisMultiplayer.Common.UDP
             this.Call(Methods.ClientSender.Send, Encoding.ASCII.GetBytes(data)).Wait();
         }
 
-        private void UDPSendCallback(IAsyncResult res)
+        private void UDPSendMethod(IAsyncResult res)
         {
             if (Serving)
             {
@@ -63,35 +64,37 @@ namespace SynthesisMultiplayer.Common.UDP
                     {
                         var outputData = message.Get();
                         var bytesSent = Connection.EndSend(res);
-                        eventWaitHandle.WaitOne(sendCallbackTimeout);
+                        eventWaitHandle.WaitOne(sendMethodTimeout);
                         Connection.BeginSend(outputData,
                             outputData.Length, Endpoint.Address.ToString(),
-                            Endpoint.Port, UDPSendCallback, null);
+                            Endpoint.Port, UDPSendMethod, null);
                     }
                 }
             }
         }
 
-        [Callback(methodName: Methods.ClientSender.Send)]
-        public void SendCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.ClientSender.Send)]
+        [ArgumentAttribute("sendData",typeof(byte[]))]
+        public void SendMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            sendQueue.Send(handle.Arguments.Dequeue());
+            byte[] sendData = ArgumentPacker.GetArgs<byte[]>(handle);
+            sendQueue.Send(sendData);
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = true;
             Console.WriteLine("Fanout sender started");
             Connection.BeginSend(new byte[] { },
                 0, Endpoint.Address.ToString(),
-                Endpoint.Port, UDPSendCallback, null);
+                Endpoint.Port, UDPSendMethod, null);
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down broadcaster");
             Serving = false;
@@ -101,8 +104,8 @@ namespace SynthesisMultiplayer.Common.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Terminate();
             Initialize(Id);

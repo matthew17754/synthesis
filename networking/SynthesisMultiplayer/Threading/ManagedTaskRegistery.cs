@@ -1,4 +1,4 @@
-﻿using SynthesisMultiplayer.Threading.Execution;
+﻿using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 using TaskEntry =
     SynthesisMultiplayer.Util.Either<
         (
-            SynthesisMultiplayer.Threading.Execution.IManagedTask Task,
+            SynthesisMultiplayer.Threading.IManagedTask Task,
             System.Threading.Tasks.Task Process,
-            SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Execution.AsyncCallHandle)> Channel
+            SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Runtime.AsyncCallHandle)> Channel
         ),
         System.Guid>;
-using MessageChannel = SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Execution.AsyncCallHandle)>;
-namespace SynthesisMultiplayer.Threading.Execution
+using MessageChannel = SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Runtime.AsyncCallHandle)>;
+namespace SynthesisMultiplayer.Threading
 {
     internal class ManagedTaskRegistry
     {

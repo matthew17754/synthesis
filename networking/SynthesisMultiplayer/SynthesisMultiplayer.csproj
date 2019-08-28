@@ -67,10 +67,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attribute\CallbackArgument.cs" />
-    <Compile Include="Attribute\Callback.cs" />
-    <Compile Include="Attribute\SavedState.cs" />
-    <Compile Include="Attribute\StaticMethod.cs" />
+    <Compile Include="Attribute\ArgumentAttribute.cs" />
+    <Compile Include="Attribute\CallbackAttribute.cs" />
+    <Compile Include="Attribute\ReturnTypeAttribute.cs" />
+    <Compile Include="Attribute\SavedStateAttribute.cs" />
     <Compile Include="Client\gRPC\LobbyClient.cs" />
     <Compile Include="Client\UDP\LobbyBroadcastListener.cs" />
     <Compile Include="Common\UDP\StreamListener.cs" />
@@ -81,8 +81,9 @@
     <Compile Include="Service\LobbyClientService.cs" />
     <Compile Include="Service\LobbyHostService.cs" />
     <Compile Include="Service\LobbyService.cs" />
-    <Compile Include="Threading\Execution\ArgumentAttributes.cs" />
-    <Compile Include="Threading\Execution\CallStack.cs" />
+    <Compile Include="Threading\Runtime\RuntimeArgumentAttributes.cs" />
+    <Compile Include="Threading\Runtime\CallStack.cs" />
+    <Compile Include="Threading\Runtime\CallbackInfo.cs" />
     <Compile Include="Threading\ISupervisor.cs" />
     <Compile Include="Threading\ManagedTaskRegistery.cs" />
     <Compile Include="Server\IServer.cs" />
@@ -91,12 +92,12 @@
     <Compile Include="Server\gRPC\LobbyHandler.cs" />
     <Compile Include="Server\ServerStatus.cs" />
     <Compile Include="Server\UDP\LobbyBroadcaster.cs" />
-    <Compile Include="Threading\Execution\AsyncCallHandle.cs" />
+    <Compile Include="Threading\Runtime\AsyncCallHandle.cs" />
     <Compile Include="Threading\IManagedTask.cs" />
     <Compile Include="Threading\ITaskContext.cs" />
     <Compile Include="Threading\ManagedTaskHelper.cs" />
     <Compile Include="Threading\TaskContext.cs" />
-    <Compile Include="Threading\Execution\ArgumentPacker.cs" />
+    <Compile Include="Threading\Runtime\ArgumentPacker.cs" />
     <Compile Include="Util\Cast.cs" />
     <Compile Include="Util\Channel.cs" />
     <Compile Include="Util\Either.cs" />
@@ -105,7 +106,9 @@
     <Compile Include="Util\Optional.cs" />
     <Compile Include="Util\StateBackup.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="CodeGeneration\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />

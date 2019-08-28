@@ -2,11 +2,12 @@
 using SynthesisMultiplayer.Client.gRPC;
 using SynthesisMultiplayer.Client.UDP;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Net;
-using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -85,8 +86,8 @@ namespace SynthesisMultiplayer.Service
             JoinLobby();
         }
 
-        [Callback(methodName: Methods.LobbyClientService.Connect)]
-        public void ConnectCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.LobbyClientService.Connect)]
+        public void ConnectMethod(ITaskContext context, AsyncCallHandle handle)
         {
             var ip = handle.Arguments.Dequeue();
         }

@@ -5,14 +5,21 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
+using SynthesisMultiplayer.Threading.Runtime;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 using TaskMethods = System.Collections.Generic.Dictionary<string, string>;
-using Callbacks = System.Collections.Generic.Dictionary<string, SynthesisMultiplayer.Threading.Execution.ManagedTaskCallback>;
+using Methods = System.Collections.Generic.Dictionary<string, 
+    (
+        SynthesisMultiplayer.Threading.ManagedTaskMethod Method,
+        SynthesisMultiplayer.Threading.Runtime.CallbackInfo MethodInfo
+    )>;
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
+using System.Collections.Generic;
+using System.Diagnostics;
 
-namespace SynthesisMultiplayer.Threading.Execution
+namespace SynthesisMultiplayer.Threading
 {
-    public delegate void ManagedTaskCallback(ITaskContext context, AsyncCallHandle handle = null);
+    public delegate void ManagedTaskMethod(ITaskContext context, AsyncCallHandle handle = null);
     public interface IManagedTask : IDisposable
     {
 
@@ -42,7 +49,7 @@ namespace SynthesisMultiplayer.Threading.Execution
     {
         public static Task Run(this IManagedTask task, Guid taskId, Channel<(string, AsyncCallHandle)> channel, ITaskContext context = null, int loopTime = 50, StateData state = null)
         {
-            Callbacks callbacks = GenerateCallbackList(task);
+            Methods Methods = GenerateCallbackList(task);
             TaskMethods taskMethods = GenerateMethodList(task);
             return Task.Factory.StartNew((c) =>
             {
@@ -56,10 +63,10 @@ namespace SynthesisMultiplayer.Threading.Execution
                         var message = channel.TryGet();
                         if (message.Valid)
                         {
-                            var (callback, handle) = message.Get();
-                            if (!taskMethods.ContainsKey(callback))
-                                throw new Exception("Unknown callback: '" + callback + "'");
-                            callbacks[taskMethods[callback]](context ?? new TaskContext(), handle);
+                            var (Method, handle) = message.Get();
+                            if (!taskMethods.ContainsKey(Method))
+                                throw new Exception("Unknown Method: '" + Method + "'");
+                            Methods[taskMethods[Method]].Method(context ?? new TaskContext(), handle);
                         }
                         task.Loop();
                     }
@@ -72,7 +79,7 @@ namespace SynthesisMultiplayer.Threading.Execution
         {
             return Task<dynamic>.Factory.StartNew(() =>
             {
-                var handle = new AsyncCallHandle(args);
+                var handle = new AsyncCallHandle(GetMethodInfo(task.GetType(), method), args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
                 return handle.Result;
             });
@@ -81,36 +88,44 @@ namespace SynthesisMultiplayer.Threading.Execution
         {
             return Task.Factory.StartNew(() =>
             {
-                var handle = new AsyncCallHandle(args);
+                var handle = new AsyncCallHandle(GetMethodInfo(task.GetType(), method), args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
                 handle.Wait();
                 return;
             });
         }
 
-        public static Callbacks GenerateCallbackList(this IManagedTask task) => task
+        public static Methods GenerateCallbackList(this IManagedTask task) => task
             .GetType().GetMethods()
-            .Where(m => m.GetCustomAttributes(typeof(Callback), false).Length > 0).ToList()
+            .Where(m => m.GetCustomAttributes(typeof(CallbackAttribute), false).Length > 0).ToList()
             .Select(method =>
             {
-                var callbackInfo = (Callback)method
-                    .GetCustomAttribute(typeof(Callback), false);
-                var callbackName = method.DeclaringType.Name +
-                    (callbackInfo.Name ?? method.Name);
-                return (callbackName, (ManagedTaskCallback)Delegate
-                   .CreateDelegate(typeof(ManagedTaskCallback), task, method));
-            }).ToDictionary(x => x.callbackName, x => x.Item2);
-
+                var Method = (CallbackAttribute)method
+                    .GetCustomAttribute(typeof(CallbackAttribute), false);
+                var MethodName = method.DeclaringType.Name + method.Name;
+                var Arguments = (Method.ArgumentNames ?? new List<string>())
+                    .Join(method.GetCustomAttributes(typeof(ArgumentAttribute), false)
+                    .Cast<ArgumentAttribute>()
+                    .ToList(),
+                    name => name,
+                    arg => arg.Name,
+                    (argName, arg) => arg).ToList();
+                var ReturnType = (ReturnTypeAttribute)method
+                    .GetCustomAttribute(typeof(ReturnTypeAttribute), false);
+                var MethodInfo = new Runtime.CallbackInfo(MethodName, Arguments, ReturnType);
+                return (MethodName, ((ManagedTaskMethod)Delegate
+                   .CreateDelegate(typeof(ManagedTaskMethod), task, method),MethodInfo));
+            }).ToDictionary(x => x.MethodName, x => x.Item2);
+        
         public static TaskMethods GenerateMethodList(this IManagedTask task) => task
             .GetType().GetMethods()
-            .Where(m => m.GetCustomAttributes(typeof(Callback), false).Length > 0).ToList()
+            .Where(m => m.GetCustomAttributes(typeof(CallbackAttribute), false).Length > 0).ToList()
             .Select(method =>
             {
-                var callbackInfo = (Callback)method
-                    .GetCustomAttribute(typeof(Callback), false);
-                var callbackName = method.DeclaringType.Name +
-                    (callbackInfo.Name ?? method.Name);
-                return (callbackInfo.MethodName, callbackName);
-            }).Where(kv => kv.MethodName != null).ToDictionary(x => x.MethodName, x => x.callbackName);
+                var Method = (CallbackAttribute)method
+                    .GetCustomAttribute(typeof(CallbackAttribute), false);
+                var CallbackName = method.DeclaringType.Name + method.Name;
+                return (Method.Name, CallbackName);
+            }).Where(kv => kv.Name != null).ToDictionary(x => x.Name, x => x.CallbackName);
     }
 }

@@ -2,7 +2,8 @@
 using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,11 +42,12 @@ namespace SynthesisMultiplayer.Client.gRPC
         public ManagedTaskStatus Status { get; private set; }
         public LobbyClient() { }
 
-        [Callback(methodName: Methods.LobbyClient.JoinLobby)]
+        [Callback(Methods.LobbyClient.JoinLobby, "endpoint", "timeout")]
+        [Argument("endpoint", typeof(IPEndPoint))]
+        [Argument("timeout", typeof(int), -1, RuntimeArgumentAttributes.HasDefault, RuntimeArgumentAttributes.Optional)]
         public void JoinLobbyCallback(ITaskContext context, AsyncCallHandle handle)
         {
-            var endpoint = handle.Arguments.Dequeue();
-            var timeout = handle.Arguments.Count() > 0 ? handle.Arguments.Dequeue() : -1;
+            (IPEndPoint endpoint, int timeout) = ArgumentPacker.GetArgs<IPEndPoint, int>(handle);
             var Channel = new Grpc.Core.Channel(endpoint.ToString(), Grpc.Core.ChannelCredentials.Insecure);
             var Client = new ServerHost.ServerHostClient(Channel);
             var res = Client.JoinLobby(new JoinLobbyRequest

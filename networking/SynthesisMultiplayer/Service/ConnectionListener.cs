@@ -3,12 +3,14 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
 using System.Threading;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Util;
 using MatchmakingService;
 using System.Text;
 using SynthesisMultiplayer.Attribute;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -43,7 +45,7 @@ namespace SynthesisMultiplayer.Server.UDP
             public Dictionary<Guid, IPEndPoint> ConnectionInfo;
             public IPEndPoint LastEndpoint;
         }
-        [SavedState]
+        [SavedStateAttribute]
         ConnectionListenerData ServerData;
         bool disposed;
         Channel<byte[]> Channel;
@@ -58,7 +60,7 @@ namespace SynthesisMultiplayer.Server.UDP
         {
             Serving = false;
         }
-        private void ReceiveCallback(IAsyncResult result)
+        private void ReceiveMethod(IAsyncResult result)
         {
             if (Serving)
             {
@@ -70,7 +72,7 @@ namespace SynthesisMultiplayer.Server.UDP
                 context.sender.Send(receivedData);
                 Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
-                udpClient.BeginReceive(ReceiveCallback, context);
+                udpClient.BeginReceive(ReceiveMethod, context);
             }
         }
         public IPEndPoint GetConnectionInfo(Guid id) =>
@@ -106,11 +108,11 @@ namespace SynthesisMultiplayer.Server.UDP
             }
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
-            Connection.BeginReceive(ReceiveCallback, new ConnectionListenerClient
+            Connection.BeginReceive(ReceiveMethod, new ConnectionListenerClient
             {
                 client = Connection,
                 peer = Endpoint,
@@ -120,8 +122,8 @@ namespace SynthesisMultiplayer.Server.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
@@ -131,8 +133,8 @@ namespace SynthesisMultiplayer.Server.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
             if(handle.Arguments.Dequeue() == true)
             {
@@ -147,10 +149,11 @@ namespace SynthesisMultiplayer.Server.UDP
 
         }
 
-        [Callback(methodName: Methods.ConnectionListener.GetConnectionInfo)]
-        public void GetConnectionInfoCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(Methods.ConnectionListener.GetConnectionInfo, "jobId")]
+        [Argument("jobId", typeof(Guid))]
+        public void GetConnectionInfoMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            var jobId = handle.Arguments.Dequeue();
+            var jobId = GetArgs<Guid>(handle);
             lock (ServerData.Mutex)
                 handle.Result = ServerData.ConnectionInfo.ContainsKey(jobId) ? ServerData.ConnectionInfo[jobId] : null;
         }

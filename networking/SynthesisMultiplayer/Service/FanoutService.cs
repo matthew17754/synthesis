@@ -4,22 +4,23 @@ using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Common.UDP;
 using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
-
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 namespace SynthesisMultiplayer.Common
 {
     public partial class Methods
     {
         public class FanoutService
         {
-            public const string AddConnection = "ADD_LISTENER";
+            public const string AddConnection = "ADD_CONNECTION";
         }
     }
 }
@@ -82,11 +83,12 @@ namespace SynthesisMultiplayer.Service
         public void AddConnection(IPAddress ip, int port) =>
             this.Do(Methods.FanoutService.AddConnection, port, ip).Wait();
 
-        [Callback(methodName: Methods.FanoutService.AddConnection)]
+        [Callback(Methods.FanoutService.AddConnection, "ip", "port")]
+        [Argument("ip", typeof(IPAddress))]
+        [Argument("port", typeof(int), 33000, RuntimeArgumentAttributes.HasDefault)]
         public void AddConnection(ITaskContext context, AsyncCallHandle handle)
         {
-            var ip = handle.Arguments.Dequeue();
-            var port = handle.Arguments.Count > 0 ? handle.Arguments.Dequeue() : 33000;
+            var (ip, port) = GetArgs<IPAddress, int>(handle);
             var newListener = Start(new StreamListener(ip, port));
             var newSender = Start(new StreamSender(ip, port));
             while (!GetTask(newSender).Initialized) { }

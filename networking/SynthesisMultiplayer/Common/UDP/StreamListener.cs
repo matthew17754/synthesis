@@ -1,7 +1,7 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -45,7 +45,7 @@ namespace SynthesisMultiplayer.Common.UDP
             public Queue<byte[]> Data;
             public IPEndPoint LastEndpoint;
         }
-        [SavedState]
+        [SavedStateAttribute]
         ClientListenerData ClientData;
         bool disposed;
         Channel<byte[]> Channel;
@@ -62,7 +62,7 @@ namespace SynthesisMultiplayer.Common.UDP
             ClientData = new ClientListenerData();
             Channel = new Channel<byte[]>();
         }
-        private void ReceiveCallback(IAsyncResult result)
+        private void ReceiveMethod(IAsyncResult result)
         {
             if (Serving)
             {
@@ -74,7 +74,7 @@ namespace SynthesisMultiplayer.Common.UDP
                 context.sender.Send(receivedData);
                 Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(Endpoint.Address, Endpoint.Port);
-                udpClient.BeginReceive(ReceiveCallback, context);
+                udpClient.BeginReceive(ReceiveMethod, context);
             }
         }
         public IPEndPoint PeekClientData(Guid id) =>
@@ -113,11 +113,11 @@ namespace SynthesisMultiplayer.Common.UDP
             }
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Listener started");
-            Connection.BeginReceive(ReceiveCallback, new ConnectionListenerContext
+            Connection.BeginReceive(ReceiveMethod, new ConnectionListenerContext
             {
                 client = Connection,
                 peer = Endpoint,
@@ -127,8 +127,8 @@ namespace SynthesisMultiplayer.Common.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down listener");
             Serving = false;
@@ -138,9 +138,10 @@ namespace SynthesisMultiplayer.Common.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
+            var doBackup = GetArgs<bool>(handle);
             if (handle.Arguments.Dequeue() == true)
             {
                 var state = StateBackup.DumpState(this);
@@ -154,8 +155,9 @@ namespace SynthesisMultiplayer.Common.UDP
 
         }
 
-        [Callback(methodName: Methods.ClientListener.GetClientData)]
-        public void GetClientDataCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(Methods.ClientListener.GetClientData, "doBlock")]
+        [Argument("doBlock", typeof(bool), false, RuntimeArgumentAttributes.HasDefault)]
+        public void GetClientDataMethod(ITaskContext context, AsyncCallHandle handle)
         {
             var doBlock = handle.Arguments.Dequeue();
             if (doBlock)

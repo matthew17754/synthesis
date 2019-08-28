@@ -1,6 +1,7 @@
 ﻿using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Server;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,9 +24,9 @@ namespace SynthesisMultiplayer.Common
 
     public interface IServer : IManagedTask
     {
-        void ServeCallback(ITaskContext context, AsyncCallHandle handle);
-        void RestartCallback(ITaskContext context, AsyncCallHandle handle);
-        void ShutdownCallback(ITaskContext context, AsyncCallHandle handle);
+        void ServeMethod(ITaskContext context, AsyncCallHandle handle);
+        void RestartMethod(ITaskContext context, AsyncCallHandle handle);
+        void ShutdownMethod(ITaskContext context, AsyncCallHandle handle);
     }
     public static class IServerMethods
     {

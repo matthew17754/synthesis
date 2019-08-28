@@ -1,5 +1,6 @@
 ﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Net;
@@ -12,7 +13,7 @@ namespace SynthesisMultiplayer.Common
     {
         private bool disposed;
         protected Mutex statusMutex;
-        [SavedState]
+        [SavedStateAttribute]
         protected IPEndPoint Endpoint { get; set; }
         protected UdpClient Connection { get; set; }
         protected Channel<(string, AsyncCallHandle)> Messages;
@@ -21,9 +22,9 @@ namespace SynthesisMultiplayer.Common
         public ManagedTaskStatus Status { get; protected set; }
         public Guid Id { get; protected set; }
 
-        public abstract void ServeCallback(ITaskContext context, AsyncCallHandle handle);
-        public abstract void RestartCallback(ITaskContext context, AsyncCallHandle handle);
-        public abstract void ShutdownCallback(ITaskContext context, AsyncCallHandle handle);
+        public abstract void ServeMethod(ITaskContext context, AsyncCallHandle handle);
+        public abstract void RestartMethod(ITaskContext context, AsyncCallHandle handle);
+        public abstract void ShutdownMethod(ITaskContext context, AsyncCallHandle handle);
         public abstract void Initialize(Guid taskId);
         public abstract void Terminate(string reason = null, params dynamic[] args);
         public abstract void Loop();

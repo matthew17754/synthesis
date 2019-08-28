@@ -6,15 +6,13 @@ using System.Threading.Tasks;
 
 namespace SynthesisMultiplayer.Attribute
 {
-    [AttributeUsage(AttributeTargets.Method)]
-    public sealed class Callback : System.Attribute
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    public sealed class SavedStateAttribute : System.Attribute
     {
         public string Name { get; set; }
-        public string MethodName { get; set; }
-        public Callback(string name = null, string methodName = null)
+        public SavedStateAttribute(string name = null)
         {
             Name = name;
-            MethodName = methodName;
         }
     }
 }

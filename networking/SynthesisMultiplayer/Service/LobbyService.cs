@@ -2,14 +2,15 @@
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Server.gRPC;
 using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
 namespace SynthesisMultiplayer.Service
 {
     public class LobbyService : IManagedTask, IServer
@@ -64,8 +65,8 @@ namespace SynthesisMultiplayer.Service
             this.Call(Methods.Server.Shutdown).Wait();
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve, argNames: "test")]
+        public void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             ((LobbyBroadcaster)GetTask(Broadcaster)).Serve();
             ((ConnectionListener)GetTask(ConnectionListener)).Serve();
@@ -73,14 +74,14 @@ namespace SynthesisMultiplayer.Service
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
             throw new NotImplementedException();
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             ManagedTaskHelper.Terminate(Broadcaster);
             ManagedTaskHelper.Terminate(ConnectionListener);

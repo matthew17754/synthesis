@@ -1,17 +1,9 @@
 ﻿using System;
-using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading.Execution;
 using SynthesisMultiplayer.Common;
 using System.Threading;
 using SynthesisMultiplayer.Service;
-using System.Net;
-using SynthesisMultiplayer.Client.UDP;
-using MatchmakingService;
-using System.Collections.Generic;
-using static SynthesisMultiplayer.Threading.Execution.ManagedTaskHelper;
-using SynthesisMultiplayer.Server.gRPC;
-using SynthesisMultiplayer.Client.gRPC;
-
+using SynthesisMultiplayer.Threading;
+using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
 namespace MultiplayerServer
 {
     public class Application

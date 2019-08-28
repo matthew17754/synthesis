@@ -1,6 +1,7 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading.Execution;
+using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.Threading.Runtime;
 using System;
 using System.Net;
 using System.Threading;
@@ -28,16 +29,16 @@ namespace SynthesisMultiplayer.Server.UDP
 {
     public class LobbyBroadcaster : ManagedUdpTask
     {
-        const int sendCallbackTimeout = 10000;
-        [SavedState]
+        const int sendMethodTimeout = 10000;
+        [SavedStateAttribute]
         Guid LobbyId { get; set; }
-        [SavedState]
+        [SavedStateAttribute]
         string Name { get; set; }
-        [SavedState]
+        [SavedStateAttribute]
         int Capacity { get; set; }
-        [SavedState]
+        [SavedStateAttribute]
         string Version { get; set; }
-        [SavedState]
+        [SavedStateAttribute]
         List<string> Tags { get; set; }
         SessionStatus SessionStatus;
         SessionBroadcastMessage message;
@@ -105,24 +106,24 @@ namespace SynthesisMultiplayer.Server.UDP
             IsInitialized = true;
         }
 
-        private void UDPSendCallback(IAsyncResult res)
+        private void UDPSendMethod(IAsyncResult res)
         {
             if (Serving)
             {
                 var bytesSent = Connection.EndSend(res);
-                eventWaitHandle.WaitOne(sendCallbackTimeout);
+                eventWaitHandle.WaitOne(sendMethodTimeout);
                 var outputStream = new MemoryStream();
                 Message.WriteTo(outputStream);
                 outputStream.Position = 0;
                 var outputData = new StreamReader(outputStream).ReadToEnd();
                 Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
                     outputData.Length, Endpoint.Address.ToString(),
-                    Endpoint.Port, UDPSendCallback, null);
+                    Endpoint.Port, UDPSendMethod, null);
             }
         }
 
-        [Callback(methodName: Methods.Server.Serve)]
-        public override void ServeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Serve)]
+        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = true;
             SessionStatus = SessionStatus.Serving;
@@ -134,14 +135,14 @@ namespace SynthesisMultiplayer.Server.UDP
             var outputData = new StreamReader(outputStream).ReadToEnd();
             Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
                 outputData.Length, Endpoint.Address.ToString(),
-                Endpoint.Port, UDPSendCallback, null);
+                Endpoint.Port, UDPSendMethod, null);
             outputStream.Dispose();
             handle.Done();
 
         }
 
-        [Callback(methodName: Methods.Server.Shutdown)]
-        public override void ShutdownCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Shutdown)]
+        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Console.WriteLine("Shutting down broadcaster");
             Serving = false;
@@ -151,8 +152,8 @@ namespace SynthesisMultiplayer.Server.UDP
             handle.Done();
         }
 
-        [Callback(methodName: Methods.Server.Restart)]
-        public override void RestartCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.Server.Restart)]
+        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Terminate();
             Initialize(Id);
@@ -165,8 +166,8 @@ namespace SynthesisMultiplayer.Server.UDP
             Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
 
-        [Callback(methodName: Methods.LobbyBroadcaster.SetLobbyAttribute)]
-        public void SetLobbyAttributeCallback(ITaskContext context, AsyncCallHandle handle)
+        [Callback(name: Methods.LobbyBroadcaster.SetLobbyAttribute)]
+        public void SetLobbyAttributeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             string attributeName = "";
             dynamic value = null;

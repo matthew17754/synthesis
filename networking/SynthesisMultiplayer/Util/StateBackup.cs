@@ -16,10 +16,10 @@ namespace SynthesisMultiplayer.Util
                 .Cast<MemberInfo>()
                 .Concat(obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(p => p.CanWrite && p.CanRead))
-                .Where(f => f.GetCustomAttributes(typeof(SavedState), false).Length > 0)
+                .Where(f => f.GetCustomAttributes(typeof(SavedStateAttribute), false).Length > 0)
                 .Select(field =>
                     {
-                        var stateInfo = (SavedState)field.GetCustomAttribute(typeof(SavedState));
+                        var stateInfo = (SavedStateAttribute)field.GetCustomAttribute(typeof(SavedStateAttribute));
                         var stateName = stateInfo.Name ?? field.DeclaringType.ToString() + "." + field.Name;
                         if (currentState != null && currentState.ContainsKey(stateName))
                             throw new Exception("Duplicate state entry '" + stateName + "'");
