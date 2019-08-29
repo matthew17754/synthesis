@@ -514,6 +514,10 @@ namespace Synthesis.GUI
             StateMachine.SceneGlobal.PushState(new BrowseRobotState());
         }
 
+        /// <summary>
+        /// Hides the FieldListPanel and sets the PlayerPrefs to the newly selected field.
+        /// Then reloads the scene.
+        /// </summary>
         public void ChangeField()
         {
             GameObject panel = GameObject.Find("FieldListPanel");
@@ -590,6 +594,9 @@ namespace Synthesis.GUI
             }
         }
 
+        /// <summary>
+        /// Opens the file browser to choose a new directory to selected fields from.
+        /// </summary>
         public void ChangeFieldDirectory()
         {
             StateMachine.SceneGlobal.PushState(new BrowseFieldState());
