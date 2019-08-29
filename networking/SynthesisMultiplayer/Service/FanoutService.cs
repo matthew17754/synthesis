@@ -3,6 +3,7 @@ using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
 using SynthesisMultiplayer.Common.UDP;
+using SynthesisMultiplayer.IO;
 using SynthesisMultiplayer.Server.UDP;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Threading.Runtime;
@@ -89,13 +90,15 @@ namespace SynthesisMultiplayer.Service
         public void AddConnection(ITaskContext context, AsyncCallHandle handle)
         {
             var (ip, port) = GetArgs<IPAddress, int>(handle);
-            var newListener = Start(new StreamListener(ip, port));
+            var newListener = Start(new StreamListener(ip, port+1));
             var newSender = Start(new StreamSender(ip, port));
             while (!GetTask(newSender).Initialized) { }
             while (!GetTask(newListener).Initialized) { }
             ((IServer)GetTask(newSender)).Serve();
+            ((IServer)GetTask(newListener)).Serve();
             Connections.Add((newListener, newSender));
-            Console.WriteLine("New Sender '" + newSender.ToString() + "' added");
+            Info.Log("New Sender '" + newSender.ToString() + "' added");
+            Info.Log("New Listener '" + newListener.ToString() + "' added");
             handle.Done();
         }
 
@@ -103,8 +106,9 @@ namespace SynthesisMultiplayer.Service
         {
             foreach (var (listener, sender) in Connections)
             {
-                GetTask(listener).Terminate();
-                GetTask(sender).Terminate();
+                Info.Log("Fanout service shutting down");
+                GetTask(listener).Terminate(reason, true);
+                GetTask(sender).Terminate(reason, true);
             }
         }
    }

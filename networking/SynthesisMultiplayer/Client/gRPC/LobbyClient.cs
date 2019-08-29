@@ -2,6 +2,7 @@
 using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
 using SynthesisMultiplayer.Common;
+using SynthesisMultiplayer.IO;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Threading.Runtime;
 using System;
@@ -105,12 +106,12 @@ namespace SynthesisMultiplayer.Client.gRPC
                     {
                         Connected = false;
                         cancellationToken.Cancel();
-                        Console.WriteLine("Failed to connect within time limit");
+                        Info.Log("Failed to connect within time limit");
                         handle.Done();
                         return;
                     }
                 }
-                Console.WriteLine("Done");
+                Info.Log($"Joined lobby on {endpoint.ToString()}");
                 call.RequestStream.CompleteAsync();
                 responseTask.Wait();
                 Channel.ShutdownAsync().Wait();

@@ -16,6 +16,7 @@ using Methods = System.Collections.Generic.Dictionary<string,
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SynthesisMultiplayer.IO;
 
 namespace SynthesisMultiplayer.Threading
 {
@@ -47,38 +48,42 @@ namespace SynthesisMultiplayer.Threading
 
     public static class IManagedTaskMethods
     {
-        public static Task Run(this IManagedTask task, Guid taskId, Channel<(string, AsyncCallHandle)> channel, ITaskContext context = null, int loopTime = 50, StateData state = null)
+        public static Thread Run(this IManagedTask task, Guid taskId, Channel<(string, AsyncCallHandle)> channel, ITaskContext context = null, int loopTime = 50, StateData state = null)
         {
             Methods Methods = GenerateCallbackList(task);
             TaskMethods taskMethods = GenerateMethodList(task);
-            return Task.Factory.StartNew((c) =>
+            var t = new Thread((c) =>
             {
                 task.Initialize(taskId);
                 if (state != null)
                     StateBackup.RestoreState(task, state);
                 while (task.Alive)
                 {
+
+                    //Info.Log($"Loop for: {task.GetType().Name}");
                     if (task.Initialized)
                     {
-                        var message = channel.TryGet();
-                        if (message.Valid)
+                        if (channel.TryPeek().Valid)
                         {
-                            var (Method, handle) = message.Get();
-                            if (!taskMethods.ContainsKey(Method))
-                                throw new Exception("Unknown Method: '" + Method + "'");
-                            Methods[taskMethods[Method]].Method(context ?? new TaskContext(), handle);
+                            var (method, handle) = channel.Get();
+                            if (!taskMethods.ContainsKey(method))
+                                throw new Exception("Unknown Method: '" + method + "'");
+                            Methods[taskMethods[method]].Method(context ?? new TaskContext(), handle);
                         }
                         task.Loop();
                     }
                     Thread.Sleep(loopTime);
                 }
-            }, context, TaskCreationOptions.LongRunning);
+            });
+            t.Start(context);
+            return t;
         }
 
         public static Task<dynamic> Call(this IManagedTask task, string method, params dynamic[] args)
         {
-            return Task<dynamic>.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
+                var Method = method;
                 var handle = new AsyncCallHandle(GetMethodInfo(task.GetType(), method), args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
                 return handle.Result;
@@ -86,11 +91,11 @@ namespace SynthesisMultiplayer.Threading
         }
         public static Task Do(this IManagedTask task, string method, int methodCallWaitPeriod = 50, params dynamic[] args)
         {
-            return Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
+                var Method = method;
                 var handle = new AsyncCallHandle(GetMethodInfo(task.GetType(), method), args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
-                handle.Wait();
                 return;
             });
         }

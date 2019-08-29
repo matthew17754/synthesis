@@ -1,5 +1,6 @@
 ﻿using MatchmakingService;
 using SynthesisMultiplayer.Attribute;
+using SynthesisMultiplayer.IO;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
@@ -45,7 +46,7 @@ namespace SynthesisMultiplayer.Common.UDP
             public Queue<byte[]> Data;
             public IPEndPoint LastEndpoint;
         }
-        [SavedStateAttribute]
+        [SavedState]
         ClientListenerData ClientData;
         bool disposed;
         Channel<byte[]> Channel;
@@ -72,7 +73,7 @@ namespace SynthesisMultiplayer.Common.UDP
                 var receivedData = udpClient.EndReceive(result, ref peer);
                 ClientData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
-                Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
+                Debug.Log("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(Endpoint.Address, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveMethod, context);
             }
@@ -96,14 +97,14 @@ namespace SynthesisMultiplayer.Common.UDP
                     var decodedData = ClientDataFrame.Parser.ParseFrom(newData);
                     if (decodedData.Api != "v1")
                     {
-                        Console.WriteLine("API version not recognized. Skipping");
+                        Warning.Log("API version not recognized. Skipping");
                         return;
                     }
                     ClientData.Data.Enqueue(Encoding.ASCII.GetBytes(decodedData.Data));
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("API version not recognized. Skipping");
+                    Warning.Log("API version not recognized. Skipping");
                     return;
                 }
             }
@@ -116,7 +117,7 @@ namespace SynthesisMultiplayer.Common.UDP
         [Callback(name: Methods.Server.Serve)]
         public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            Console.WriteLine("Listener started");
+            Info.Log($"Listener started on {Endpoint.ToString()}");
             Connection.BeginReceive(ReceiveMethod, new ConnectionListenerContext
             {
                 client = Connection,
@@ -130,7 +131,6 @@ namespace SynthesisMultiplayer.Common.UDP
         [Callback(name: Methods.Server.Shutdown)]
         public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            Console.WriteLine("Shutting down listener");
             Serving = false;
             IsInitialized = false;
             Connection.Close();
@@ -209,7 +209,7 @@ namespace SynthesisMultiplayer.Common.UDP
         public override void Terminate(string reason = null, params dynamic[] args)
         {
             this.Do(Methods.Server.Shutdown).Wait();
-            Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
+            Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
 
     }

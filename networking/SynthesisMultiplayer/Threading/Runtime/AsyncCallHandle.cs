@@ -132,7 +132,6 @@ namespace SynthesisMultiplayer.Threading.Runtime
                 }
                 Thread.Sleep(methodCallWaitPeriod);
             }
-
         }
         public void Dispose()
         {

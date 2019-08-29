@@ -14,6 +14,7 @@ using SynthesisMultiplayer.Attribute;
 using System.Net;
 using SynthesisMultiplayer.Util;
 using SynthesisMultiplayer.Threading;
+using SynthesisMultiplayer.IO;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -80,7 +81,7 @@ namespace SynthesisMultiplayer.Server.gRPC
                     Ip = new IPEndPoint(IPAddress.Parse(context.Host.Split(':')[0]), int.Parse(context.Host.Split(':')[1]))
                 };
                 Jobs.Add(job.JobId, job);
-                Console.WriteLine("New join request");
+                Info.Log("New join request");
                 return Task.FromResult(new JoinLobbyResponse
                 {
                     Api = "v1",
@@ -131,7 +132,7 @@ namespace SynthesisMultiplayer.Server.gRPC
                 Ports = { new ServerPort("localhost", Port, ServerCredentials.Insecure) }
             };
             Server.Start();
-            Console.WriteLine("Serving Grpc");
+            Info.Log("Serving Grpc");
             handle.Done();
         }
 
@@ -145,6 +146,8 @@ namespace SynthesisMultiplayer.Server.gRPC
         public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Server.KillAsync().Wait();
+            Alive = false;
+            Initialized = false;
             Server = null;
             handle.Done();
         }
@@ -158,7 +161,7 @@ namespace SynthesisMultiplayer.Server.gRPC
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Call(Methods.Server.Shutdown);
+            this.Call(Methods.Server.Shutdown).Wait();
         }
 
         public void Loop() { }

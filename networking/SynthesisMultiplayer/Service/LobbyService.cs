@@ -22,6 +22,7 @@ namespace SynthesisMultiplayer.Service
         public ManagedTaskStatus Status { get; private set; }
 
         protected Guid Broadcaster, ConnectionListener, FanoutService, Lobby;
+        protected bool Serving = false;
         protected int GrpcPort;
         protected int ListenerPort;
         protected int LobbyPort;
@@ -52,11 +53,14 @@ namespace SynthesisMultiplayer.Service
 
         public void Loop()
         {
-            var newConnection = (Optional<Guid>)Call(Lobby, Methods.LobbyHandler.GetLatestConnection).Result;
-            if(newConnection.Valid)
+            if (Serving)
             {
-                var connectionInfo = ((ConnectionListener)GetTask(ConnectionListener)).GetConnectionInfo(newConnection);
-                ((FanoutService)GetTask(FanoutService)).AddConnection(connectionInfo.Address, connectionInfo.Port);
+                var newConnection = (Optional<Guid>)Call(Lobby, Methods.LobbyHandler.GetLatestConnection).Result;
+                if (newConnection.Valid)
+                {
+                    var connectionInfo = ((ConnectionListener)GetTask(ConnectionListener)).GetConnectionInfo(newConnection);
+                    ((FanoutService)GetTask(FanoutService)).AddConnection(connectionInfo.Address, connectionInfo.Port);
+                }
             }
         }
 
@@ -71,6 +75,7 @@ namespace SynthesisMultiplayer.Service
             ((LobbyBroadcaster)GetTask(Broadcaster)).Serve();
             ((ConnectionListener)GetTask(ConnectionListener)).Serve();
             ((LobbyHandler)GetTask(Lobby)).Serve();
+            Serving = true;
             handle.Done();
         }
 
@@ -83,10 +88,14 @@ namespace SynthesisMultiplayer.Service
         [Callback(name: Methods.Server.Shutdown)]
         public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            ManagedTaskHelper.Terminate(Broadcaster);
-            ManagedTaskHelper.Terminate(ConnectionListener);
-            ManagedTaskHelper.Terminate(FanoutService);
-            ManagedTaskHelper.Terminate(Lobby);
+            Serving = false;
+            ManagedTaskHelper.Terminate(Lobby, "Lobby Shutdown");
+            ManagedTaskHelper.Terminate(FanoutService, "Lobby Shutdown");
+            ManagedTaskHelper.Terminate(ConnectionListener, "Lobby Shutdown");
+            ManagedTaskHelper.Terminate(Broadcaster, "Lobby Shutdown");
+            Alive = false;
+            Initialized = false;
+            Status = ManagedTaskStatus.Completed;
             handle.Done();
         }
     }

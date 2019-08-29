@@ -13,6 +13,7 @@ using System.Text;
 using static MatchmakingService.SessionBroadcastMessage.Types;
 using System.Collections.Generic;
 using System.Reflection;
+using SynthesisMultiplayer.IO;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -128,7 +129,7 @@ namespace SynthesisMultiplayer.Server.UDP
             Serving = true;
             SessionStatus = SessionStatus.Serving;
             message.Status = SessionStatus;
-            Console.WriteLine("Broadcaster started");
+            Info.Log("Broadcaster started");
             var outputStream = new MemoryStream();
             Message.WriteTo(outputStream);
             outputStream.Position = 0;
@@ -144,7 +145,7 @@ namespace SynthesisMultiplayer.Server.UDP
         [Callback(name: Methods.Server.Shutdown)]
         public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            Console.WriteLine("Shutting down broadcaster");
+            Info.Log("Shutting down broadcaster");
             Serving = false;
             IsInitialized = false;
             Connection.Close();
@@ -163,7 +164,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override void Terminate(string reason = null, params dynamic[] args)
         {
             this.Shutdown();
-            Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
+            Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
 
         [Callback(name: Methods.LobbyBroadcaster.SetLobbyAttribute)]
@@ -178,7 +179,7 @@ namespace SynthesisMultiplayer.Server.UDP
             }
             catch (Exception)
             {
-                Console.WriteLine("Not enough arguments provided");
+                Info.Log("Not enough arguments provided");
             }
             GetType().GetProperty(attributeName, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(this, value);
             RegenerateMessage = true;

@@ -2,12 +2,15 @@
 using SynthesisMultiplayer.Client.gRPC;
 using SynthesisMultiplayer.Client.UDP;
 using SynthesisMultiplayer.Common;
+using SynthesisMultiplayer.Common.UDP;
+using SynthesisMultiplayer.IO;
 using SynthesisMultiplayer.Threading;
 using SynthesisMultiplayer.Threading.Runtime;
 using SynthesisMultiplayer.Util;
 using System;
 using System.Net;
 using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -33,6 +36,8 @@ namespace SynthesisMultiplayer.Service
 
         protected Guid LobbyListener, LobbyClient;
         protected Guid StreamListener, StreamSender;
+
+        protected bool Connected { get; private set; }
 
         protected IPEndPoint lobbyEndpoint;
 
@@ -86,10 +91,32 @@ namespace SynthesisMultiplayer.Service
             JoinLobby();
         }
 
-        [Callback(name: Methods.LobbyClientService.Connect)]
+        [Callback(Methods.LobbyClientService.Connect, "ip", "lobbyPort")]
+        [Argument("ip", typeof(string))]
+        [Argument("lobbyPort", typeof(int), 33000, RuntimeArgumentAttributes.HasDefault)]
         public void ConnectMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            var ip = handle.Arguments.Dequeue();
+            var (ip, lobbyPort) = GetArgs<string, int>(handle);
+            JoinLobby(ip);
+            StreamSender = Start(new StreamSender(lobbyEndpoint.Address, lobbyPort+1));
+            StreamListener = Start(new StreamListener(lobbyEndpoint.Address, lobbyPort));
+            ((StreamSender)GetTask(StreamSender)).Serve();
+            ((StreamListener)GetTask(StreamListener)).Serve();
+            while(!((StreamSender)GetTask(StreamSender)).Initialized && !((StreamListener)GetTask(StreamListener)).Initialized) { }
+            Connected = true;
+            handle.Done();
         }
+
+        [Callback("send", "data")]
+        [Argument("data", typeof(string))]
+        public void SendCallback(ITaskContext context, AsyncCallHandle handle)
+        {
+            var data = GetArgs<string>(handle);
+            Debug.Log("Sending " + data);
+            ((StreamSender)GetTask(StreamSender)).Send(data);
+            handle.Done();
+        }
+        public void Connect(string ip) =>
+            this.Call(Methods.LobbyClientService.Connect, ip).Wait();
     }
 }

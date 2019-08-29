@@ -15,7 +15,7 @@ namespace SynthesisMultiplayer.Util
         int waitTimeout;
         EventWaitHandle eventWaitHandle;
         bool disposedValue = false;
-
+        public int Count { get => buffer.Count; }
         public Channel(int timeout = 5)
         {
             mutex = new Mutex();
@@ -42,7 +42,8 @@ namespace SynthesisMultiplayer.Util
         }
         public T Get()
         {
-            eventWaitHandle.WaitOne();
+            if(Count == 0)
+                eventWaitHandle.WaitOne();
             lock (mutex)
                 return buffer.Dequeue();
         }
@@ -51,7 +52,7 @@ namespace SynthesisMultiplayer.Util
             if(eventWaitHandle.WaitOne(waitTimeout))
             {
                 lock (mutex)
-                    return buffer.Count != 0 ? new Optional<T>(buffer.Dequeue()) : new Optional<T>();
+                    return Count != 0 ? new Optional<T>(buffer.Dequeue()) : new Optional<T>();
             }
             return new Optional<T>();
         }
@@ -63,12 +64,9 @@ namespace SynthesisMultiplayer.Util
         }
         public Optional<T> TryPeek()
         {
-            if (eventWaitHandle.WaitOne(waitTimeout))
-            {
-                lock (mutex)
-                    return buffer.Count != 0 ? new Optional<T>(buffer.Peek()) : new Optional<T>();
-            }
-            return new Optional<T>();
+            lock (mutex)
+                return Count != 0 ? new Optional<T>(buffer.Peek()) : new Optional<T>();
+
         }
         public void Close()
         {

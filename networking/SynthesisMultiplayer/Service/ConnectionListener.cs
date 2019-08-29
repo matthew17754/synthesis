@@ -11,6 +11,7 @@ using MatchmakingService;
 using System.Text;
 using SynthesisMultiplayer.Attribute;
 using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
+using SynthesisMultiplayer.IO;
 
 namespace SynthesisMultiplayer.Common
 {
@@ -70,7 +71,7 @@ namespace SynthesisMultiplayer.Server.UDP
                 var receivedData = udpClient.EndReceive(result, ref context.peer);
                 ServerData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
-                Console.WriteLine("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
+                Debug.Log("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(IPAddress.Any, Endpoint.Port);
                 udpClient.BeginReceive(ReceiveMethod, context);
             }
@@ -91,14 +92,14 @@ namespace SynthesisMultiplayer.Server.UDP
                     var decodedData = UDPValidatorMessage.Parser.ParseFrom(newData);
                     if (decodedData.Api != "v1")
                     {
-                        Console.WriteLine("API version not recognized. Skipping");
+                        Warning.Log("API version not recognized. Skipping");
                         return;
                     }
                     ServerData.ConnectionInfo[new Guid(decodedData.JobId)] = ServerData.LastEndpoint;
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("API version not recognized. Skipping");
+                    Warning.Log("API version not recognized. Skipping");
                     return;
                 }
             }
@@ -111,7 +112,7 @@ namespace SynthesisMultiplayer.Server.UDP
         [Callback(name: Methods.Server.Serve)]
         public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            Console.WriteLine("Listener started");
+            Info.Log("Listener started");
             Connection.BeginReceive(ReceiveMethod, new ConnectionListenerClient
             {
                 client = Connection,
@@ -125,7 +126,7 @@ namespace SynthesisMultiplayer.Server.UDP
         [Callback(name: Methods.Server.Shutdown)]
         public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
-            Console.WriteLine("Shutting down listener");
+            Info.Log("Shutting down listener");
             Serving = false;
             initialized = false;
             Connection.Close();
@@ -186,7 +187,7 @@ namespace SynthesisMultiplayer.Server.UDP
         public override void Terminate(string reason = null, params dynamic[] args)
         {
             this.Do(Methods.Server.Shutdown).Wait();
-            Console.WriteLine("Server closed: '" + (reason ?? "No reason provided") + "'");
+            Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
     }
 }

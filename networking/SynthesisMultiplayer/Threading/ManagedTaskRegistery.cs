@@ -9,7 +9,7 @@ using TaskEntry =
     SynthesisMultiplayer.Util.Either<
         (
             SynthesisMultiplayer.Threading.IManagedTask Task,
-            System.Threading.Tasks.Task Process,
+            System.Threading.Thread Process,
             SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Runtime.AsyncCallHandle)> Channel
         ),
         System.Guid>;
@@ -20,12 +20,12 @@ namespace SynthesisMultiplayer.Threading
     {
         Dictionary<Guid, TaskEntry> Tasks;
         Dictionary<string, Guid> TaskNames;
-        Mutex TaskLock;
+        ReaderWriterLockSlim TaskLock;
         private ManagedTaskRegistry()
         {
             Tasks = new Dictionary<Guid, TaskEntry>();
             TaskNames = new Dictionary<string, Guid>();
-            TaskLock = new Mutex();
+            TaskLock = new ReaderWriterLockSlim();
         }
 
         public static ManagedTaskRegistry Instance { get { return Internal.instance; } }
@@ -35,38 +35,38 @@ namespace SynthesisMultiplayer.Threading
             internal static readonly ManagedTaskRegistry instance = new ManagedTaskRegistry();
         }
 
-        public static (IManagedTask, Task) GetTask(Guid taskId)
+        public static (IManagedTask, Thread) GetTask(Guid taskId)
         {
             var taskInfo = getTaskImpl(taskId);
             return (taskInfo.Left.Task, taskInfo.Left.Process);
         }
-        public static (IManagedTask, Task) GetTask(string taskName)
+        public static (IManagedTask, Thread) GetTask(string taskName)
         {
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterReadLock();
+            if (!Instance.TaskNames.ContainsKey(taskName))
             {
-                if (!Instance.TaskNames.ContainsKey(taskName))
-                {
-                    return (null, null);
-                }
-                var taskInfo = getTaskImpl(Instance.TaskNames[taskName]);
-                return (taskInfo.Left.Task, taskInfo.Left.Process);
+                Instance.TaskLock.ExitReadLock();
+                return (null, null);
             }
+            Instance.TaskLock.ExitReadLock();
+            var taskInfo = getTaskImpl(Instance.TaskNames[taskName]);
+            return (taskInfo.Left.Task, taskInfo.Left.Process);
         }
 
-        public static Task GetProcess(Guid taskId)
+        public static Thread GetProcess(Guid taskId)
         {
             return getTaskImpl(taskId).Left.Process;
         }
-        public static Task GetProcess(string taskName)
+        public static Thread GetProcess(string taskName)
         {
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterReadLock();
+            if (!Instance.TaskNames.ContainsKey(taskName))
             {
-                if (!Instance.TaskNames.ContainsKey(taskName))
-                {
-                    return null;
-                }
-                return getTaskImpl(Instance.TaskNames[taskName]).Left.Process;
+                Instance.TaskLock.ExitReadLock();
+                return null;
             }
+            Instance.TaskLock.ExitReadLock();
+            return getTaskImpl(Instance.TaskNames[taskName]).Left.Process;
         }
         public static IManagedTask GetTaskObject(Guid taskId)
         {
@@ -74,14 +74,14 @@ namespace SynthesisMultiplayer.Threading
         }
         public static IManagedTask GetTaskObject(string taskName)
         {
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterReadLock();
+            if (!Instance.TaskNames.ContainsKey(taskName))
             {
-                if (!Instance.TaskNames.ContainsKey(taskName))
-                {
-                    return null;
-                }
-                return getTaskImpl(Instance.TaskNames[taskName]).Left.Task;
+                Instance.TaskLock.ExitReadLock();
+                return null;
             }
+            Instance.TaskLock.ExitReadLock();
+            return getTaskImpl(Instance.TaskNames[taskName]).Left.Task;
         }
 
         public static MessageChannel GetChannel(Guid taskId)
@@ -90,36 +90,38 @@ namespace SynthesisMultiplayer.Threading
         }
         public static MessageChannel GetChannel(string taskName)
         {
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterReadLock();
+            if (!Instance.TaskNames.ContainsKey(taskName))
             {
-                if (!Instance.TaskNames.ContainsKey(taskName))
-                {
-                    return null;
-                }
-                return getTaskImpl(Instance.TaskNames[taskName]).Left.Channel;
+                Instance.TaskLock.ExitReadLock();
+                return null;
             }
+            Instance.TaskLock.ExitReadLock();
+            return getTaskImpl(Instance.TaskNames[taskName]).Left.Channel;
         }
 
         // Recurses through 
         private static TaskEntry getTaskImpl(Guid taskId)
         {
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterReadLock();
+            if (!Instance.Tasks.ContainsKey(taskId))
             {
-                if (!Instance.Tasks.ContainsKey(taskId))
-                {
-                    return null;
-                }
-                var taskData = Instance.Tasks[taskId];
-                if (taskData.GetState() == TaskEntry.State.Invalid)
-                {
-                    return null;
-                }
-                if (taskData.GetState() == TaskEntry.State.Left)
-                {
-                    return taskData;
-                }
-                return getTaskImpl(taskData);
+                Instance.TaskLock.ExitReadLock();
+                return null;
             }
+            var taskData = Instance.Tasks[taskId];
+            if (taskData.GetState() == TaskEntry.State.Invalid)
+            {
+                Instance.TaskLock.ExitReadLock();
+                return null;
+            }
+            if (taskData.GetState() == TaskEntry.State.Left)
+            {
+                Instance.TaskLock.ExitReadLock();
+                return taskData;
+            }
+            Instance.TaskLock.ExitReadLock();
+            return getTaskImpl(taskData);
         }
 
         public static Guid StartTask(IManagedTask taskInstance, string name = null, ITaskContext context = null)
@@ -132,20 +134,23 @@ namespace SynthesisMultiplayer.Threading
             context = context ?? new TaskContext();
             var channel = new MessageChannel();
             var task = taskInstance.Run(taskId, channel, context);
-            lock (Instance.TaskLock)
+            Instance.TaskLock.EnterUpgradeableReadLock();
+            if (Instance.Tasks.ContainsKey(taskId))
             {
-                if (Instance.Tasks.ContainsKey(taskId))
-                {
-                    throw new Exception("Task with id '" + taskId.ToString() + "' already registered.");
-                }
-                if (name != null && Instance.TaskNames.ContainsKey(name))
-                {
-                    throw new Exception("Task with name '" + name + "' already registered.");
-                }
-                Instance.Tasks[taskId] = new TaskEntry((taskInstance, task, channel));
-                if (name != null)
-                    Instance.TaskNames[name] = taskId;
+                Instance.TaskLock.ExitReadLock();
+                throw new Exception("Task with id '" + taskId.ToString() + "' already registered.");
             }
+            if (name != null && Instance.TaskNames.ContainsKey(name))
+            {
+                Instance.TaskLock.ExitReadLock();
+                throw new Exception("Task with name '" + name + "' already registered.");
+            }
+            Instance.TaskLock.EnterWriteLock();
+            Instance.Tasks[taskId] = new TaskEntry((taskInstance, task, channel));
+            if (name != null)
+                Instance.TaskNames[name] = taskId;
+            Instance.TaskLock.ExitWriteLock();
+            Instance.TaskLock.ExitUpgradeableReadLock();
             return taskId;
         }
 
@@ -155,15 +160,13 @@ namespace SynthesisMultiplayer.Threading
             var messageChannel = GetChannel(taskId);
             Dictionary<string, dynamic> state = null;
             task.Terminate();
-            process.Wait();
+            process.Join();
             if (doRestoreState)
                 state = StateBackup.DumpState(task);
-            process.Dispose();
             process = task.Run(taskId, messageChannel, context: new TaskContext(), state: state);
-            lock (Instance.TaskLock)
-            {
-                Instance.Tasks[taskId] = new TaskEntry((task, process, messageChannel));
-            }
+            Instance.TaskLock.EnterWriteLock();
+            Instance.Tasks[taskId] = new TaskEntry((task, process, messageChannel));
+            Instance.TaskLock.ExitWriteLock();
         }
 
         public static void RestartTask(string taskName, bool doRestoreState = false)
@@ -172,40 +175,33 @@ namespace SynthesisMultiplayer.Threading
             var messageChannel = GetChannel(taskName);
             Dictionary<string, dynamic> state = null;
             task.Terminate();
-            process.Wait();
+            process.Join();
             task.Terminate();
             if (doRestoreState)
                 state = StateBackup.DumpState(task);
-            process.Dispose();
             process = task.Run(GetTaskObject(taskName).Id, messageChannel, context: new TaskContext(), state: state);
-            lock (Instance.TaskLock)
-            {
-                Instance.Tasks[task.Id] = new TaskEntry((task, process, messageChannel));
-            }
+            Instance.TaskLock.EnterWriteLock();
+            Instance.Tasks[task.Id] = new TaskEntry((task, process, messageChannel));
+            Instance.TaskLock.ExitWriteLock();
         }
 
-        public static void TerminateTask(Guid taskId, params dynamic[] args)
+        public static void TerminateTask(Guid taskId, string reason = null, params dynamic[] args)
         {
-            lock (Instance.TaskLock)
-            {
-                var (task, proc) = GetTask(taskId);
-                task.Terminate(args: args);
-                GetChannel(taskId).Close();
-            }
+            var (task, proc) = GetTask(taskId);
+            task.Terminate(args: args);
+            GetChannel(taskId).Close();
         }
 
         public static void TerminateTask(string taskName, params dynamic[] args)
         {
-            lock (Instance.TaskLock)
-            {
-                var (task, proc) = GetTask(taskName);
-                task.Terminate(args: args);
-                GetChannel(taskName).Close();
-            }
+            var (task, proc) = GetTask(taskName);
+            task.Terminate(args: args);
+            GetChannel(taskName).Close();
         }
         public static void Send(Guid taskId, (string, AsyncCallHandle) message)
         {
-            if (GetTask(taskId).Item1 == null || GetTask(taskId).Item2 == null)
+            var taskObject = GetTask(taskId);
+            if (taskObject.Item2 == null || taskObject.Item2 == null)
             {
                 throw new Exception("No task found with id '" + taskId.ToString() + "'");
             }
@@ -213,11 +209,18 @@ namespace SynthesisMultiplayer.Threading
         }
         public static void Send(string taskName, (string, AsyncCallHandle) message)
         {
-            if (GetTask(taskName).Item1 == null || GetTask(taskName).Item2 == null)
+            var taskObject = GetTask(taskName);
+            if (taskObject.Item2 == null || taskObject.Item2 == null)
             {
                 throw new Exception("No task found with name '" + taskName + "'");
             }
             GetChannel(taskName).Send(message);
+        }
+
+        // TODO: Remove
+        public static (Dictionary<Guid, TaskEntry>, Dictionary<string, Guid>) DumpThreads()
+        {
+            return (Instance.Tasks, Instance.TaskNames);
         }
     }
 }
