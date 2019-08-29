@@ -27,6 +27,10 @@ public class SimStart : MonoBehaviour
             stateMachine.PushState(new MainState());
     }
 
+    /// <summary>
+    /// Determines if there was a robot specified in the command arguments.
+    /// </summary>
+    /// <returns>Whether or not a robot was selected in the command line arguments</returns>
     private bool DetermineSelected()
     {
         if (!AppModel.InitialLaunch)

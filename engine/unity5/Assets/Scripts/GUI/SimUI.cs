@@ -216,16 +216,25 @@ namespace Synthesis.GUI
             UpdateDriverStationPanel();
         }
 
+        /// <summary>
+        /// Closes the update prompt
+        /// </summary>
         public void CloseUpdatePrompt() {
             GameObject.Find("UpdatePrompt").SetActive(false);
         }
 
+        /// <summary>
+        /// Will open the synthesis website.
+        /// </summary>
         public void UpdateYes() {
             Process.Start("http://synthesis.autodesk.com");
             Process.Start(updater);
             Application.Quit();
         }
         
+        /// <summary>
+        /// Decides which tab it should be tracking for usage time.
+        /// </summary>
         private void LogTabTiming()
         {
             switch (currentTab)
@@ -423,6 +432,10 @@ namespace Synthesis.GUI
         }
         #endregion
         #region change robot/field functions
+
+        /// <summary>
+        /// Hides the RobotListPanel and changes the current robot to the robot that was selected.
+        /// </summary>
         public void ChangeRobot()
         {
             GameObject panel = GameObject.Find("RobotListPanel");
@@ -914,6 +927,13 @@ namespace Synthesis.GUI
                 tabStateMachine.Link<T>(tab, strict);
         }
 
+        /// <summary>
+        /// Checks if the MaM drivebases folder exists. This is used to determine
+        /// whether or not MaM is installed.
+        /// </summary>
+        /// <returns>
+        /// MaM is installed.
+        /// </returns>
         public static bool IsMaMInstalled() {
             return Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + Path.DirectorySeparatorChar
                 + "Autodesk" + Path.DirectorySeparatorChar + "Synthesis" + Path.DirectorySeparatorChar + "MixAndMatch" + Path.DirectorySeparatorChar

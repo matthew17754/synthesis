@@ -5,6 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Manages the ErrorScene
+/// </summary>
 public class ErrorMenu : MonoBehaviour
 {
     public void Start()

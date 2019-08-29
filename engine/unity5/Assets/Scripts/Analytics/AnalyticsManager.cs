@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using System;
 using System.Threading;
 
+/// <summary>
+/// The AnalyticsManager is the interface for recording data on synthesis users.
+/// Every time it passes DUMP_DELAY in seconds it will dump all recorded data to google analytics.
+/// </summary>
 public class AnalyticsManager : MonoBehaviour {
 
     public static AnalyticsManager GlobalInstance { get; set; }

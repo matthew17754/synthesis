@@ -155,6 +155,7 @@ namespace Synthesis.States
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
             string selectedReplay = PlayerPrefs.GetString("simSelectedReplay");
 
+            // This determines if it is the users first time loading a bot
             if (PlayerPrefs.GetString("simSelectedRobot", "").Equals(""))
             {
                 AppModel.ErrorToMenu("ROBOT_SELECT|FIRST");
@@ -165,6 +166,7 @@ namespace Synthesis.States
             {
                 Tracking = true;
 
+                // If it's the first time then the user will be sent to the plane
                 if (timesLoaded > 0)
                 {
                     if (!LoadField(PlayerPrefs.GetString("simSelectedField")))
@@ -174,6 +176,7 @@ namespace Synthesis.States
                     }
                     else
                     {
+                        // Updates the position of the plane so it's not clipping the ground
                         MovePlane();
                     }
                 }
@@ -357,6 +360,9 @@ namespace Synthesis.States
             return isOk;
         }
 
+        /// <summary>
+        /// Adjusts the plane to be just below the field
+        /// </summary>
         public void MovePlane()
         {
             GameObject plane = GameObject.Find("Environment");

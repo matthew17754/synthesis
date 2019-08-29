@@ -4,6 +4,10 @@ using UnityEngine;
 using System.Threading.Tasks;
 using System.Threading;
 
+/// <summary>
+/// This will check to see if the analytics GameObject exists
+/// inside the scene. If there isn't one then one will be created
+/// </summary>
 public class AnalyticsChecker : MonoBehaviour
 {
     public GameObject analyticsManagerPrefab;

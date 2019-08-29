@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 namespace Synthesis.States
 {
+    /// <summary>
+    /// This state handles the error scene for when the user encounters an issue.
+    /// </summary>
     public class ErrorScreenState : State
     {
 
