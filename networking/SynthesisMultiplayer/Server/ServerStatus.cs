@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Server
+namespace Multiplayer.Server
 {
     public enum ServerStatus
     {

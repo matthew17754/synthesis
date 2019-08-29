@@ -3,17 +3,17 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
 using System.Threading;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Util;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Common;
+using Multiplayer.Util;
 using MatchmakingService;
 using System.Text;
-using SynthesisMultiplayer.Attribute;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
-using SynthesisMultiplayer.IO;
+using Multiplayer.Attribute;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using Multiplayer.IO;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -24,7 +24,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Server.UDP
+namespace Multiplayer.Server.UDP
 {
     public class ConnectionListener : ManagedUdpTask
     {

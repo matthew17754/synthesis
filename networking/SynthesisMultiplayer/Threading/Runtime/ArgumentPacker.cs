@@ -1,4 +1,4 @@
-﻿using SynthesisMultiplayer.Attribute;
+﻿using Multiplayer.Attribute;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading.Runtime
+namespace Multiplayer.Threading.Runtime
 {
     public static class ArgumentPacker
     {

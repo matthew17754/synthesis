@@ -1,4 +1,4 @@
-﻿using SynthesisMultiplayer.Attribute;
+﻿using Multiplayer.Attribute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading.Runtime
+namespace Multiplayer.Threading.Runtime
 {
     public class CallbackInfo
     {

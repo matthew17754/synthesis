@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SynthesisMultiplayer.Util
+namespace Multiplayer.Util
 {
     public class Either<TLeft, TRight>
     {

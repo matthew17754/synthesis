@@ -1,20 +1,20 @@
-﻿using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 using TaskEntry =
-    SynthesisMultiplayer.Util.Either<
+    Multiplayer.Util.Either<
         (
-            SynthesisMultiplayer.Threading.IManagedTask Task,
+            Multiplayer.Threading.IManagedTask Task,
             System.Threading.Thread Process,
-            SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Runtime.AsyncCallHandle)> Channel
+            Multiplayer.Util.Channel<(string, Multiplayer.Threading.Runtime.AsyncCallHandle)> Channel
         ),
         System.Guid>;
-using MessageChannel = SynthesisMultiplayer.Util.Channel<(string, SynthesisMultiplayer.Threading.Runtime.AsyncCallHandle)>;
-namespace SynthesisMultiplayer.Threading
+using MessageChannel = Multiplayer.Util.Channel<(string, Multiplayer.Threading.Runtime.AsyncCallHandle)>;
+namespace Multiplayer.Threading
 {
     internal class ManagedTaskRegistry
     {
@@ -216,11 +216,19 @@ namespace SynthesisMultiplayer.Threading
             }
             GetChannel(taskName).Send(message);
         }
-
-        // TODO: Remove
-        public static (Dictionary<Guid, TaskEntry>, Dictionary<string, Guid>) DumpThreads()
+        public static void CleanupTasks()
         {
-            return (Instance.Tasks, Instance.TaskNames);
+            foreach(var taskEntry in Instance.Tasks)
+            {
+                var (task, proc) = taskEntry.Value.GetState() == TaskEntry.State.Left ?
+                    GetTask(taskEntry.Key) :
+                    GetTask(taskEntry.Value.Right);
+                if (task.Alive)
+                {
+                    TerminateTask(task.Id);
+                    proc.Join();
+                }
+            }
         }
     }
 }

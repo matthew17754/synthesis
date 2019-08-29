@@ -1,10 +1,10 @@
 ﻿using Google.Protobuf;
-using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.IO;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.IO;
 using System.Net;
@@ -12,7 +12,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -23,7 +23,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Common.UDP
+namespace Multiplayer.Common.UDP
 {
     public class StreamSender : ManagedUdpTask
     {
@@ -55,19 +55,6 @@ namespace SynthesisMultiplayer.Common.UDP
             this.Call(Methods.ClientSender.Send, Encoding.ASCII.GetBytes(data)).Wait();
         }
 
-        private void UDPSendMethod(IAsyncResult res)
-        {
-            int sent = Connection.EndSend(res);
-            if (Serving)
-            {
-                var outputData = sendQueue.Get();
-                eventWaitHandle.WaitOne(sendMethodTimeout);
-                Connection.BeginSend(outputData,
-                    outputData.Length, Endpoint.Address.ToString(),
-                    Endpoint.Port, UDPSendMethod, null);
-            }
-        }
-
         [Callback(Methods.ClientSender.Send, "sendData")]
         [Argument("sendData", typeof(byte[]))]
         public void SendMethod(ITaskContext context, AsyncCallHandle handle)
@@ -81,8 +68,6 @@ namespace SynthesisMultiplayer.Common.UDP
         public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = true;
-            Connection.BeginSend(new byte[] { },
-                0, Endpoint, UDPSendMethod, null);
             Info.Log($"Stream Sender started on {Endpoint.ToString()}");
             handle.Done();
         }
@@ -115,8 +100,12 @@ namespace SynthesisMultiplayer.Common.UDP
         {
             if (Serving)
             {
-                Thread.Sleep(100);
-                eventWaitHandle.Set();
+                if (sendQueue.TryPeek().Valid)
+                {
+                    var outputData = sendQueue.Get();
+                    Connection.SendAsync(outputData,
+                        outputData.Length, Endpoint);
+                }
             }
         }
     }

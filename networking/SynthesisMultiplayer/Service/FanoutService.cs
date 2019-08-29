@@ -1,21 +1,21 @@
 ﻿using Google.Protobuf;
 using MatchmakingService;
-using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Common.UDP;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
+using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.Common.UDP;
+using Multiplayer.IO;
+using Multiplayer.Server.UDP;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
-namespace SynthesisMultiplayer.Common
+using static Multiplayer.Threading.ManagedTaskHelper;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -26,7 +26,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Service
+namespace Multiplayer.Service
 {
     public class FanoutService : IManagedTask
     {
@@ -62,7 +62,7 @@ namespace SynthesisMultiplayer.Service
         {
             foreach (var (listener, sender) in Connections)
             {
-                var newData = Call(listener, Methods.ClientListener.GetClientData, false).Result;
+                var newData = Call(listener, Methods.StreamListener.GetStreamData, false).Result;
                 if (newData != null)
                 {
                     var message = new ServerDataFrame
@@ -104,6 +104,7 @@ namespace SynthesisMultiplayer.Service
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
+            IsInitialized = false;
             foreach (var (listener, sender) in Connections)
             {
                 Info.Log("Fanout service shutting down");

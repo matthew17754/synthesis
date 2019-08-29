@@ -1,13 +1,13 @@
 ﻿using System;
-using SynthesisMultiplayer.Common;
+using Multiplayer.Common;
 using System.Threading;
-using SynthesisMultiplayer.Service;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.IO;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using Multiplayer.Service;
+using Multiplayer.Threading;
+using Multiplayer.IO;
+using static Multiplayer.Threading.ManagedTaskHelper;
 using System.IO;
 using System.Text;
-using SynthesisMultiplayer.Common.UDP;
+using Multiplayer.Common.UDP;
 using System.Net;
 
 namespace MultiplayerServer
@@ -73,7 +73,8 @@ namespace MultiplayerServer
             Thread.Sleep(500);
             while (Console.ReadKey(true).Key != ConsoleKey.Escape) { }
             LobbyService.Terminate();
-
+            senderTask.Terminate();
+            lobbyClient.Terminate();
             Info.Log("Server Closing. Please wait...");
             int counter = 0;
             while (LobbyService.Status != ManagedTaskStatus.Completed)
@@ -84,6 +85,7 @@ namespace MultiplayerServer
                 }
                 ++counter;
             }
+            CleanupTasks();
         }
     }
 }

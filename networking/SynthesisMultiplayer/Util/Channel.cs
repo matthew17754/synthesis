@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Util
+namespace Multiplayer.Util
 {
     public class Channel<T> : IDisposable
     {

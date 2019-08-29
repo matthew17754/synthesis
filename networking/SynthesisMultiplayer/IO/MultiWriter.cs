@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.IO
+namespace Multiplayer.IO
 {
     public class MultiWriter : TextWriter
     {

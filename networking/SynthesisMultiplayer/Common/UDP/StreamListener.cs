@@ -1,9 +1,9 @@
 ﻿using MatchmakingService;
-using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.IO;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,33 +11,33 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
-        public class ClientListener
+        public class StreamListener
         {
-            public const string GetClientData = "GET_CLIENT_DATA";
+            public const string GetStreamData = "GET_STREAM_DATA";
         }
     }
 }
 
-namespace SynthesisMultiplayer.Common.UDP
+namespace Multiplayer.Common.UDP
 {
     public class StreamListener : ManagedUdpTask
     {
-        protected class ConnectionListenerContext : TaskContext
+        protected class StreamListenerContext : TaskContext
         {
             public UdpClient client;
             public IPEndPoint peer;
 
             public Channel<byte[]> sender;
         }
-        private class ClientListenerData
+        private class StreamListenerData
         {
-            public ClientListenerData()
+            public StreamListenerData()
             {
                 Data = new Queue<byte[]>();
                 Mutex = new Mutex();
@@ -47,7 +47,7 @@ namespace SynthesisMultiplayer.Common.UDP
             public IPEndPoint LastEndpoint;
         }
         [SavedState]
-        ClientListenerData ClientData;
+        StreamListenerData StreamData;
         bool disposed;
         Channel<byte[]> Channel;
         bool IsInitialized { get; set; }
@@ -60,18 +60,18 @@ namespace SynthesisMultiplayer.Common.UDP
             base(ip, port)
         {
             Serving = false;
-            ClientData = new ClientListenerData();
+            StreamData = new StreamListenerData();
             Channel = new Channel<byte[]>();
         }
         private void ReceiveMethod(IAsyncResult result)
         {
             if (Serving)
             {
-                var context = ((ConnectionListenerContext)(result.AsyncState));
+                var context = ((StreamListenerContext)(result.AsyncState));
                 var udpClient = context.client;
                 var peer = context.peer;
                 var receivedData = udpClient.EndReceive(result, ref peer);
-                ClientData.LastEndpoint = context.peer;
+                StreamData.LastEndpoint = context.peer;
                 context.sender.Send(receivedData);
                 Debug.Log("Got Data '" + Encoding.Default.GetString(receivedData) + "'");
                 context.peer = new IPEndPoint(Endpoint.Address, Endpoint.Port);
@@ -79,9 +79,9 @@ namespace SynthesisMultiplayer.Common.UDP
             }
         }
         public IPEndPoint PeekClientData(Guid id) =>
-            this.Call(Methods.ClientListener.GetClientData, false).Result;
+            this.Call(Methods.StreamListener.GetStreamData, false).Result;
         public IPEndPoint GetClientData(Guid id) =>
-            this.Call(Methods.ClientListener.GetClientData, true).Result;
+            this.Call(Methods.StreamListener.GetStreamData, true).Result;
 
         public override void Loop()
         {
@@ -100,7 +100,7 @@ namespace SynthesisMultiplayer.Common.UDP
                         Warning.Log("API version not recognized. Skipping");
                         return;
                     }
-                    ClientData.Data.Enqueue(Encoding.ASCII.GetBytes(decodedData.Data));
+                    StreamData.Data.Enqueue(Encoding.ASCII.GetBytes(decodedData.Data));
                 }
                 catch (Exception)
                 {
@@ -118,7 +118,7 @@ namespace SynthesisMultiplayer.Common.UDP
         public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Info.Log($"Listener started on {Endpoint.ToString()}");
-            Connection.BeginReceive(ReceiveMethod, new ConnectionListenerContext
+            Connection.BeginReceive(ReceiveMethod, new StreamListenerContext
             {
                 client = Connection,
                 peer = Endpoint,
@@ -155,7 +155,7 @@ namespace SynthesisMultiplayer.Common.UDP
 
         }
 
-        [Callback(Methods.ClientListener.GetClientData, "doBlock")]
+        [Callback(Methods.StreamListener.GetStreamData, "doBlock")]
         [Argument("doBlock", typeof(bool), false, RuntimeArgumentAttributes.HasDefault)]
         public void GetClientDataMethod(ITaskContext context, AsyncCallHandle handle)
         {
@@ -164,18 +164,18 @@ namespace SynthesisMultiplayer.Common.UDP
             {
                 while (true)
                 {
-                    lock (ClientData.Mutex)
+                    lock (StreamData.Mutex)
                     {
-                        if (ClientData.Data.Count >= 1)
-                            handle.Result = ClientData.Data.Dequeue();
+                        if (StreamData.Data.Count >= 1)
+                            handle.Result = StreamData.Data.Dequeue();
                     }
                     Thread.Sleep(50);
                 }
             } else
             {
-                lock(ClientData.Mutex)
+                lock(StreamData.Mutex)
                 {
-                    handle.Result = ClientData.Data.Count >= 1 ? ClientData.Data.Dequeue() : null;
+                    handle.Result = StreamData.Data.Count >= 1 ? StreamData.Data.Dequeue() : null;
                     handle.Done();
                 }
             }
@@ -201,14 +201,14 @@ namespace SynthesisMultiplayer.Common.UDP
         {
             Id = taskId;
             IsInitialized = true;
-            ClientData = new ClientListenerData();
+            StreamData = new StreamListenerData();
             Channel = new Channel<byte[]>();
             Connection = new UdpClient(Endpoint);
         }
 
         public override void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Do(Methods.Server.Shutdown).Wait();
+            this.Shutdown();
             Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
 

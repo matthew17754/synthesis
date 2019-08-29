@@ -1,8 +1,8 @@
-﻿using SynthesisMultiplayer.Threading.Runtime;
+﻿using Multiplayer.Threading.Runtime;
 using System;
 using System.Linq;
 
-namespace SynthesisMultiplayer.Attribute
+namespace Multiplayer.Attribute
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public sealed class ArgumentAttribute : System.Attribute

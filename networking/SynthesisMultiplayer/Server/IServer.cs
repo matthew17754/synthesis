@@ -1,14 +1,14 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Server;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Server;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
 
     public partial class Methods

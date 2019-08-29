@@ -1,18 +1,18 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Client.gRPC;
-using SynthesisMultiplayer.Client.UDP;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Common.UDP;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Client.gRPC;
+using Multiplayer.Client.UDP;
+using Multiplayer.Common;
+using Multiplayer.Common.UDP;
+using Multiplayer.IO;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Net;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Threading.ManagedTaskHelper;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -23,7 +23,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Service
+namespace Multiplayer.Service
 {
     public class LobbyClientService : IManagedTask
     {
@@ -59,7 +59,9 @@ namespace SynthesisMultiplayer.Service
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Call(Methods.Server.Shutdown).Wait();
+            Info.Log("Shutting lobby client");
+            Initialized = false;
+            Alive = false;
         }
 
         protected virtual void Dispose(bool disposing)

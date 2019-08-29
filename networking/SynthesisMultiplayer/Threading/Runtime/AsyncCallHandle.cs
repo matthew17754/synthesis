@@ -1,4 +1,4 @@
-﻿using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.Remoting;
 using System.Threading;
 
-namespace SynthesisMultiplayer.Threading.Runtime
+namespace Multiplayer.Threading.Runtime
 {
     public class AsyncCallHandle : IDisposable
     {

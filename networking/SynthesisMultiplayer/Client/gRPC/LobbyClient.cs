@@ -1,10 +1,10 @@
 ﻿using Google.Protobuf;
 using MatchmakingService;
-using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
+using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.IO;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -32,7 +32,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Client.gRPC
+namespace Multiplayer.Client.gRPC
 {
     public class LobbyClient : IManagedTask
     {
@@ -101,6 +101,7 @@ namespace SynthesisMultiplayer.Client.gRPC
                             Api = "v1",
                             JobId = res.JobId,
                         }).Wait();
+
                         Thread.Sleep(50);
                     } else
                     {
@@ -148,6 +149,8 @@ namespace SynthesisMultiplayer.Client.gRPC
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
+            Initialized = false;
+            Alive = false;
         }
     }
 }

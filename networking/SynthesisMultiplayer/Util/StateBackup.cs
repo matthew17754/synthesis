@@ -1,4 +1,4 @@
-﻿using SynthesisMultiplayer.Attribute;
+﻿using Multiplayer.Attribute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
-namespace SynthesisMultiplayer.Util
+namespace Multiplayer.Util
 {
     public static class StateBackup
     {

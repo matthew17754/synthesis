@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Attribute
+namespace Multiplayer.Attribute
 {
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class CallbackAttribute : System.Attribute

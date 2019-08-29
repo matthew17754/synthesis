@@ -1,17 +1,17 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Server.gRPC;
-using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.Server.gRPC;
+using Multiplayer.Server.UDP;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
-namespace SynthesisMultiplayer.Service
+using static Multiplayer.Threading.ManagedTaskHelper;
+namespace Multiplayer.Service
 {
     public class LobbyHostService : IManagedTask, IServer
     {

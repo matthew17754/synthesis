@@ -4,19 +4,19 @@ using System.Collections.Generic;
 using System;
 using Grpc;
 using System.Threading.Tasks;
-using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading.Runtime;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
+using Multiplayer.Server.UDP;
+using Multiplayer.Threading.Runtime;
+using static Multiplayer.Threading.ManagedTaskHelper;
 using Grpc.Core;
 using System.Threading;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.Attribute;
 using System.Net;
-using SynthesisMultiplayer.Util;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.IO;
+using Multiplayer.Util;
+using Multiplayer.Threading;
+using Multiplayer.IO;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -27,7 +27,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Server.gRPC
+namespace Multiplayer.Server.gRPC
 {
     public class LobbyHandler : IManagedTask, IServer
     {

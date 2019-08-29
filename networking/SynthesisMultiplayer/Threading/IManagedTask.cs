@@ -1,24 +1,24 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Util;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using SynthesisMultiplayer.Threading.Runtime;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
+using Multiplayer.Threading.Runtime;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
 using TaskMethods = System.Collections.Generic.Dictionary<string, string>;
 using Methods = System.Collections.Generic.Dictionary<string, 
     (
-        SynthesisMultiplayer.Threading.ManagedTaskMethod Method,
-        SynthesisMultiplayer.Threading.Runtime.CallbackInfo MethodInfo
+        Multiplayer.Threading.ManagedTaskMethod Method,
+        Multiplayer.Threading.Runtime.CallbackInfo MethodInfo
     )>;
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
 using System.Collections.Generic;
 using System.Diagnostics;
-using SynthesisMultiplayer.IO;
+using Multiplayer.IO;
 
-namespace SynthesisMultiplayer.Threading
+namespace Multiplayer.Threading
 {
     public delegate void ManagedTaskMethod(ITaskContext context, AsyncCallHandle handle = null);
     public interface IManagedTask : IDisposable
@@ -96,6 +96,7 @@ namespace SynthesisMultiplayer.Threading
                 var Method = method;
                 var handle = new AsyncCallHandle(GetMethodInfo(task.GetType(), method), args);
                 ManagedTaskHelper.Send(task.Id, (method, handle));
+                handle.Wait();
                 return;
             });
         }

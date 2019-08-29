@@ -1,17 +1,19 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Server.gRPC;
-using SynthesisMultiplayer.Server.UDP;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.Server.gRPC;
+using Multiplayer.Server.UDP;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using static SynthesisMultiplayer.Threading.ManagedTaskHelper;
-namespace SynthesisMultiplayer.Service
+using static Multiplayer.Threading.ManagedTaskHelper;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
+namespace Multiplayer.Service
 {
     public class LobbyService : IManagedTask, IServer
     {
@@ -66,7 +68,7 @@ namespace SynthesisMultiplayer.Service
 
         public void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Call(Methods.Server.Shutdown).Wait();
+            this.Shutdown();
         }
 
         [Callback(name: Methods.Server.Serve, argNames: "test")]
@@ -85,7 +87,7 @@ namespace SynthesisMultiplayer.Service
             throw new NotImplementedException();
         }
 
-        [Callback(name: Methods.Server.Shutdown)]
+        [Callback(Methods.Server.Shutdown)]
         public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
         {
             Serving = false;
@@ -96,7 +98,9 @@ namespace SynthesisMultiplayer.Service
             Alive = false;
             Initialized = false;
             Status = ManagedTaskStatus.Completed;
+            Thread.Sleep(50);
             handle.Done();
+            Thread.Sleep(50);
         }
     }
 }

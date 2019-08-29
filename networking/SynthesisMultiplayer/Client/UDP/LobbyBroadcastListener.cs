@@ -1,10 +1,10 @@
 ﻿using MatchmakingService;
-using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.IO;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.Common;
+using Multiplayer.IO;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,9 +14,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static MatchmakingService.SessionBroadcastMessage.Types;
-using static SynthesisMultiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Threading.Runtime.ArgumentPacker;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -27,7 +27,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Client.UDP
+namespace Multiplayer.Client.UDP
 {
     public class LobbyBroadcastListener : ManagedUdpTask
     {

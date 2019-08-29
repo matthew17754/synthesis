@@ -1,13 +1,13 @@
-﻿using SynthesisMultiplayer.Attribute;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
-using SynthesisMultiplayer.Util;
+﻿using Multiplayer.Attribute;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
+using Multiplayer.Util;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public abstract class ManagedUdpTask : IServer
     {

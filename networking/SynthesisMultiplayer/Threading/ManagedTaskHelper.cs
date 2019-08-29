@@ -1,12 +1,12 @@
-﻿using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Util;
-using SynthesisMultiplayer.Threading.Runtime;
+﻿using Multiplayer.Common;
+using Multiplayer.Util;
+using Multiplayer.Threading.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SynthesisMultiplayer.Threading
+namespace Multiplayer.Threading
 {
     public class ManagedTaskHelper
     {
@@ -23,5 +23,6 @@ namespace SynthesisMultiplayer.Threading
         public static Task Do(string taskName, string method, params dynamic[] args) => GetTask(taskName).Do(method, args: args);
         public static void Terminate(Guid taskId, string reason = null, params dynamic[] args) => ManagedTaskRegistry.TerminateTask(taskId, reason, args);
         public static void Terminate(string taskName, string reason = null, params dynamic[] args) => ManagedTaskRegistry.TerminateTask(taskName, reason, args);
+        public static void CleanupTasks() => ManagedTaskRegistry.CleanupTasks();
     }
 }

@@ -1,21 +1,21 @@
 ﻿using MatchmakingService;
-using SynthesisMultiplayer.Common;
-using SynthesisMultiplayer.Threading;
-using SynthesisMultiplayer.Threading.Runtime;
+using Multiplayer.Common;
+using Multiplayer.Threading;
+using Multiplayer.Threading.Runtime;
 using System;
 using System.Net;
 using System.Threading;
 using Google.Protobuf;
 using System.IO;
 using System.Net.Sockets;
-using SynthesisMultiplayer.Attribute;
+using Multiplayer.Attribute;
 using System.Text;
 using static MatchmakingService.SessionBroadcastMessage.Types;
 using System.Collections.Generic;
 using System.Reflection;
-using SynthesisMultiplayer.IO;
+using Multiplayer.IO;
 
-namespace SynthesisMultiplayer.Common
+namespace Multiplayer.Common
 {
     public partial class Methods
     {
@@ -26,7 +26,7 @@ namespace SynthesisMultiplayer.Common
     }
 }
 
-namespace SynthesisMultiplayer.Server.UDP
+namespace Multiplayer.Server.UDP
 {
     public class LobbyBroadcaster : ManagedUdpTask
     {
@@ -117,9 +117,13 @@ namespace SynthesisMultiplayer.Server.UDP
                 Message.WriteTo(outputStream);
                 outputStream.Position = 0;
                 var outputData = new StreamReader(outputStream).ReadToEnd();
-                Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
-                    outputData.Length, Endpoint.Address.ToString(),
-                    Endpoint.Port, UDPSendMethod, null);
+                if(Serving)
+                    Connection.BeginSend(Encoding.ASCII.GetBytes(outputData),
+                        outputData.Length, Endpoint.Address.ToString(),
+                        Endpoint.Port, UDPSendMethod, null);
+            } else
+            {
+                Connection.EndSend(res);
             }
         }
 

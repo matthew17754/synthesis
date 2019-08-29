@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using LoggerFunc = System.Action<string>;
-namespace SynthesisMultiplayer.IO
+namespace Multiplayer.IO
 {
     public class LogWriter : TextWriter
     {
