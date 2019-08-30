@@ -549,14 +549,6 @@ namespace Synthesis.States
         }
 
         /// <summary>
-        /// Changes the control index of the active robot
-        /// </summary>
-        public void ChangeControlIndex(int index)
-        {
-            ActiveRobot.ControlIndex = index;
-        }
-
-        /// <summary>
         /// If there are two robots or more, remove and delete the robot at that index
         /// </summary>
         public void RemoveRobot(int index)

@@ -638,21 +638,32 @@ namespace Synthesis.GUI
             }
         }
 
+        public void SetAddRobotPanelActive(bool value)
+        {
+            if(value != addPanel.activeSelf)
+            {
+                if (!value)
+                {
+                    addPanel.SetActive(false);
+                }
+                else
+                {
+                    if (IsMaMInstalled())
+                    {
+                        addPanel.SetActive(true);
+                    }
+                    else
+                    {
+                        ToggleChangeRobotPanel();
+                    }
+                    changePanel.SetActive(false);
+                }
+            }
+        }
+
         public void ToggleAddRobotPanel()
         {
-            if (addPanel.activeSelf)
-            {
-                addPanel.SetActive(false);
-            }
-            else
-            {
-                if (IsMaMInstalled()) {
-                    addPanel.SetActive(true);
-                } else {
-                    ToggleChangeRobotPanel();
-                }
-                changePanel.SetActive(false);
-            }
+            SetAddRobotPanelActive(!addPanel.activeSelf);
         }
 
         public void ToggleChangePanel()
