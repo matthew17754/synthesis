@@ -10,7 +10,6 @@ using Synthesis.DriverPractice;
 using Synthesis.GUI.Scrollables;
 using Synthesis.States;
 using Synthesis.Utils;
-using Assets.Scripts.GUI;
 
 /// <summary>
 /// Class for controlling the various aspects of local multiplayer
@@ -19,10 +18,13 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
 {
 
     private GameObject canvas;
-    private SimUI simUI;
 
-    private GameObject multiplayerWindow;
+    private GameObject mainMultiplayerWindow;
+    private GameObject localMultiplayerWindow;
     private GameObject addRobotWindow;
+
+    private Text activeRobotText;
+    private Dropdown playerControlsDropdown;
 
     private GameObject mixAndMatchPanel;
 
@@ -31,39 +33,25 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
     private GameObject highlight;
 
     /// <summary>
-    /// FInds all the gameobjects and stores them in variables for efficiency
+    /// Finds all the gameobjects and stores them in variables for efficiency
     /// </summary>
     private void Start()
     {
         canvas = GameObject.Find("Canvas");
-        multiplayerWindow = Auxiliary.FindObject(canvas, "MultiplayerPanel");
+        mainMultiplayerWindow = Auxiliary.FindObject(canvas, "NewMultiplayerPanel");
+        localMultiplayerWindow = Auxiliary.FindObject(Auxiliary.FindObject(mainMultiplayerWindow, "LocalPanel"), "Panel");
         addRobotWindow = Auxiliary.FindObject(canvas, "AddRobotPanel");
+
+        activeRobotText = Auxiliary.FindObject(localMultiplayerWindow, "ActiveRobotText").GetComponent<Text>();
+        playerControlsDropdown = Auxiliary.FindObject(localMultiplayerWindow, "PlayerControlsDropdown").GetComponent<Dropdown>();
 
         for (int i = 0; i < robotButtons.Length; i++)
         {
             robotButtons[i] = Auxiliary.FindObject(canvas, "Robot" + (i + 1) + "Button");
         }
 
-        simUI = StateMachine.SceneGlobal.gameObject.GetComponent<SimUI>();
         highlight = Auxiliary.FindObject(canvas, "HighlightActiveRobot");
         mixAndMatchPanel = Auxiliary.FindObject(canvas, "MixAndMatchPanel");
-    }
-
-    /// <summary>
-    /// Toggles the multiplayer window
-    /// </summary>
-    public void ToggleMultiplayerWindow()
-    {
-        if (multiplayerWindow.activeSelf)
-        {
-            multiplayerWindow.SetActive(false);
-        }
-        else
-        {
-            simUI.EndOtherProcesses();
-            multiplayerWindow.SetActive(true);
-            UpdateUI();
-        }
     }
 
     /// <summary>
@@ -134,7 +122,10 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
             State.SwitchActiveRobot(activeIndex);
             UpdateUI();
         }
-        else UserMessageManager.Dispatch("Cannot Delete. Must Have At Least One Robot on Field.", 5);
+        else
+        {
+            UserMessageManager.Dispatch("Cannot Delete. Must Have At Least One Robot on Field.", 5);
+        }
     }
 
     /// <summary>
@@ -176,10 +167,9 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
 
         highlight.transform.position = robotButtons[activeIndex].transform.position;
 
-        Resources.FindObjectsOfTypeAll<GameObject>().Where(x => x.name.Equals("ActiveRobotText")).First().GetComponent<Text>().text = "Robot: " + State.SpawnedRobots[activeIndex].RobotName;
-        Resources.FindObjectsOfTypeAll<GameObject>().Where(x => x.name.Equals("ControlIndexDropdown")).First().GetComponent<Dropdown>().value = State.ActiveRobot.ControlIndex;
-        // GameObject.Find("ActiveRobotText").GetComponent<Text>().text = "Robot: " + mainState.SpawnedRobots[activeIndex].RobotName;
-        //GameObject.Find("ControlIndexDropdown").GetComponent<Dropdown>().value = mainState.activeRobot.controlIndex;
+        activeRobotText.text = "Robot: " + State.SpawnedRobots[activeIndex].RobotName;
+        playerControlsDropdown.value = State.ActiveRobot.ControlIndex;
+        playerControlsDropdown.RefreshShownValue();
     }
 
     /// <summary>
@@ -187,7 +177,7 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
     /// </summary>
     public void HideTooltip()
     {
-        Auxiliary.FindObject(multiplayerWindow, "MultiplayerTooltip").SetActive(false);
+        Auxiliary.FindObject(localMultiplayerWindow, "MultiplayerTooltip").SetActive(false);
     }
 
     /// <summary>
@@ -197,10 +187,5 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
     {
         State.ChangeControlIndex(index);
         UpdateUI();
-    }
-
-    public void EndProcesses()
-    {
-        if (multiplayerWindow.activeSelf) multiplayerWindow.SetActive(false);
     }
 }

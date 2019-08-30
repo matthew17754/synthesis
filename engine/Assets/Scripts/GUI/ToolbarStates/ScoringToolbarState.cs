@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     /// <summary>
     /// The state that controls the scoring toolbar and related state functions. Because of the nature of the specific functions,

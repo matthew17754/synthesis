@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     /// <summary>
     /// The toolbar state for the sensor toolbar and related functions.

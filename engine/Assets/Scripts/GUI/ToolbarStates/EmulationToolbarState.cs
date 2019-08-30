@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System;
 using Synthesis;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     /// <summary>
     /// This state controls the emulation toolbar and interface to starting emulation robot code.

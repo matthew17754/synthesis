@@ -410,7 +410,7 @@ namespace Synthesis.DriverPractice
             dpmRobot = mainState.ActiveRobot.GetDriverPractice();
             trajectoryLine.transform.parent = dpmRobot.transform;
             Destroy(moveArrows);
-            if (Auxiliary.FindGameObject("Field") != null) {
+            if (Auxiliary.FindGameObject("Field") != null && FieldDataHandler.gamepieces.Count > 0) {
                 moveArrows = CreateMoveArrows();
             }
         }

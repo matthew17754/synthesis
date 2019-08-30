@@ -453,6 +453,7 @@ namespace Synthesis.GUI
         private GameObject mainPanel;
         private bool lastActive = false;
         private bool shouldBeActive = false;
+        private bool lastMultiplayerToolbarState = false;
         private bool lastAnyFieldfocused = false;
 
         // Robot IO view
@@ -514,7 +515,11 @@ namespace Synthesis.GUI
         {
             if (shouldBeActive) // Handle hiding the panel. Other UIs don't hide automatically, but this one is big and should.
             {
-                if (InputControl.GetButtonDown(new KeyMapping("Hide Menu", KeyCode.H, Input.Enums.KeyModifier.Ctrl), true)) // TODO make global control
+                if (InputControl.GetButtonDown(new KeyMapping("Hide Menu", KeyCode.H, Input.Enums.KeyModifier.Ctrl), true)) // TODO make global control 
+                {
+                    mainPanel.SetActive(!mainPanel.activeSelf);
+                }
+                if (lastMultiplayerToolbarState != SimUI.getSimUI().getTabStateMachine().CurrentState is MultiplayerToolbarState)
                 {
                     mainPanel.SetActive(!mainPanel.activeSelf);
                 }
@@ -550,6 +555,7 @@ namespace Synthesis.GUI
                 RobotPrintManager.Update();
             }
 
+            lastMultiplayerToolbarState = SimUI.getSimUI().getTabStateMachine() != null ? SimUI.getSimUI().getTabStateMachine().CurrentState is MultiplayerToolbarState : false;
             lastActive = mainPanel.activeSelf;
         }
 

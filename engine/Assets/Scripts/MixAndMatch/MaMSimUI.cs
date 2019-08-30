@@ -17,7 +17,6 @@ namespace Synthesis.MixAndMatch
         GameObject canvas;
 
         GameObject mixAndMatchPanel;
-        GameObject multiplayerPanel;
 
         private SimUI simUI;
 
@@ -39,7 +38,6 @@ namespace Synthesis.MixAndMatch
             canvas = GameObject.Find("Canvas");
 
             mixAndMatchPanel = Auxiliary.FindObject(canvas, "MixAndMatchPanel");
-            multiplayerPanel = Auxiliary.FindObject(canvas, "MultiplayerPanel");
 
             simUI = StateMachine.SceneGlobal.gameObject.GetComponent<SimUI>();
         }
@@ -56,21 +54,6 @@ namespace Synthesis.MixAndMatch
                 simUI.EndOtherProcesses();
                 mixAndMatchPanel.SetActive(true);
                 InputControl.DisableSimControls();
-            }
-        }
-
-        public void ToggleMaMInMultiplayer()
-        {
-            if (mixAndMatchPanel.activeSelf)
-            {
-                mixAndMatchPanel.SetActive(false);
-                multiplayerPanel.SetActive(true);
-            }
-            else
-            {
-                simUI.EndOtherProcesses();
-                mixAndMatchPanel.SetActive(true);
-                multiplayerPanel.SetActive(true);
             }
         }
     }

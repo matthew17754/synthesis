@@ -7,7 +7,7 @@ using Synthesis.Sensors;
 using Synthesis.Camera;
 using Synthesis.GUI;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     /// <summary>
     /// Menu toolbar

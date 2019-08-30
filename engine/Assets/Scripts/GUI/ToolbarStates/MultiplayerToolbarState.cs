@@ -4,7 +4,7 @@ using Synthesis.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     public class MultiplayerToolbarState : State
     {
@@ -38,7 +38,7 @@ namespace Assets.Scripts.GUI
             selectedButtonImage = Resources.Load<Sprite>("Images/New Textures/greenButton");
             unselectedButtonImage = Resources.Load<Sprite>("Images/New Textures/TopbarHighlight");
 
-            tabState = TabState.Local;
+            OnLocalMultiplayerButtonClicked();
         }
 
         public override void Update()
@@ -51,16 +51,28 @@ namespace Assets.Scripts.GUI
         public void OnLocalMultiplayerButtonClicked()
         {
             tabState = TabState.Local;
+            AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.MultiplayerTab,
+                    AnalyticsLedger.EventAction.Clicked,
+                    "LocalMultiplayer",
+                    AnalyticsLedger.getMilliseconds().ToString());
         }
 
         public void OnHostMultiplayerButtonClicked()
         {
             tabState = TabState.Host;
+            AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.MultiplayerTab,
+                    AnalyticsLedger.EventAction.Clicked,
+                    "HostMultiplayer",
+                    AnalyticsLedger.getMilliseconds().ToString());
         }
 
         public void OnJoinMultiplayerButtonClicked()
         {
             tabState = TabState.Join;
+            AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.MultiplayerTab,
+                    AnalyticsLedger.EventAction.Clicked,
+                    "JoinMultiplayer",
+                    AnalyticsLedger.getMilliseconds().ToString());
         }
 
         public void OnDisconnectMultiplayerButtonClicked()

@@ -32,23 +32,17 @@ namespace Synthesis.GUI
         SensorManagerGUI sensorManagerGUI;
         RobotCameraGUI robotCameraGUI;
         Toolkit toolkit;
-        LocalMultiplayer multiplayer;
-        SimUI simUI;
-        MenuUI menuUI;
 
         GameObject changeRobotPanel;
-        GameObject robotListPanel;
         GameObject changePanel;
         GameObject addPanel;
         GameObject changeFieldPanel;
         GameObject resetDropdown;
-        GameObject multiplayerPanel;
         GameObject stopwatchWindow;
         GameObject statsWindow;
         GameObject rulerWindow;
         GameObject toolbar;
-        GameObject tabs;
-        GameObject pointImpulsePanel;
+        GameObject pointImpulsePanel; // TODO move to toolkit
 
         public bool dpmWindowOn = false; //if the driver practice mode window is active
         public static bool inputPanelOn = false;
@@ -62,18 +56,15 @@ namespace Synthesis.GUI
             canvas = GameObject.Find("Canvas");
             camera = GameObject.Find("Main Camera").GetComponent<DynamicCamera>();
 
-            tabs = Auxiliary.FindObject(canvas, "Tabs");
             toolbar = Auxiliary.FindObject(canvas, "MainToolbar");
 
             changeRobotPanel = Auxiliary.FindObject(canvas, "ChangeRobotPanel");
-            robotListPanel = Auxiliary.FindObject(changeRobotPanel, "RobotListPanel");
             changePanel = Auxiliary.FindObject(canvas, "ChangePanel");
             addPanel = Auxiliary.FindObject(canvas, "AddPanel");
             changeFieldPanel = Auxiliary.FindObject(canvas, "ChangeFieldPanel");
             pointImpulsePanel = Auxiliary.FindObject(canvas, "PointImpulsePanel");
 
             resetDropdown = GameObject.Find("ResetRobotDropdown");
-            multiplayerPanel = Auxiliary.FindObject(canvas, "MultiplayerPanel");
 
             stopwatchWindow = Auxiliary.FindObject(canvas, "StopwatchPanel");
             statsWindow = Auxiliary.FindObject(canvas, "StatsPanel");
@@ -81,9 +72,6 @@ namespace Synthesis.GUI
 
             // To access instatiate classes within a state, use the StateMachine.SceneGlobal
             toolkit = StateMachine.SceneGlobal.GetComponent<Toolkit>();
-            multiplayer = StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>();
-            simUI = StateMachine.SceneGlobal.GetComponent<SimUI>();
-            menuUI = StateMachine.SceneGlobal.GetComponent<MenuUI>();
             robotCameraGUI = StateMachine.SceneGlobal.GetComponent<RobotCameraGUI>();
             sensorManagerGUI = StateMachine.SceneGlobal.GetComponent<SensorManagerGUI>();
 
@@ -269,32 +257,14 @@ namespace Synthesis.GUI
         /// <summary>
         /// Enters replay mode
         /// </summary>
-        public void OnReplayModeButtonClicked() {
+        public void OnReplayModeButtonClicked()
+        {
             State.EnterReplayState();
 
             AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.HomeTab,
                 AnalyticsLedger.EventAction.Clicked,
                 "Replay Mode",
                 AnalyticsLedger.getMilliseconds().ToString());
-        }
-
-        /// <summary>
-        /// Toggles the multiplayer window
-        /// </summary>
-        public void OnMultiplayerButtonClicked() {
-            if (multiplayerPanel.activeSelf) {
-                multiplayerPanel.SetActive(false);
-            }
-            else {
-                EndOtherProcesses();
-                multiplayerPanel.SetActive(true);
-                multiplayer.UpdateUI();
-
-                AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.HomeTab,
-                    AnalyticsLedger.EventAction.Clicked,
-                    "Multiplayer",
-                    AnalyticsLedger.getMilliseconds().ToString());
-            }
         }
 
         /// <summary>
@@ -384,7 +354,6 @@ namespace Synthesis.GUI
             pointImpulsePanel.SetActive(false);
 
             toolkit.EndProcesses();
-            multiplayer.EndProcesses();
             sensorManagerGUI.EndProcesses();
             robotCameraGUI.EndProcesses();
         }
