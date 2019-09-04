@@ -236,8 +236,8 @@
     <Compile Include="Assets\Scripts\GUI\LocalMultiplayer.cs" />
     <Compile Include="Assets\Scripts\GUI\MainMenu.cs" />
     <Compile Include="Assets\Scripts\GUI\MenuUI.cs" />
+    <Compile Include="Assets\Scripts\GUI\MultiplayerPanel.cs" />
     <Compile Include="Assets\Scripts\GUI\NetworkMultiplayerUI.cs" />
-    <Compile Include="Assets\Scripts\GUI\NewMultiplayerPanel.cs" />
     <Compile Include="Assets\Scripts\GUI\OverlayWindow.cs" />
     <Compile Include="Assets\Scripts\GUI\Popup.cs" />
     <Compile Include="Assets\Scripts\GUI\PopupButton.cs" />

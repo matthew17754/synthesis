@@ -7,9 +7,9 @@ using UnityEngine.UI;
 
 namespace Synthesis.GUI
 {
-    class NewMultiplayerPanel : MonoBehaviour
+    class MultiplayerPanel : MonoBehaviour
     {
-        public static NewMultiplayerPanel Instance { get; private set; }
+        public static MultiplayerPanel Instance { get; private set; }
 
         private GameObject canvas;
         private GameObject mainPanel;
@@ -23,15 +23,94 @@ namespace Synthesis.GUI
 
         public GameObject ServerEntryPrefab;
 
-        public struct HostGameProperties
+        public class HostGameProperties
         {
-            public InputField name;
-            public InputField id;
-            public InputField password;
-            public InputField capactiy;
-            public InputField tags;
+            private InputField id;
+            private InputField name;
+            private InputField password;
+            private InputField capactiy;
+            private InputField tags;
             public const int MAX_CAPACITY = 12;
             public const int MIN_CAPACITY = 1;
+
+            public HostGameProperties(GameObject parent)
+            {
+                name = Auxiliary.FindObject(parent, "Name").GetComponentInChildren<InputField>();
+                id = Auxiliary.FindObject(parent, "ID").GetComponentInChildren<InputField>();
+                password = Auxiliary.FindObject(parent, "Password").GetComponentInChildren<InputField>();
+                capactiy = Auxiliary.FindObject(parent, "Capacity").GetComponentInChildren<InputField>();
+                tags = Auxiliary.FindObject(parent, "Tags").GetComponentInChildren<InputField>();
+
+                capactiy.onValidateInput += (input, charIndex, addedChar) => {
+                    if (addedChar == '-' || !int.TryParse(addedChar.ToString(), out int dummy)) // Ensure is positive integer
+                    {
+                        return '\0';
+                    }
+                    if (int.Parse(input + addedChar) > MAX_CAPACITY) // Ensure is in valid range
+                    {
+                        capactiy.text = MAX_CAPACITY.ToString();
+                        UserMessageManager.Dispatch("Maximum capacity is " + MAX_CAPACITY, 3);
+                        return '\0';
+                    }
+                    if (int.Parse(input + addedChar) < MIN_CAPACITY) // Ensure is in valid range
+                    {
+                        capactiy.text = MIN_CAPACITY.ToString();
+                        UserMessageManager.Dispatch("Minimum capacity is " + MIN_CAPACITY, 3);
+                        return '\0';
+                    }
+                    return addedChar;
+                };
+            }
+
+            public string GetName()
+            {
+                return name.text;
+            }
+
+            public string GetID()
+            {
+                return id.text;
+            }
+
+            public void SetID(string i)
+            {
+                id.text = i;
+            }
+
+            public string GetPassword()
+            {
+                return password.text;
+            }
+
+            public int GetCapacity()
+            {
+                return int.Parse(capactiy.text);
+            }
+
+            public string GetTags()
+            {
+                return tags.text;
+            }
+
+            public void SelectFirstEmptyProperty()
+            {
+                if (name.text == "")
+                {
+                    name.Select();
+                }
+                else if (password.text == "")
+                {
+                    password.Select();
+                }
+                else if (capactiy.text == "")
+                {
+                    capactiy.Select();
+                }
+                else if (tags.text == "")
+                {
+                    tags.Select();
+                }
+            }
         }
 
         public class ServerEntry
@@ -47,22 +126,27 @@ namespace Synthesis.GUI
 
             private int maxCapacity = HostGameProperties.MAX_CAPACITY;
 
-            public ServerEntry(string nameValue, string idValue, int capacityValue, string versionValue, string tagsValue, string statusValue)
+            public ServerEntry(GameObject parent, string nameValue, string idValue, int capacityValue, string versionValue, string tagsValue, string statusValue)
             {
-                gameObject = Instantiate(Instance.ServerEntryPrefab, Instance.serverViewport.transform);
+                gameObject = Instantiate(Instance.ServerEntryPrefab, parent.transform);
                 gameObject.name = "Server Entry";
 
                 name = Auxiliary.FindObject(gameObject, "Name").GetComponent<InputField>();
                 name.text = nameValue;
+
                 id = Auxiliary.FindObject(gameObject, "ID").GetComponent<InputField>();
                 id.text = idValue;
+
                 capacity = Auxiliary.FindObject(gameObject, "Capacity").GetComponent<InputField>();
                 maxCapacity = Math.Min(Math.Max(capacityValue, 0), HostGameProperties.MAX_CAPACITY);
+
                 SetCurrentUserCount(0);
                 version = Auxiliary.FindObject(gameObject, "Version").GetComponent<InputField>();
                 version.text = versionValue;
+
                 tags = Auxiliary.FindObject(gameObject, "Tags").GetComponent<InputField>();
                 tags.text = tagsValue;
+
                 status = Auxiliary.FindObject(gameObject, "Status").GetComponent<InputField>();
                 UpdateStatus(statusValue);
             }
@@ -80,7 +164,7 @@ namespace Synthesis.GUI
 
         private LocalMultiplayer localMultiplayer;
         private HostGameProperties hostGameProperties;
-        private List<ServerEntry> serverList = new List<ServerEntry>();
+        private List<ServerEntry> serverList;
 
         private Rect lastSetPixelRect;
         private bool lastActive;
@@ -91,45 +175,23 @@ namespace Synthesis.GUI
             Instance = this;
 
             canvas = GameObject.Find("Canvas");
-            mainPanel = Auxiliary.FindObject(canvas, "NewMultiplayerPanel");
+            mainPanel = Auxiliary.FindObject(canvas, "MultiplayerPanel");
 
             localPanel = Auxiliary.FindObject(canvas, "LocalPanel");
             hostPanel = Auxiliary.FindObject(canvas, "HostPanel");
             joinPanel = Auxiliary.FindObject(canvas, "JoinPanel");
 
             localMultiplayer = FSM.StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>();
-
             serverViewport = Auxiliary.FindObject(joinPanel, "Content");
+            hostGameProperties = new HostGameProperties(hostPanel);
+            serverList = new List<ServerEntry>();
 
-            lastTabState = MultiplayerToolbarState.TabState.Local;
+            lastTabState = MultiplayerToolbarState.DEFAULT_TAB_STATE;
 
-            hostGameProperties.name = Auxiliary.FindObject(hostPanel, "Name").GetComponentInChildren<InputField>();
-            hostGameProperties.id = Auxiliary.FindObject(hostPanel, "ID").GetComponentInChildren<InputField>();
-            hostGameProperties.password = Auxiliary.FindObject(hostPanel, "Password").GetComponentInChildren<InputField>();
-            hostGameProperties.capactiy = Auxiliary.FindObject(hostPanel, "Capacity").GetComponentInChildren<InputField>();
-            hostGameProperties.tags = Auxiliary.FindObject(hostPanel, "Tags").GetComponentInChildren<InputField>();
-
-            hostGameProperties.capactiy.onValidateInput += (input, charIndex, addedChar) => {
-                if(addedChar == '-' || !int.TryParse(addedChar.ToString(), out int dummy)) // Ensure is positive integer
-                {
-                    return '\0';
-                }
-                if(int.Parse(input + addedChar) > HostGameProperties.MAX_CAPACITY) // Ensure is in valid range
-                {
-                    hostGameProperties.capactiy.text = HostGameProperties.MAX_CAPACITY.ToString();
-                    UserMessageManager.Dispatch("Maximum capacity is " + HostGameProperties.MAX_CAPACITY, 3);
-                    return '\0';
-                }
-                if (int.Parse(input + addedChar) < HostGameProperties.MIN_CAPACITY) // Ensure is in valid range
-                {
-                    hostGameProperties.capactiy.text = HostGameProperties.MIN_CAPACITY.ToString();
-                    UserMessageManager.Dispatch("Minimum capacity is " + HostGameProperties.MIN_CAPACITY, 3);
-                    return '\0';
-                }
-                return addedChar;
-            };
-
-            AddServerEntry("Test Lobby", "12334", 12, States.MainState.CurrentVersion, "test-field", "Connecting"); // TODO - for testing
+            for (int i = 0; i < 20; i++)
+            {
+                AddServerEntry("Test Lobby " + i, "12334", 12, States.MainState.CurrentVersion, "test-field", "Connecting"); // TODO - for testing
+            }
         }
 
         public void Update()
@@ -154,9 +216,9 @@ namespace Synthesis.GUI
 
                 if(lastTabState != tabState)
                 {
-                    if (hostPanel.activeSelf && hostGameProperties.name.text == "")
+                    if (hostPanel.activeSelf)
                     {
-                        hostGameProperties.name.Select();
+                        hostGameProperties.SelectFirstEmptyProperty();
                     }
                 }
                 lastTabState = tabState;
@@ -190,7 +252,7 @@ namespace Synthesis.GUI
 
         private void AddServerEntry(string name, string id, int capacity, string version, string tags, string status)
         {
-            serverList.Add(new ServerEntry(name, id, capacity, version, tags, status)); // TODO
+            serverList.Add(new ServerEntry(serverViewport, name, id, capacity, version, tags, status)); // TODO
         }
     }
 }

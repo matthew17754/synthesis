@@ -40,7 +40,7 @@ namespace Synthesis.GUI
         private void Start()
         {
             canvas = GameObject.Find("Canvas");
-            mainMultiplayerWindow = Auxiliary.FindObject(canvas, "NewMultiplayerPanel");
+            mainMultiplayerWindow = Auxiliary.FindObject(canvas, "MultiplayerPanel");
             localMultiplayerWindow = Auxiliary.FindObject(Auxiliary.FindObject(mainMultiplayerWindow, "LocalPanel"), "Panel");
             addRobotWindow = Auxiliary.FindObject(canvas, "AddRobotPanel");
 

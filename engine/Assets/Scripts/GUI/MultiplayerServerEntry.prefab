@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4937959091011922255}
   - component: {fileID: 389911719978365162}
   - component: {fileID: 953860891209792814}
+  - component: {fileID: 7560651987823257660}
   m_Layer: 5
   m_Name: MultiplayerServerEntry
   m_TagString: Untagged
@@ -44,7 +45,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 304, y: 25}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &114269111045863768
 MonoBehaviour:
@@ -55,7 +56,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1333336039312162}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -405508275, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
@@ -88,7 +89,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1333336039312162}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1679637790, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_IgnoreLayout: 0
@@ -108,7 +109,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1333336039312162}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
@@ -128,6 +129,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!114 &953860891209792814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -137,7 +139,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1333336039312162}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1392445389, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
@@ -152,7 +154,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9803922, g: 0.63529414, b: 0.10588236, a: 1}
     m_PressedColor: {r: 0.9803922, g: 0.63529414, b: 0.10588236, a: 1}
     m_SelectedColor: {r: 0.9803922, g: 0.63529414, b: 0.10588236, a: 1}
-    m_DisabledColor: {r: 0.21568629, g: 0.25882354, b: 0.30980393, a: 0.5019608}
+    m_DisabledColor: {r: 0.13333334, g: 0.16078432, b: 0.20000002, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0
   m_SpriteState:
@@ -173,6 +175,20 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
+--- !u!114 &7560651987823257660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1333336039312162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
 --- !u!1001 &1231361684802694006
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -693,7 +709,7 @@ PrefabInstance:
     - target: {fileID: 1851346172930745402, guid: f113c37ee8091cc45975e13be812809b,
         type: 3}
       propertyPath: m_PreferredWidth
-      value: 50
+      value: 60
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f113c37ee8091cc45975e13be812809b, type: 3}
