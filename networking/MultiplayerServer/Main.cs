@@ -2,9 +2,9 @@
 using Multiplayer.Common;
 using System.Threading;
 using Multiplayer.Service;
-using Multiplayer.Threading;
+using Multiplayer.Actor;
 using Multiplayer.IO;
-using static Multiplayer.Threading.ManagedTaskHelper;
+using static Multiplayer.Actor.ActorHelper;
 using System.IO;
 using System.Text;
 using Multiplayer.Common.UDP;

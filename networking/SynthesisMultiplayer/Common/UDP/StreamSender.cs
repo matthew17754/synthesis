@@ -2,8 +2,8 @@
 using Multiplayer.Attribute;
 using Multiplayer.Common;
 using Multiplayer.IO;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Util;
 using System;
 using System.IO;
@@ -57,15 +57,15 @@ namespace Multiplayer.Common.UDP
 
         [Callback(Methods.ClientSender.Send, "sendData")]
         [Argument("sendData", typeof(byte[]))]
-        public void SendMethod(ITaskContext context, AsyncCallHandle handle)
+        public void SendMethod(ITaskContext context, ActorCallbackHandle handle)
         {
-            byte[] sendData = ArgumentPacker.GetArgs<byte[]>(handle);
+            byte[] sendData = ArgumentUnpacker.GetArgs<byte[]>(handle);
             sendQueue.Send(sendData);
             handle.Done();
         }
 
         [Callback(name: Methods.Server.Serve)]
-        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Serving = true;
             Info.Log($"Stream Sender started on {Endpoint.ToString()}");
@@ -73,7 +73,7 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Serving = false;
             initialized = false;
@@ -83,7 +83,7 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Terminate();
             Initialize(Id);

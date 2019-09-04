@@ -2,8 +2,8 @@
 using Multiplayer.Common;
 using Multiplayer.Server.gRPC;
 using Multiplayer.Server.UDP;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -11,11 +11,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static Multiplayer.Threading.ManagedTaskHelper;
-using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Actor.ActorHelper;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
+using Multiplayer.IO;
+
 namespace Multiplayer.Service
 {
-    public class LobbyService : IManagedTask, IServer
+    public class LobbyService : IActor, IServer
     {
 
         public bool Initialized { get; private set; }
@@ -72,7 +74,7 @@ namespace Multiplayer.Service
         }
 
         [Callback(name: Methods.Server.Serve, argNames: "test")]
-        public void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             ((LobbyBroadcaster)GetTask(Broadcaster)).Serve();
             ((ConnectionListener)GetTask(ConnectionListener)).Serve();
@@ -82,19 +84,19 @@ namespace Multiplayer.Service
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             throw new NotImplementedException();
         }
 
         [Callback(Methods.Server.Shutdown)]
-        public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Serving = false;
-            ManagedTaskHelper.Terminate(Lobby, "Lobby Shutdown");
-            ManagedTaskHelper.Terminate(FanoutService, "Lobby Shutdown");
-            ManagedTaskHelper.Terminate(ConnectionListener, "Lobby Shutdown");
-            ManagedTaskHelper.Terminate(Broadcaster, "Lobby Shutdown");
+            ActorHelper.Terminate(Lobby, "Lobby Shutdown");
+            ActorHelper.Terminate(FanoutService, "Lobby Shutdown");
+            ActorHelper.Terminate(ConnectionListener, "Lobby Shutdown");
+            ActorHelper.Terminate(Broadcaster, "Lobby Shutdown");
             Alive = false;
             Initialized = false;
             Status = ManagedTaskStatus.Completed;

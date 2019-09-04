@@ -3,8 +3,8 @@ using MatchmakingService;
 using Multiplayer.Attribute;
 using Multiplayer.Common;
 using Multiplayer.IO;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,7 +34,7 @@ namespace Multiplayer.Common
 
 namespace Multiplayer.Client.gRPC
 {
-    public class LobbyClient : IManagedTask
+    public class LobbyClient : IActor
     {
         public bool Connected { get; private set; }
         public bool Initialized { get; private set; }
@@ -45,10 +45,10 @@ namespace Multiplayer.Client.gRPC
 
         [Callback(Methods.LobbyClient.JoinLobby, "endpoint", "timeout")]
         [Argument("endpoint", typeof(IPEndPoint))]
-        [Argument("timeout", typeof(int), -1, RuntimeArgumentAttributes.HasDefault, RuntimeArgumentAttributes.Optional)]
-        public void JoinLobbyCallback(ITaskContext context, AsyncCallHandle handle)
+        [Argument("timeout", typeof(int), -1, ActorCallbackArgumentAttributes.HasDefault, ActorCallbackArgumentAttributes.Optional)]
+        public void JoinLobbyCallback(ITaskContext context, ActorCallbackHandle handle)
         {
-            (IPEndPoint endpoint, int timeout) = ArgumentPacker.GetArgs<IPEndPoint, int>(handle);
+            (IPEndPoint endpoint, int timeout) = ArgumentUnpacker.GetArgs<IPEndPoint, int>(handle);
             var Channel = new Grpc.Core.Channel(endpoint.ToString(), Grpc.Core.ChannelCredentials.Insecure);
             var Client = new ServerHost.ServerHostClient(Channel);
             var res = Client.JoinLobby(new JoinLobbyRequest
@@ -72,7 +72,7 @@ namespace Multiplayer.Client.gRPC
                 message.WriteTo(outputStream);
                 outputStream.Position = 0;
                 var outputData = new StreamReader(outputStream).ReadToEnd();
-                var asyncHandle = new AsyncCallHandle();
+                var asyncHandle = new ActorCallbackHandle();
                 var cancellationToken = new CancellationTokenSource();
                 var responseTask = Task.Factory.StartNew(token =>
                 {

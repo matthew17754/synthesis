@@ -1,4 +1,5 @@
 ﻿using Multiplayer.Attribute;
+using Multiplayer.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,9 +8,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multiplayer.Threading.Runtime
+namespace Multiplayer.Actor.Runtime
 {
-    public static class ArgumentPacker
+    public static class ArgumentUnpacker
     {
         private static void CheckCount(Queue<dynamic> q, int count)
         {
@@ -18,10 +19,11 @@ namespace Multiplayer.Threading.Runtime
                 throw new Exception("Not enough args");
             }
         }
-        private static CallbackInfo GetMethodInfo()
+        private static ActorCallbackInfo GetMethodInfo()
         {
             // TODO: Find a way to do this that *doesn't* involve reading stack
             var frame = new StackFrame(2);
+            Info.Log(frame);
             var method = frame.GetMethod();
             var methodName = "";
             var hasMethod = false;
@@ -52,10 +54,10 @@ namespace Multiplayer.Threading.Runtime
                     arg => arg.Name,
                     (argName, arg) => arg
                 ).ToList();
-            return new CallbackInfo(methodName, arguments, returnType);
+            return new ActorCallbackInfo(methodName, arguments, returnType);
         }
 
-        public static CallbackInfo GetMethodInfo(Type baseType, string methodName)
+        public static ActorCallbackInfo GetMethodInfo(Type baseType, string methodName)
         {
             // TODO: Find a way to do this that *doesn't* involve reading stack
             var method = baseType.GetMethods()
@@ -92,7 +94,7 @@ namespace Multiplayer.Threading.Runtime
                     arg => arg.Name,
                     (argName, arg) => arg
                 ).ToList();
-            return new CallbackInfo(methodName, arguments, returnType);
+            return new ActorCallbackInfo(methodName, arguments, returnType);
         }
 
 
@@ -127,42 +129,42 @@ namespace Multiplayer.Threading.Runtime
             return (q.Dequeue(), q.Dequeue(), q.Dequeue(), q.Dequeue(), q.Dequeue(), q.Dequeue());
         }
 
-        public static T GetArgs<T>(AsyncCallHandle handle)
+        public static T GetArgs<T>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);
             methodInfo.ValidateArguments(handle);
             return handle.Arguments.Dequeue();
         }
-        public static (T1,T2) GetArgs<T1,T2>(AsyncCallHandle handle)
+        public static (T1,T2) GetArgs<T1,T2>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);
             methodInfo.ValidateArguments(handle);
             return (handle.Arguments.Dequeue(), handle.Arguments.Dequeue());
         }
-        public static (T1,T2,T3) GetArgs<T1,T2,T3>(AsyncCallHandle handle)
+        public static (T1,T2,T3) GetArgs<T1,T2,T3>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);
             methodInfo.ValidateArguments(handle);
             return (handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue());
         }
-        public static (T1,T2,T3,T4) GetArgs<T1,T2,T3,T4>(AsyncCallHandle handle)
+        public static (T1,T2,T3,T4) GetArgs<T1,T2,T3,T4>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);
             methodInfo.ValidateArguments(handle);
             return (handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue());
         }
-        public static (T1,T2,T3,T4,T5) GetArgs<T1,T2,T3,T4,T5>(AsyncCallHandle handle)
+        public static (T1,T2,T3,T4,T5) GetArgs<T1,T2,T3,T4,T5>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);
             methodInfo.ValidateArguments(handle);
             return (handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue(), handle.Arguments.Dequeue());
         }
-        public static (T1,T2,T3,T4,T5,T6) GetArgs<T1,T2,T3,T4,T5,T6>(AsyncCallHandle handle)
+        public static (T1,T2,T3,T4,T5,T6) GetArgs<T1,T2,T3,T4,T5,T6>(ActorCallbackHandle handle)
         {
             var methodInfo = GetMethodInfo();
             CheckCount(handle.Arguments, methodInfo.RequiredParameters);

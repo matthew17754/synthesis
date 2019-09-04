@@ -3,14 +3,14 @@ using System.Net.Sockets;
 using System.Net;
 using System.Collections.Generic;
 using System.Threading;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Common;
 using Multiplayer.Util;
 using MatchmakingService;
 using System.Text;
 using Multiplayer.Attribute;
-using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 using Multiplayer.IO;
 
 namespace Multiplayer.Common
@@ -110,7 +110,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Serve)]
-        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Info.Log("Listener started");
             Connection.BeginReceive(ReceiveMethod, new ConnectionListenerClient
@@ -124,7 +124,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Info.Log("Shutting down listener");
             Serving = false;
@@ -135,7 +135,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             if(handle.Arguments.Dequeue() == true)
             {
@@ -152,7 +152,7 @@ namespace Multiplayer.Server.UDP
 
         [Callback(Methods.ConnectionListener.GetConnectionInfo, "jobId")]
         [Argument("jobId", typeof(Guid))]
-        public void GetConnectionInfoMethod(ITaskContext context, AsyncCallHandle handle)
+        public void GetConnectionInfoMethod(ITaskContext context, ActorCallbackHandle handle)
         {
             var jobId = GetArgs<Guid>(handle);
             lock (ServerData.Mutex)

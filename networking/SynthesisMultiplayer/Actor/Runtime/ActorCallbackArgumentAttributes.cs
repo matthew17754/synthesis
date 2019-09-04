@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multiplayer.Threading.Runtime
+namespace Multiplayer.Actor.Runtime
 {
-    public enum RuntimeArgumentAttributes
+    public enum ActorCallbackArgumentAttributes
     {
         Optional,
         Nullable,

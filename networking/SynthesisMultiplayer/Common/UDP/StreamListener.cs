@@ -1,8 +1,8 @@
 ﻿using MatchmakingService;
 using Multiplayer.Attribute;
 using Multiplayer.IO;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 
 namespace Multiplayer.Common
 {
@@ -115,7 +115,7 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(name: Methods.Server.Serve)]
-        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Info.Log($"Listener started on {Endpoint.ToString()}");
             Connection.BeginReceive(ReceiveMethod, new StreamListenerContext
@@ -129,7 +129,7 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Serving = false;
             IsInitialized = false;
@@ -139,7 +139,7 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             var doBackup = GetArgs<bool>(handle);
             if (handle.Arguments.Dequeue() == true)
@@ -156,8 +156,8 @@ namespace Multiplayer.Common.UDP
         }
 
         [Callback(Methods.StreamListener.GetStreamData, "doBlock")]
-        [Argument("doBlock", typeof(bool), false, RuntimeArgumentAttributes.HasDefault)]
-        public void GetClientDataMethod(ITaskContext context, AsyncCallHandle handle)
+        [Argument("doBlock", typeof(bool), false, ActorCallbackArgumentAttributes.HasDefault)]
+        public void GetClientDataMethod(ITaskContext context, ActorCallbackHandle handle)
         {
             var doBlock = handle.Arguments.Dequeue();
             if (doBlock)

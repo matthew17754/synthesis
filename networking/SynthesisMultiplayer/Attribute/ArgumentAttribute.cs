@@ -1,4 +1,4 @@
-﻿using Multiplayer.Threading.Runtime;
+﻿using Multiplayer.Actor.Runtime;
 using System;
 using System.Linq;
 
@@ -8,11 +8,11 @@ namespace Multiplayer.Attribute
     public sealed class ArgumentAttribute : System.Attribute
     {
         public string Name { get; set; }
-        public RuntimeArgumentAttributes[] Attributes { get; set; }
+        public ActorCallbackArgumentAttributes[] Attributes { get; set; }
         public Type Type;
         public object DefaultValue;
 
-        public ArgumentAttribute(string name, Type type, object defaultValue = null, params RuntimeArgumentAttributes[] attr)
+        public ArgumentAttribute(string name, Type type, object defaultValue = null, params ActorCallbackArgumentAttributes[] attr)
         {
             Name = name;
             Type = type;

@@ -4,13 +4,13 @@ using Multiplayer.Client.UDP;
 using Multiplayer.Common;
 using Multiplayer.Common.UDP;
 using Multiplayer.IO;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Util;
 using System;
 using System.Net;
-using static Multiplayer.Threading.ManagedTaskHelper;
-using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Actor.ActorHelper;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 
 namespace Multiplayer.Common
 {
@@ -25,7 +25,7 @@ namespace Multiplayer.Common
 
 namespace Multiplayer.Service
 {
-    public class LobbyClientService : IManagedTask
+    public class LobbyClientService : IActor
     {
         public bool Initialized { get; private set; }
         public bool Alive { get; private set; }
@@ -95,8 +95,8 @@ namespace Multiplayer.Service
 
         [Callback(Methods.LobbyClientService.Connect, "ip", "lobbyPort")]
         [Argument("ip", typeof(string))]
-        [Argument("lobbyPort", typeof(int), 33000, RuntimeArgumentAttributes.HasDefault)]
-        public void ConnectMethod(ITaskContext context, AsyncCallHandle handle)
+        [Argument("lobbyPort", typeof(int), 33000, ActorCallbackArgumentAttributes.HasDefault)]
+        public void ConnectMethod(ITaskContext context, ActorCallbackHandle handle)
         {
             var (ip, lobbyPort) = GetArgs<string, int>(handle);
             JoinLobby(ip);
@@ -111,7 +111,7 @@ namespace Multiplayer.Service
 
         [Callback("send", "data")]
         [Argument("data", typeof(string))]
-        public void SendCallback(ITaskContext context, AsyncCallHandle handle)
+        public void SendCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             var data = GetArgs<string>(handle);
             Debug.Log("Sending " + data);

@@ -5,15 +5,15 @@ using System;
 using Grpc;
 using System.Threading.Tasks;
 using Multiplayer.Server.UDP;
-using Multiplayer.Threading.Runtime;
-using static Multiplayer.Threading.ManagedTaskHelper;
+using Multiplayer.Actor.Runtime;
+using static Multiplayer.Actor.ActorHelper;
 using Grpc.Core;
 using System.Threading;
 using Multiplayer.Common;
 using Multiplayer.Attribute;
 using System.Net;
 using Multiplayer.Util;
-using Multiplayer.Threading;
+using Multiplayer.Actor;
 using Multiplayer.IO;
 
 namespace Multiplayer.Common
@@ -29,7 +29,7 @@ namespace Multiplayer.Common
 
 namespace Multiplayer.Server.gRPC
 {
-    public class LobbyHandler : IManagedTask, IServer
+    public class LobbyHandler : IActor, IServer
     {
         private class Job
         {
@@ -121,10 +121,10 @@ namespace Multiplayer.Server.gRPC
         }
 
         [Callback(name: Methods.LobbyHandler.GetLatestConnection)]
-        public void GetLatestConnectionMethod(ITaskContext context, AsyncCallHandle handle) =>
+        public void GetLatestConnectionMethod(ITaskContext context, ActorCallbackHandle handle) =>
             handle.Result = CompletedJobs.TryGet();
         [Callback(name: Methods.Server.Serve)]
-        public void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Server = new Grpc.Core.Server
             {
@@ -137,13 +137,13 @@ namespace Multiplayer.Server.gRPC
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             throw new NotImplementedException();
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Server.KillAsync().Wait();
             Alive = false;
