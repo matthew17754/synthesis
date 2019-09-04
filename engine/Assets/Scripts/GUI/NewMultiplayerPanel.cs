@@ -78,11 +78,13 @@ namespace Synthesis.GUI
             }
         }
 
+        private LocalMultiplayer localMultiplayer;
         private HostGameProperties hostGameProperties;
         private List<ServerEntry> serverList = new List<ServerEntry>();
 
         private Rect lastSetPixelRect;
-        private Assets.Scripts.GUI.MultiplayerToolbarState.TabState? lastTabState;
+        private bool lastActive;
+        private MultiplayerToolbarState.TabState? lastTabState;
 
         public void Awake()
         {
@@ -95,9 +97,11 @@ namespace Synthesis.GUI
             hostPanel = Auxiliary.FindObject(canvas, "HostPanel");
             joinPanel = Auxiliary.FindObject(canvas, "JoinPanel");
 
+            localMultiplayer = FSM.StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>();
+
             serverViewport = Auxiliary.FindObject(joinPanel, "Content");
 
-            lastTabState = Assets.Scripts.GUI.MultiplayerToolbarState.TabState.Local;
+            lastTabState = MultiplayerToolbarState.TabState.Local;
 
             hostGameProperties.name = Auxiliary.FindObject(hostPanel, "Name").GetComponentInChildren<InputField>();
             hostGameProperties.id = Auxiliary.FindObject(hostPanel, "ID").GetComponentInChildren<InputField>();
@@ -130,26 +134,23 @@ namespace Synthesis.GUI
 
         public void Update()
         {
-            try
-            {
-                mainPanel.SetActive(SimUI.getSimUI().getTabStateMachine().CurrentState is Assets.Scripts.GUI.MultiplayerToolbarState);
-            }
-            catch(Exception)
-            {
-                mainPanel.SetActive(false);
-            }
-
-            InputControl.freeze = mainPanel.activeSelf; // TODO not all controls use InputControl (can be freezed)
-            DynamicCamera.ControlEnabled = !mainPanel.activeSelf;
+            SetActive(SimUI.getSimUI().getTabStateMachine() != null && 
+                SimUI.getSimUI().getTabStateMachine().CurrentState is MultiplayerToolbarState);
 
             if (mainPanel.activeSelf) // Update rest of UI
             {
 
-                var tabState = ((Assets.Scripts.GUI.MultiplayerToolbarState)SimUI.getSimUI().getTabStateMachine().CurrentState).tabState;
+                var tabState = ((MultiplayerToolbarState)SimUI.getSimUI().getTabStateMachine().CurrentState).tabState;
 
-                localPanel.SetActive(tabState == Assets.Scripts.GUI.MultiplayerToolbarState.TabState.Local);
-                hostPanel.SetActive(tabState == Assets.Scripts.GUI.MultiplayerToolbarState.TabState.Host);
-                joinPanel.SetActive(tabState == Assets.Scripts.GUI.MultiplayerToolbarState.TabState.Join);
+                localPanel.SetActive(tabState == MultiplayerToolbarState.TabState.Local);
+                hostPanel.SetActive(tabState == MultiplayerToolbarState.TabState.Host);
+                joinPanel.SetActive(tabState == MultiplayerToolbarState.TabState.Join);
+
+                if (tabState == MultiplayerToolbarState.TabState.Local)
+                {
+
+                    localMultiplayer.UpdateUI();
+                }
 
                 if(lastTabState != tabState)
                 {
@@ -159,6 +160,23 @@ namespace Synthesis.GUI
                     }
                 }
                 lastTabState = tabState;
+
+                InputControl.DisableSimControls(); // TODO not all controls use InputControl (can be freezed)
+            }
+            else if(lastActive)
+            {
+                InputControl.EnableSimControls();
+            }
+
+            lastActive = mainPanel.activeSelf;
+        }
+
+        public void SetActive(bool value)
+        {
+            mainPanel.SetActive(value);
+            if (mainPanel.activeSelf && !lastActive)
+            {
+                SimUI.getSimUI().EndOtherProcesses();
             }
         }
 

@@ -6,7 +6,6 @@ using Synthesis.FSM;
 using System.Reflection;
 using Synthesis.States;
 using Synthesis.Utils;
-using Assets.Scripts.GUI;
 using UnityEngine.SceneManagement;
 using Synthesis.MixAndMatch;
 using System.Net;

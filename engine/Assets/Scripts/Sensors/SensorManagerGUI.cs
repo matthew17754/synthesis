@@ -7,7 +7,6 @@ using Synthesis.Camera;
 using Synthesis.States;
 using Synthesis.Utils;
 using Synthesis.Configuration;
-using Assets.Scripts.GUI;
 using Synthesis.Robot;
 using System;
 

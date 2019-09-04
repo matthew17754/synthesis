@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.GUI
+namespace Synthesis.GUI
 {
     /// <summary>
     /// The Driver Practice toolbar. Controls buttons and states on the driver practice toolbar.

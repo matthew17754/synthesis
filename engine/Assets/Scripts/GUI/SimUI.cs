@@ -16,7 +16,6 @@ using Synthesis.Sensors;
 using Synthesis.States;
 using Synthesis.Utils;
 using Synthesis.Robot;
-using Assets.Scripts.GUI;
 using Synthesis.Field;
 using System;
 using System.Diagnostics;
@@ -35,7 +34,6 @@ namespace Synthesis.GUI
 
         new DynamicCamera camera;
         Toolkit toolkit;
-        LocalMultiplayer multiplayer;
         SensorManagerGUI sensorManagerGUI;
         SensorManager sensorManager;
         RobotCameraManager robotCameraManager;
@@ -108,7 +106,6 @@ namespace Synthesis.GUI
                 camera = GameObject.Find("Main Camera").GetComponent<DynamicCamera>();
 
                 toolkit = GetComponent<Toolkit>();
-                multiplayer = GetComponent<LocalMultiplayer>();
                 sensorManagerGUI = GetComponent<SensorManagerGUI>();
 
                 FindElements();
@@ -175,7 +172,6 @@ namespace Synthesis.GUI
 
             navigationTooltip = Auxiliary.FindObject("NavigationTooltipContainer");
             overviewCameraWindow = Auxiliary.FindObject(canvas, "OverviewPanel");
-            //multiplayerPanel = Auxiliary.FindObject(canvas, "MultiplayerPanel");
             driverStationPanel = Auxiliary.FindObject(canvas, "DriverStationPanel");
             changeRobotPanel = Auxiliary.FindObject(canvas, "ChangeRobotPanel");
             robotListPanel = Auxiliary.FindObject(changeRobotPanel, "RobotListPanel");
@@ -265,6 +261,11 @@ namespace Synthesis.GUI
                     break;
                 case "EmulationTab":
                     AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.EmulationTab,
+                        AnalyticsLedger.TimingVarible.Customizing,
+                        AnalyticsLedger.TimingLabel.MainSimulator); // log any timing events from switching tabs
+                    break;
+                case "MultiplayerTab":
+                    AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MultiplayerTab,
                         AnalyticsLedger.TimingVarible.Customizing,
                         AnalyticsLedger.TimingLabel.MainSimulator); // log any timing events from switching tabs
                     break;
@@ -388,6 +389,16 @@ namespace Synthesis.GUI
 
         public void OnMultiplayerTab()
         {
+            AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MultiplayerTab,
+                AnalyticsLedger.TimingVarible.Customizing,
+                AnalyticsLedger.TimingLabel.MainSimulator); // log any timing events from switching tabs
+            AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.MultiplayerTab,
+                AnalyticsLedger.EventAction.Clicked,
+                "Tab",
+                AnalyticsLedger.getMilliseconds().ToString()); // log the button was clicked
+            AnalyticsManager.GlobalInstance.StartTime(AnalyticsLedger.TimingLabel.MultiplayerTab,
+                AnalyticsLedger.TimingVarible.Customizing); // start timer for current tab
+
             currentTab = "MultiplayerTab";
             tabStateMachine.ChangeState(new MultiplayerToolbarState());
         }
@@ -617,7 +628,7 @@ namespace Synthesis.GUI
 
         public void TogglePanel(GameObject panel)
         {
-            if (panel.activeSelf == true)
+            if (panel.activeSelf)
             {
                 panel.SetActive(false);
             }
@@ -627,26 +638,37 @@ namespace Synthesis.GUI
             }
         }
 
+        public void SetAddRobotPanelActive(bool value)
+        {
+            if(value != addPanel.activeSelf)
+            {
+                if (!value)
+                {
+                    addPanel.SetActive(false);
+                }
+                else
+                {
+                    if (IsMaMInstalled())
+                    {
+                        addPanel.SetActive(true);
+                    }
+                    else
+                    {
+                        ToggleChangeRobotPanel();
+                    }
+                    changePanel.SetActive(false);
+                }
+            }
+        }
+
         public void ToggleAddRobotPanel()
         {
-            if (addPanel.activeSelf == true)
-            {
-                addPanel.SetActive(false);
-            }
-            else
-            {
-                if (IsMaMInstalled()) {
-                    addPanel.SetActive(true);
-                } else {
-                    ToggleChangeRobotPanel();
-                }
-                changePanel.SetActive(false);
-            }
+            SetAddRobotPanelActive(!addPanel.activeSelf);
         }
 
         public void ToggleChangePanel()
         {
-            if (changePanel.activeSelf == true)
+            if (changePanel.activeSelf)
             {
                 changePanel.SetActive(false);
             }
@@ -836,7 +858,6 @@ namespace Synthesis.GUI
             addPanel.SetActive(false);
 
             toolkit.EndProcesses();
-            multiplayer.EndProcesses();
             sensorManagerGUI.EndProcesses();
             robotCameraGUI.EndProcesses();
         }

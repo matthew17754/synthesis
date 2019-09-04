@@ -42,6 +42,7 @@ public class AnalyticsLedger
             ScoringTab = "Scoring Tab",
             SensorTab = "Sensor Tab",
             EmulationTab = "Emulation Tab",
+            MultiplayerTab = "Multiplayer Tab",
             ExitTab = "Exit Tab",
 
             // Global categories
@@ -110,6 +111,7 @@ public class AnalyticsLedger
             ScoringTab = "Scoring Tab",
             SensorTab = "Sensor Tab",
             EmulationTab = "Emulation Tab",
+            MultiplayerTab = "Multiplayer Tab",
             Tab = "Toolbar Tab";
     }
 
@@ -146,6 +148,7 @@ public class AnalyticsLedger
             DPMTab = "Gamepiece Tab",
             ScoringTab = "Scoring Tab",
             SensorTab = "Sensor Tab",
-            EmulationTab = "Emulation Tab";
+            EmulationTab = "Emulation Tab",
+            MultiplayerTab = "Multiplayer Tab";
     }
 }
