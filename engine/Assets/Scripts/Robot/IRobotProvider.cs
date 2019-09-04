@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,8 +20,9 @@ namespace Synthesis.Robot
         GameObject Robot { get; }
 
         /// <summary>
-        /// If true, the active robot is in its active state.
+        /// If true, the main robot is in its active state.
         /// </summary>
         bool RobotActive { get; }
     }
 }
+*/

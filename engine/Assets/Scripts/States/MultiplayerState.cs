@@ -27,7 +27,7 @@
 //    /// <summary>
 //    /// This is the main class of the simulator; it handles all the initialization of robot and field objects within the simulator.
 //    /// Handles replay tracking and loading
-//    /// Handles interfaces between the SimUI and the active robot such as resetting, orienting, etc.
+//    /// Handles interfaces between the SimUI and the main robot such as resetting, orienting, etc.
 //    /// </summary>
 //    public class MultiplayerState : State, IRobotProvider
 //    {
@@ -40,19 +40,19 @@
 //        private List<NetworkRobot> robots;
 
 //        /// <summary>
-//        /// The active robot in this state.
+//        /// The main robot in this state.
 //        /// </summary>
 //        public NetworkRobot ActiveRobot { get; set; }
 
 //        /// <summary>
-//        /// Used for accessing the active robot in this state.
+//        /// Used for accessing the main robot in this state.
 //        /// </summary>
 //        /// <returns></returns>
 //        public GameObject Robot => ActiveRobot?.GetComponentInChildren<NetworkMesh>()?.MeshObject ??
 //            ActiveRobot?.transform.GetChild(0).gameObject;
 
 //        /// <summary>
-//        /// True if the scene's active robot is driveable by the user.
+//        /// True if the scene's main robot is driveable by the user.
 //        /// </summary>
 //        public bool RobotActive => true;
 
@@ -207,7 +207,7 @@
 //                //Initializes the physical robot based off of robot directory. Returns false if not sucessful
 //                if (!playerRobot.InitializeRobot(directory)) return false;
 
-//                //If this is the first robot spawned, then set it to be the active robot and initialize the robot camera on it
+//                //If this is the first robot spawned, then set it to be the main robot and initialize the robot camera on it
 //                if (isLocal)
 //                    ActiveRobot = playerRobot;
 //                else
@@ -221,7 +221,7 @@
 //        }
 
 //        /// <summary>
-//        /// Sends the received packets to the active robot
+//        /// Sends the received packets to the main robot
 //        /// </summary>
 //        private void SendRobotPackets()
 //        {

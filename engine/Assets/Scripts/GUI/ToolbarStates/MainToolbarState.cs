@@ -185,7 +185,7 @@ namespace Synthesis.GUI
             //if (multiplayerState != null)
             //    multiplayerState.ActiveRobot.CmdResetRobot();
 
-            State.ActiveRobot.ResetRobotOrientation();
+            State.robotManager.MainRobot.ResetRobotOrientation();
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using Synthesis.States;
+using Synthesis.Input;
 
 /// <summary>
 /// This script is used for controlling objects in a scene by dragging them around with the mouse.
@@ -24,7 +25,7 @@ public class GodMode : LinkedMonoBehaviour<MainState>
     /// </summary>
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) && (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) && constraint == null)
+        if (InputControl.GetMouseButtonDown(0) && (InputControl.GetKey(KeyCode.LeftAlt) || InputControl.GetKey(KeyCode.RightAlt)) && constraint == null)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             BulletSharp.Math.Vector3 start = ray.origin.ToBullet();
@@ -52,7 +53,7 @@ public class GodMode : LinkedMonoBehaviour<MainState>
                 }
             }
         }
-        else if (Input.GetMouseButtonUp(0) && constraint != null)
+        else if (InputControl.GetMouseButtonUp(0) && constraint != null)
         {
             constraint.thisRigidBody.GetCollisionObject().ActivationState = initialState;
             constraint.GetComponent<BRigidBody>().angularDamping = initialDamping;

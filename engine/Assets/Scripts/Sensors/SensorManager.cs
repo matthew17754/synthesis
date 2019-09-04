@@ -14,7 +14,7 @@ namespace Synthesis.Sensors
     /// <summary>
     /// This class handles a list of sensors and other sensor-related actions like adding/removing sensor, and selecting existing sensor/attachment node
     /// </summary>
-    class SensorManager : MonoBehaviour
+    public class SensorManager : MonoBehaviour
     {
         public GameObject Ultrasonic;
         public GameObject BeamBreaker;
@@ -76,11 +76,11 @@ namespace Synthesis.Sensors
         /// <returns></returns>
         public GameObject AddNewSensor(GameObject sensorToCopy, String type, int number, float distance = 0)
         {
-            GameObject sensor = GameObject.Instantiate(sensorToCopy, main.ActiveRobot.transform.Find("node_0.bxda").transform);
+            GameObject sensor = GameObject.Instantiate(sensorToCopy, main.robotManager.MainRobot.transform.Find("node_0.bxda").transform);
             sensor.transform.localPosition = new Vector3(0, 0.2f, 0); //so it doesn't initialize in the middle of the robot BUT CHANGE IT
             sensor.transform.localRotation = Quaternion.Euler(Vector3.zero);
             sensor.name = type + " " + number;
-            sensor.GetComponent<SensorBase>().Robot = main.ActiveRobot;
+            sensor.GetComponent<SensorBase>().Robot = main.robotManager.MainRobot;
             sensor.GetComponent<SensorBase>().sensorType = type;
             sensor.GetComponent<SensorBase>().SetSensorRange(distance);
             sensorList.Add(sensor);

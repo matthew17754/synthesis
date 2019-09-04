@@ -9,19 +9,13 @@ using Synthesis.Field;
 using Synthesis.FSM;
 using Synthesis.GUI;
 using Synthesis.Input;
-using Synthesis.MixAndMatch;
 using Synthesis.RN;
 using Synthesis.Sensors;
 using Synthesis.States;
 using Synthesis.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Synthesis.Robot
@@ -37,8 +31,6 @@ namespace Synthesis.Robot
 
         private const float ResetVelocity = 5f;
         private const float HoldTime = 0.8f;
-
-        private readonly SensorManager sensorManager;
 
         private DriverPracticeRobot dpmRobot;
 
@@ -174,20 +166,13 @@ namespace Synthesis.Robot
             {
                 keyDownTime = Time.time;
             }
-            else if (InputControl.GetButtonDown(Controls.Global.GetButtons().resetField))
-            {
-                Auxiliary.FindObject(GameObject.Find("Canvas"), "LoadingPanel").SetActive(true);
-                SceneManager.LoadScene("Scene");
-
-                AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
-                    AnalyticsLedger.TimingVarible.Playing,
-                    AnalyticsLedger.TimingLabel.ChangeField);
-            }
             else if (InputControl.GetButton(Controls.Players[ControlIndex].GetButtons().resetRobot) &&
-                !state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState.GetType().Equals(typeof(DynamicCamera.ConfigurationState)))
-            {
+                !(state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState is DynamicCamera.ConfigurationState)
+            ){
                 if (Time.time - keyDownTime > HoldTime)
+                {
                     BeginReset();
+                }
             }
             else if (InputControl.GetButtonUp(Controls.Players[ControlIndex].GetButtons().resetRobot))
             {
@@ -278,7 +263,7 @@ namespace Synthesis.Robot
             lastCameraState = dynamicCamera.ActiveState;
             dynamicCamera.SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
 
-            foreach (SimulatorRobot robot in state.SpawnedRobots)
+            foreach (SimulatorRobot robot in state.robotManager.GetSpawnedRobots())
                 foreach (BRigidBody rb in robot.GetComponentsInChildren<BRigidBody>())
                     if (rb != null && !rb.GetCollisionObject().IsActive)
                         rb.GetCollisionObject().Activate();
@@ -489,5 +474,10 @@ namespace Synthesis.Robot
         /// </summary>
         /// <param name="transposition"></param>
         protected virtual void OnTransposeRobot(Vector3 transposition) { }
+
+        public GameObject GetPrimaryGameObject()
+        {
+            return transform.GetChild(0).gameObject ?? gameObject;
+        }
     }
 }

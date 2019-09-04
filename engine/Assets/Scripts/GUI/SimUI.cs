@@ -482,10 +482,14 @@ namespace Synthesis.GUI
                     "Robot - Exported",
                     AnalyticsLedger.getMilliseconds().ToString());
 
-                robotCameraManager.DetachCamerasFromRobot(State.ActiveRobot);
-                sensorManager.RemoveSensorsFromRobot(State.ActiveRobot);
+                robotCameraManager.DetachCamerasFromRobot(State.robotManager.MainRobot);
+                sensorManager.RemoveSensorsFromRobot(State.robotManager.MainRobot);
 
-                State.ChangeRobot(directory, false);
+                State.robotManager.ChangeRobot(
+                    tabStateMachine.CurrentState is MultiplayerToolbarState ?
+                        StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>().ActiveTab : State.robotManager.MainRobotIndex,
+                    directory,
+                    false);
                 RobotTypeManager.IsMixAndMatch = false;
             }
             else
@@ -499,16 +503,16 @@ namespace Synthesis.GUI
         /// </summary>
         public void MaMChangeRobot(string robotDirectory, string manipulatorDirectory)
         {
-            MaMRobot mamRobot = State.ActiveRobot as MaMRobot;
+            MaMRobot mamRobot = State.robotManager.MainRobot as MaMRobot;
 
-            robotCameraManager.DetachCamerasFromRobot(State.ActiveRobot);
-            sensorManager.RemoveSensorsFromRobot(State.ActiveRobot);
+            robotCameraManager.DetachCamerasFromRobot(State.robotManager.MainRobot);
+            sensorManager.RemoveSensorsFromRobot(State.robotManager.MainRobot);
 
             //If the current robot has a manipulator, destroy the manipulator
             if (mamRobot != null && mamRobot.RobotHasManipulator)
                 State.DeleteManipulatorNodes();
 
-            if (!State.ChangeRobot(robotDirectory, true)) {
+            if (!State.robotManager.ChangeRobot(robotDirectory, true)) {
                 AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
             }
 
@@ -765,7 +769,7 @@ namespace Synthesis.GUI
         /// </summary>
         private void UpdateSpawnpointWindow()
         {
-            resetRobotUI.SetActive(State.ActiveRobot.IsResetting);
+            resetRobotUI.SetActive(State.robotManager.MainRobot.IsResetting);
         }
 
         /// <summary>

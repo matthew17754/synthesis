@@ -43,9 +43,7 @@ namespace Synthesis.Input
             [JsonProperty]
             public KeyMapping trajectory;
             [JsonProperty]
-            public KeyMapping duplicateRobot;
-            [JsonProperty]
-            public KeyMapping switchActiveRobot;
+            public KeyMapping switchMainRobot;
 
             //Driver practice controls
             [JsonProperty]
@@ -81,8 +79,7 @@ namespace Synthesis.Input
 
                 list.Add(resetRobot);
                 list.Add(trajectory);
-                list.Add(duplicateRobot);
-                list.Add(switchActiveRobot);
+                list.Add(switchMainRobot);
 
                 foreach (var mapping in spawnPieces)
                     list.Add(mapping);
@@ -285,15 +282,13 @@ namespace Synthesis.Input
                 {
                     buttons.resetRobot = new KeyMapping("Reset Robot", KeyCode.R);
                     buttons.trajectory = new KeyMapping("Toggle Trajectory", KeyCode.T);
-                    buttons.duplicateRobot = new KeyMapping("Duplicate Robot", KeyCode.U);
-                    buttons.switchActiveRobot = new KeyMapping("Switch Active Robot", KeyCode.Y);
+                    buttons.switchMainRobot = new KeyMapping("Switch main robot", KeyCode.Y);
                 }
                 else
                 {
                     buttons.resetRobot = new KeyMapping("Reset Robot", new JoystickInput(JoystickButton.Button8, joy));
                     buttons.trajectory = new KeyMapping("Toggle Trajectory", new JoystickInput(JoystickButton.Button11, joy));
-                    buttons.duplicateRobot = new KeyMapping("Duplicate Robot", new JoystickInput(JoystickButton.Button1, joy));
-                    buttons.switchActiveRobot = new KeyMapping("Switch Active Robot", new JoystickInput(JoystickButton.Button2, joy));
+                    buttons.switchMainRobot = new KeyMapping("Switch main robot", new JoystickInput(JoystickButton.Button2, joy));
                 }
 
                 #endregion
