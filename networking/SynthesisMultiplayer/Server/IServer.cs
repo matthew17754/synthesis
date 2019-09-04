@@ -1,7 +1,7 @@
 ﻿using Multiplayer.Attribute;
 using Multiplayer.Server;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,11 +22,11 @@ namespace Multiplayer.Common
         }
     }
 
-    public interface IServer : IManagedTask
+    public interface IServer : IActor
     {
-        void ServeMethod(ITaskContext context, AsyncCallHandle handle);
-        void RestartMethod(ITaskContext context, AsyncCallHandle handle);
-        void ShutdownMethod(ITaskContext context, AsyncCallHandle handle);
+        void ServeCallback(ITaskContext context, ActorCallbackHandle handle);
+        void RestartCallback(ITaskContext context, ActorCallbackHandle handle);
+        void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle);
     }
     public static class IServerMethods
     {

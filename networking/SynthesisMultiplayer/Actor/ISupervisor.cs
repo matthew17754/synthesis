@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multiplayer.Threading
+namespace Multiplayer.Actor
 {
-    public interface ISupervisor : IManagedTask
+    public interface ISupervisor : IActor
     {
-        Guid StartChild(IManagedTask task, string name = null);
+        Guid StartChild(IActor task, string name = null);
         void TerminateChild(Guid childId);
         void TerminateChild(string childName);
         int CountChildren();

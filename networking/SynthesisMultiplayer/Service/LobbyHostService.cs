@@ -2,18 +2,18 @@
 using Multiplayer.Common;
 using Multiplayer.Server.gRPC;
 using Multiplayer.Server.UDP;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Multiplayer.Threading.ManagedTaskHelper;
+using static Multiplayer.Actor.ActorHelper;
 namespace Multiplayer.Service
 {
-    public class LobbyHostService : IManagedTask, IServer
+    public class LobbyHostService : IActor, IServer
     {
 
         public bool Initialized { get; private set; }
@@ -65,7 +65,7 @@ namespace Multiplayer.Service
         }
 
         [Callback(name: Methods.Server.Serve)]
-        public void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             ((LobbyBroadcaster)GetTask(Broadcaster)).Serve();
             ((ConnectionListener)GetTask(ConnectionListener)).Serve();
@@ -74,18 +74,18 @@ namespace Multiplayer.Service
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             throw new NotImplementedException();
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
-            ManagedTaskHelper.Terminate(Broadcaster);
-            ManagedTaskHelper.Terminate(ConnectionListener);
-            ManagedTaskHelper.Terminate(FanoutService);
-            ManagedTaskHelper.Terminate(Lobby);
+            ActorHelper.Terminate(Broadcaster);
+            ActorHelper.Terminate(ConnectionListener);
+            ActorHelper.Terminate(FanoutService);
+            ActorHelper.Terminate(Lobby);
             handle.Done();
         }
 

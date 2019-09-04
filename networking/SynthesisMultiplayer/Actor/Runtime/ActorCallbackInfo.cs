@@ -6,14 +6,14 @@ using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multiplayer.Threading.Runtime
+namespace Multiplayer.Actor.Runtime
 {
-    public class CallbackInfo
+    public class ActorCallbackInfo
     {
         public string Name { get; private set; }
         public List<ArgumentAttribute> Arguments { get; private set; }
         public ReturnTypeAttribute ReturnType { get; private set; }
-        public CallbackInfo(string name, List<ArgumentAttribute> args, ReturnTypeAttribute returnType = null)
+        public ActorCallbackInfo(string name, List<ArgumentAttribute> args, ReturnTypeAttribute returnType = null)
         {
             Name = name;
             Arguments = args;
@@ -24,7 +24,7 @@ namespace Multiplayer.Threading.Runtime
             get
             {
                 return Arguments
-                    .Where(a => !a.Attributes.Contains(RuntimeArgumentAttributes.Optional) && !a.Attributes.Contains(RuntimeArgumentAttributes.Nullable))
+                    .Where(a => !a.Attributes.Contains(ActorCallbackArgumentAttributes.Optional) && !a.Attributes.Contains(ActorCallbackArgumentAttributes.Nullable))
                     .Count();
             }
         }
@@ -60,7 +60,7 @@ namespace Multiplayer.Threading.Runtime
             return Arguments[i];
         }
 
-        public bool ValidateArguments(AsyncCallHandle handle)
+        public bool ValidateArguments(ActorCallbackHandle handle)
         {
             Func<dynamic, Type, bool> typeCheck = (a, t) => ((Object)a).GetType() == t;
             if (RequiredParameters > handle.Arguments.Count)

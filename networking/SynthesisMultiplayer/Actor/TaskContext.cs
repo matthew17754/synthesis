@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multiplayer.Threading
+namespace Multiplayer.Actor
 {
     public class TaskContext : ITaskContext
     {

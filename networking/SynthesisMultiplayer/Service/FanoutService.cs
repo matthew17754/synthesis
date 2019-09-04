@@ -5,16 +5,16 @@ using Multiplayer.Common;
 using Multiplayer.Common.UDP;
 using Multiplayer.IO;
 using Multiplayer.Server.UDP;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using static Multiplayer.Threading.ManagedTaskHelper;
-using static Multiplayer.Threading.Runtime.ArgumentPacker;
+using static Multiplayer.Actor.ActorHelper;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 namespace Multiplayer.Common
 {
     public partial class Methods
@@ -28,7 +28,7 @@ namespace Multiplayer.Common
 
 namespace Multiplayer.Service
 {
-    public class FanoutService : IManagedTask
+    public class FanoutService : IActor
     {
         bool IsInitialized { get; set; }
         Guid TaskId { get; set; }
@@ -86,8 +86,8 @@ namespace Multiplayer.Service
 
         [Callback(Methods.FanoutService.AddConnection, "ip", "port")]
         [Argument("ip", typeof(IPAddress))]
-        [Argument("port", typeof(int), 33000, RuntimeArgumentAttributes.HasDefault)]
-        public void AddConnection(ITaskContext context, AsyncCallHandle handle)
+        [Argument("port", typeof(int), 33000, ActorCallbackArgumentAttributes.HasDefault)]
+        public void AddConnection(ITaskContext context, ActorCallbackHandle handle)
         {
             var (ip, port) = GetArgs<IPAddress, int>(handle);
             var newListener = Start(new StreamListener(ip, port+1));

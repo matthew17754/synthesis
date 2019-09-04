@@ -1,7 +1,7 @@
 ﻿using MatchmakingService;
 using Multiplayer.Common;
-using Multiplayer.Threading;
-using Multiplayer.Threading.Runtime;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using System;
 using System.Net;
 using System.Threading;
@@ -128,7 +128,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Serve)]
-        public override void ServeMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ServeCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Serving = true;
             SessionStatus = SessionStatus.Serving;
@@ -147,7 +147,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Shutdown)]
-        public override void ShutdownMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void ShutdownCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Info.Log("Shutting down broadcaster");
             Serving = false;
@@ -158,7 +158,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.Server.Restart)]
-        public override void RestartMethod(ITaskContext context, AsyncCallHandle handle)
+        public override void RestartCallback(ITaskContext context, ActorCallbackHandle handle)
         {
             Terminate();
             Initialize(Id);
@@ -172,7 +172,7 @@ namespace Multiplayer.Server.UDP
         }
 
         [Callback(name: Methods.LobbyBroadcaster.SetLobbyAttribute)]
-        public void SetLobbyAttributeMethod(ITaskContext context, AsyncCallHandle handle)
+        public void SetLobbyAttributeMethod(ITaskContext context, ActorCallbackHandle handle)
         {
             string attributeName = "";
             dynamic value = null;

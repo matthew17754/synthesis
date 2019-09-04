@@ -6,9 +6,9 @@ using System.Linq;
 using System.Runtime.Remoting;
 using System.Threading;
 
-namespace Multiplayer.Threading.Runtime
+namespace Multiplayer.Actor.Runtime
 {
-    public class AsyncCallHandle : IDisposable
+    public class ActorCallbackHandle : IDisposable
     {
         public enum FaultType
         {
@@ -45,7 +45,7 @@ namespace Multiplayer.Threading.Runtime
         public bool Fault { get; set; }
         public FaultType Type { get; set; }
 
-        public AsyncCallHandle(params dynamic[] Args)
+        public ActorCallbackHandle(params dynamic[] Args)
         {
             
             Arguments = new Queue<dynamic>();
@@ -58,7 +58,7 @@ namespace Multiplayer.Threading.Runtime
         }
 
 
-        public AsyncCallHandle(CallbackInfo info, params dynamic[] Args)
+        public ActorCallbackHandle(ActorCallbackInfo info, params dynamic[] Args)
         {
             
             Arguments = new Queue<dynamic>();
@@ -98,7 +98,7 @@ namespace Multiplayer.Threading.Runtime
             {
                 if (((object)arg).GetType() == typeof(NoneType))
                 {
-                    if (info.ArgumentAt(idx).Attributes.Contains(RuntimeArgumentAttributes.HasDefault))
+                    if (info.ArgumentAt(idx).Attributes.Contains(ActorCallbackArgumentAttributes.HasDefault))
                     {
                         StagingArgs[idx] = info.ArgumentAt(idx).DefaultValue;
                     }
