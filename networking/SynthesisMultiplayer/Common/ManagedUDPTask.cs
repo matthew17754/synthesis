@@ -1,7 +1,8 @@
-﻿using Multiplayer.Attribute;
-using Multiplayer.Actor;
+﻿using Multiplayer.Actor;
 using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.IPC;
+using Multiplayer.Server;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -13,7 +14,7 @@ namespace Multiplayer.Common
     {
         private bool disposed;
         protected Mutex statusMutex;
-        [SavedStateAttribute]
+        [SavedState]
         protected IPEndPoint Endpoint { get; set; }
         protected UdpClient Connection { get; set; }
         protected Channel<(string, ActorCallbackHandle)> Messages;

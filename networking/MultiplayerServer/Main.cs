@@ -1,14 +1,11 @@
-﻿using System;
-using Multiplayer.Common;
-using System.Threading;
-using Multiplayer.Service;
-using Multiplayer.Actor;
+﻿using Multiplayer.Actor;
 using Multiplayer.IO;
-using static Multiplayer.Actor.ActorHelper;
+using Multiplayer.Server;
+using Multiplayer.Service;
+using System;
 using System.IO;
-using System.Text;
-using Multiplayer.Common.UDP;
-using System.Net;
+using System.Threading;
+using static Multiplayer.Actor.ActorHelper;
 
 namespace MultiplayerServer
 {
@@ -53,38 +50,12 @@ namespace MultiplayerServer
                 })
                 , file));
             var lobby = Start(new LobbyService());
-            var client = Start(new LobbyClientService());
-            var LobbyService = (LobbyService)GetTask(lobby);
-            while (!LobbyService.Initialized)
-            {
-            }
-            LobbyService.Serve();
-            var lobbyClient = (LobbyClientService)GetTask(client);
-            lobbyClient.Connect("127.0.0.1:33005");
-            lobbyClient.Call("send", "test");
-            lobbyClient.Call("send", "test");
-            lobbyClient.Call("send", "test");
-            lobbyClient.Call("send", "test");
-            lobbyClient.Call("send", "test");
-            var sender = Start(new StreamSender(IPAddress.Parse("127.0.0.1"), 51200));
-            var senderTask = ((StreamSender)GetTask(sender));
-            while (!senderTask.Initialized) { }
-            senderTask.Serve();
+            var lobbyService = (LobbyService)GetTask(lobby);
+            lobbyService.Serve();
             Thread.Sleep(500);
             while (Console.ReadKey(true).Key != ConsoleKey.Escape) { }
-            LobbyService.Terminate();
-            senderTask.Terminate();
-            lobbyClient.Terminate();
+            lobbyService.Terminate();
             Info.Log("Server Closing. Please wait...");
-            int counter = 0;
-            while (LobbyService.Status != ManagedTaskStatus.Completed)
-            {
-                if (counter % 50 == 0)
-                {
-                    Console.Write(".");
-                }
-                ++counter;
-            }
             CleanupTasks();
         }
     }

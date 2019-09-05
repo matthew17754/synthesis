@@ -1,9 +1,5 @@
-﻿using Multiplayer.Common;
-using Multiplayer.Util;
-using Multiplayer.Actor.Runtime;
+﻿using Multiplayer.Actor.Runtime;
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Multiplayer.Actor
@@ -17,7 +13,7 @@ namespace Multiplayer.Actor
         public static void Restart(string taskName, bool doRestoreState = true) => ActorRegistry.Restart(taskName, doRestoreState);
         public static IActor GetTask(Guid taskId) => ActorRegistry.GetActor(taskId);
         public static IActor GetTask(string taskName) => ActorRegistry.GetActor(taskName);
-        public static Task<dynamic> Call(Guid taskId, string method, params dynamic[] args) => GetTask(taskId).Call(method, args: args);
+        public static dynamic Call(Guid taskId, string method, params dynamic[] args) => GetTask(taskId).Call(method, args: args);
         public static Task<dynamic> Call(string taskName, string method, params dynamic[] args) => GetTask(taskName).Call(method, args: args);
         public static Task Do(Guid taskId, string method, params dynamic[] args) => GetTask(taskId).Do(method, args: args);
         public static Task Do(string taskName, string method, params dynamic[] args) => GetTask(taskName).Do(method, args: args);

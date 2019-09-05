@@ -45,20 +45,14 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Protobuf, Version=3.8.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Protobuf.3.8.0\lib\net45\Google.Protobuf.dll</HintPath>
+    <Reference Include="Google.Protobuf, Version=3.9.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Protobuf.3.9.1\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
     <Reference Include="Grpc.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <HintPath>..\packages\Grpc.Core.1.22.0\lib\net45\Grpc.Core.dll</HintPath>
+      <HintPath>..\packages\Grpc.Core.1.22.1\lib\net45\Grpc.Core.dll</HintPath>
     </Reference>
     <Reference Include="Grpc.Core.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <HintPath>..\packages\Grpc.Core.Api.1.22.0\lib\net45\Grpc.Core.Api.dll</HintPath>
+      <HintPath>..\packages\Grpc.Core.Api.1.22.1\lib\net45\Grpc.Core.Api.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -66,6 +60,7 @@
     <Reference Include="System.Interactive.Async, Version=3.2.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Interactive.Async.3.2.0\lib\net46\System.Interactive.Async.dll</HintPath>
     </Reference>
+    <Reference Include="System.Numerics" />
     <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
     </Reference>
@@ -88,6 +83,7 @@
     <Compile Include="IO\LogWriter.cs" />
     <Compile Include="IO\MultiWriter.cs" />
     <Compile Include="IO\SinkWriter.cs" />
+    <Compile Include="Networking\PortUtils.cs" />
     <Compile Include="Service\ConnectionListener.cs" />
     <Compile Include="Service\FanoutService.cs" />
     <Compile Include="Service\IService.cs" />
@@ -110,13 +106,12 @@
     <Compile Include="Actor\ActorHelper.cs" />
     <Compile Include="Actor\TaskContext.cs" />
     <Compile Include="Actor\Runtime\ArgumentUnpacker.cs" />
-    <Compile Include="Util\Cast.cs" />
-    <Compile Include="Util\Channel.cs" />
-    <Compile Include="Util\Either.cs" />
+    <Compile Include="IPC\Channel.cs" />
+    <Compile Include="Collections\Either.cs" />
     <Compile Include="IO\Logger.cs" />
-    <Compile Include="Util\NoneType.cs" />
-    <Compile Include="Util\Optional.cs" />
-    <Compile Include="Util\StateBackup.cs" />
+    <Compile Include="Common\NoneType.cs" />
+    <Compile Include="Collections\Optional.cs" />
+    <Compile Include="Actor\Runtime\StateBackup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CodeGeneration\" />
@@ -132,11 +127,11 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Grpc.Core.1.22.1\build\net45\Grpc.Core.targets" Condition="Exists('..\packages\Grpc.Core.1.22.1\build\net45\Grpc.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Grpc.Core.1.22.0\build\net45\Grpc.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Grpc.Core.1.22.0\build\net45\Grpc.Core.targets'))" />
+    <Error Condition="!Exists('..\packages\Grpc.Core.1.22.1\build\net45\Grpc.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Grpc.Core.1.22.1\build\net45\Grpc.Core.targets'))" />
   </Target>
-  <Import Project="..\packages\Grpc.Core.1.22.0\build\net45\Grpc.Core.targets" Condition="Exists('..\packages\Grpc.Core.1.22.0\build\net45\Grpc.Core.targets')" />
 </Project>

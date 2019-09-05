@@ -7,6 +7,7 @@ option csharp_namespace = "MatchmakingService";
 message JoinLobbyRequest {
     string api = 1;
     string lobby_key = 2;
+	int32 best_port = 3;
 }
 
 message JoinLobbyResponse {
@@ -16,7 +17,8 @@ message JoinLobbyResponse {
 	}
     string api = 1;
     string job_id = 2;
-	ErrorCode error_code = 3;
+	int32 best_port = 3;
+	ErrorCode error_code = 4;
 }
 
 message JoinLobbyStatusRequest {

@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Multiplayer.Networking;
 
 namespace Multiplayer.Common
 {
@@ -41,6 +42,10 @@ namespace Multiplayer.Client.gRPC
         public bool Alive { get; private set; }
         public Guid Id { get; private set; }
         public ManagedTaskStatus Status { get; private set; }
+
+        public int RemotePort;
+        public int LocalPort;
+
         public LobbyClient() { }
 
         [Callback(Methods.LobbyClient.JoinLobby, "endpoint", "timeout")]
@@ -51,14 +56,21 @@ namespace Multiplayer.Client.gRPC
             (IPEndPoint endpoint, int timeout) = ArgumentUnpacker.GetArgs<IPEndPoint, int>(handle);
             var Channel = new Grpc.Core.Channel(endpoint.ToString(), Grpc.Core.ChannelCredentials.Insecure);
             var Client = new ServerHost.ServerHostClient(Channel);
+            LocalPort = PortUtils.GetAvailablePort(33010);
             var res = Client.JoinLobby(new JoinLobbyRequest
             {
-                Api = "v1"
+                Api = "v1",
+                BestPort = LocalPort,
             });
             if (string.IsNullOrEmpty(res.JobId))
             {
                 throw new Exception("No job ID found");
             }
+            if (res.BestPort == 0)
+            {
+                throw new Exception("Server did not provide port");
+            }
+            RemotePort = res.BestPort;
             using (var call = Client.JoinLobbyStatus())
             {
                 var udpClient = new UdpClient();
@@ -103,7 +115,8 @@ namespace Multiplayer.Client.gRPC
                         }).Wait();
 
                         Thread.Sleep(50);
-                    } else
+                    }
+                    else
                     {
                         Connected = false;
                         cancellationToken.Cancel();

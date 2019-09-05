@@ -14,7 +14,8 @@ using static MatchmakingService.SessionBroadcastMessage.Types;
 using System.Collections.Generic;
 using System.Reflection;
 using Multiplayer.IO;
-
+using Multiplayer.Server;
+using Multiplayer.Common;
 namespace Multiplayer.Common
 {
     public partial class Methods

@@ -1,20 +1,16 @@
 ﻿using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
-
 using ActorEntry =
-    Multiplayer.Util.Either<
+    Multiplayer.Collections.Either<
         (
             Multiplayer.Actor.IActor Task,
             System.Threading.Thread Process,
-            Multiplayer.Util.Channel<(string, Multiplayer.Actor.Runtime.ActorCallbackHandle)> Channel
+            Multiplayer.IPC.Channel<(string, Multiplayer.Actor.Runtime.ActorCallbackHandle)> Channel
         ),
         System.Guid>;
-using MessageChannel = Multiplayer.Util.Channel<(string, Multiplayer.Actor.Runtime.ActorCallbackHandle)>;
-using Multiplayer.IO;
+using MessageChannel = Multiplayer.IPC.Channel<(string, Multiplayer.Actor.Runtime.ActorCallbackHandle)>;
 
 namespace Multiplayer.Actor
 {
@@ -153,8 +149,42 @@ namespace Multiplayer.Actor
                 Instance.ActorNames[name] = taskId;
             Instance.ActorLock.ExitWriteLock();
             Instance.ActorLock.ExitUpgradeableReadLock();
+            while(!taskInstance.Initialized) { }
             return taskId;
         }
+
+
+        public static Guid StartAsync(IActor taskInstance, string name = null, ITaskContext context = null)
+        {
+            if (taskInstance.Status != ManagedTaskStatus.Created)
+            {
+                throw new Exception("Cannot start a task that is already running. Do not call OnStart or spawn tasks directly.");
+            }
+            var taskId = Guid.NewGuid();
+            context = context ?? new TaskContext();
+            var channel = new MessageChannel();
+            var task = taskInstance.Run(taskId, channel, context);
+            Instance.ActorLock.EnterUpgradeableReadLock();
+            if (Instance.Actors.ContainsKey(taskId))
+            {
+                Instance.ActorLock.ExitReadLock();
+                throw new Exception("Task with id '" + taskId.ToString() + "' already registered.");
+            }
+            if (name != null && Instance.ActorNames.ContainsKey(name))
+            {
+                Instance.ActorLock.ExitReadLock();
+                throw new Exception("Task with name '" + name + "' already registered.");
+            }
+            Instance.ActorLock.EnterWriteLock();
+            Instance.Actors[taskId] = new ActorEntry((taskInstance, task, channel));
+            if (name != null)
+                Instance.ActorNames[name] = taskId;
+            Instance.ActorLock.ExitWriteLock();
+            Instance.ActorLock.ExitUpgradeableReadLock();
+            return taskId;
+        }
+
+
 
         public static void Restart(Guid taskId, bool doRestoreState = false)
         {
