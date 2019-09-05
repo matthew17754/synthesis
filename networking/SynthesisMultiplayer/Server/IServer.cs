@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Multiplayer.Common;
 namespace Multiplayer.Common
 {
 
@@ -22,6 +22,8 @@ namespace Multiplayer.Common
         }
     }
 
+}
+namespace Multiplayer.Server {
     public interface IServer : IActor
     {
         void ServeCallback(ITaskContext context, ActorCallbackHandle handle);
@@ -32,15 +34,15 @@ namespace Multiplayer.Common
     {
         public static void Serve(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Serve, args: args).Wait();
+            server.Call(Methods.Server.Serve, args: args);
         }
         public static void Restart(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Restart, args: args).Wait();
+            server.Call(Methods.Server.Restart, args: args);
         }
         public static void Shutdown(this IServer server, params dynamic[] args)
         {
-            server.Do(Methods.Server.Shutdown, args: args).Wait();
+            server.Call(Methods.Server.Shutdown, args: args);
         }
     }
 }

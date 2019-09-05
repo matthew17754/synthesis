@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Multiplayer.Util
+namespace Multiplayer.Collections
 {
     public class Either<TLeft, TRight>
     {

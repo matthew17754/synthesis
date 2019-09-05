@@ -1,12 +1,12 @@
 ﻿using Google.Protobuf;
 using MatchmakingService;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Attribute;
 using Multiplayer.Common;
 using Multiplayer.Common.UDP;
 using Multiplayer.IO;
-using Multiplayer.Server.UDP;
-using Multiplayer.Actor;
-using Multiplayer.Actor.Runtime;
+using Multiplayer.Server;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +15,7 @@ using System.Net;
 using System.Text;
 using static Multiplayer.Actor.ActorHelper;
 using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
+
 namespace Multiplayer.Common
 {
     public partial class Methods
@@ -62,7 +63,7 @@ namespace Multiplayer.Service
         {
             foreach (var (listener, sender) in Connections)
             {
-                var newData = Call(listener, Methods.StreamListener.GetStreamData, false).Result;
+                var newData = Call(listener, Methods.StreamListener.GetStreamData, false);
                 if (newData != null)
                 {
                     var message = new ServerDataFrame
@@ -81,17 +82,18 @@ namespace Multiplayer.Service
             }
         }
 
-        public void AddConnection(IPAddress ip, int port) =>
-            this.Do(Methods.FanoutService.AddConnection, port, ip).Wait();
+        public void AddConnection(IPAddress ip, int local, int remote) =>
+            this.Call(Methods.FanoutService.AddConnection, ip, local, remote);
 
-        [Callback(Methods.FanoutService.AddConnection, "ip", "port")]
+        [Callback(Methods.FanoutService.AddConnection, "ip", "localPort", "remotePort")]
         [Argument("ip", typeof(IPAddress))]
-        [Argument("port", typeof(int), 33000, ActorCallbackArgumentAttributes.HasDefault)]
+        [Argument("localPort", typeof(int), 0, ActorCallbackArgumentAttributes.HasDefault)]
+        [Argument("remotePort", typeof(int), 0, ActorCallbackArgumentAttributes.HasDefault)]
         public void AddConnection(ITaskContext context, ActorCallbackHandle handle)
         {
-            var (ip, port) = GetArgs<IPAddress, int>(handle);
-            var newListener = Start(new StreamListener(ip, port+1));
-            var newSender = Start(new StreamSender(ip, port));
+            var (ip, localPort, remotePort) = GetArgs<IPAddress, int, int>(handle);
+            var newListener = Start(new StreamListener(ip, localPort));
+            var newSender = Start(new StreamSender(ip, remotePort));
             while (!GetTask(newSender).Initialized) { }
             while (!GetTask(newListener).Initialized) { }
             ((IServer)GetTask(newSender)).Serve();

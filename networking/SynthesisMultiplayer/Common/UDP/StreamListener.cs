@@ -1,12 +1,12 @@
 ﻿using MatchmakingService;
-using Multiplayer.Attribute;
-using Multiplayer.IO;
 using Multiplayer.Actor;
 using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.IO;
+using Multiplayer.IPC;
+using Multiplayer.Server;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -79,9 +79,9 @@ namespace Multiplayer.Common.UDP
             }
         }
         public IPEndPoint PeekClientData(Guid id) =>
-            this.Call(Methods.StreamListener.GetStreamData, false).Result;
+            this.Call(Methods.StreamListener.GetStreamData, false);
         public IPEndPoint GetClientData(Guid id) =>
-            this.Call(Methods.StreamListener.GetStreamData, true).Result;
+            this.Call(Methods.StreamListener.GetStreamData, true);
 
         public override void Loop()
         {

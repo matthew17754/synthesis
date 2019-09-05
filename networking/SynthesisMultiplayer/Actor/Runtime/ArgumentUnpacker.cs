@@ -23,7 +23,6 @@ namespace Multiplayer.Actor.Runtime
         {
             // TODO: Find a way to do this that *doesn't* involve reading stack
             var frame = new StackFrame(2);
-            Info.Log(frame);
             var method = frame.GetMethod();
             var methodName = "";
             var hasMethod = false;

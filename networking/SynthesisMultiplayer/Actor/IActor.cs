@@ -1,20 +1,20 @@
-﻿using Multiplayer.Attribute;
-using Multiplayer.Util;
+﻿using Multiplayer.Actor.Runtime;
+using Multiplayer.Attribute;
+using Multiplayer.IPC;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Multiplayer.Actor.Runtime;
 using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 using Callbacks = System.Collections.Generic.Dictionary<string, string>;
-using MessageHandles = System.Collections.Generic.Dictionary<string, 
+using MessageHandles = System.Collections.Generic.Dictionary<string,
     (
         Multiplayer.Actor.ActorCallback Method,
         Multiplayer.Actor.Runtime.ActorCallbackInfo MethodInfo
     )>;
 using StateData = System.Collections.Generic.Dictionary<string, dynamic>;
-using System.Collections.Generic;
 
 namespace Multiplayer.Actor
 {
@@ -76,21 +76,16 @@ namespace Multiplayer.Actor
             return t;
         }
 
-        public static Task<dynamic> Call(this IActor task, string method, params dynamic[] args)
+        public static dynamic Call(this IActor task, string method, params dynamic[] args)
         {
-            return Task.Run(() =>
-            {
-                var Method = method;
-                var handle = new ActorCallbackHandle(GetMethodInfo(task.GetType(), method), args);
-                ActorHelper.Send(task.Id, (method, handle));
-                return handle.Result;
-            });
+            var handle = new ActorCallbackHandle(GetMethodInfo(task.GetType(), method), args);
+            ActorHelper.Send(task.Id, (method, handle));
+            return handle.Result;
         }
-        public static Task Do(this IActor task, string method, int methodCallWaitPeriod = 50, params dynamic[] args)
+        public static Task Do(this IActor task, string method, params dynamic[] args)
         {
             return Task.Run(() =>
             {
-                var Method = method;
                 var handle = new ActorCallbackHandle(GetMethodInfo(task.GetType(), method), args);
                 ActorHelper.Send(task.Id, (method, handle));
                 handle.Wait();

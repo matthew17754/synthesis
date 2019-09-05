@@ -1,19 +1,14 @@
-﻿using Multiplayer.Attribute;
+﻿using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
+using Multiplayer.Attribute;
+using Multiplayer.Collections;
 using Multiplayer.Common;
+using Multiplayer.Server;
 using Multiplayer.Server.gRPC;
 using Multiplayer.Server.UDP;
-using Multiplayer.Actor;
-using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using static Multiplayer.Actor.ActorHelper;
-using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
-using Multiplayer.IO;
 
 namespace Multiplayer.Service
 {
@@ -59,11 +54,13 @@ namespace Multiplayer.Service
         {
             if (Serving)
             {
-                var newConnection = (Optional<Guid>)Call(Lobby, Methods.LobbyHandler.GetLatestConnection).Result;
+                var newConnection = (Optional<(Guid, int, int)>)Call(Lobby, Methods.LobbyHandler.GetLatestConnection);
                 if (newConnection.Valid)
                 {
-                    var connectionInfo = ((ConnectionListener)GetTask(ConnectionListener)).GetConnectionInfo(newConnection);
-                    ((FanoutService)GetTask(FanoutService)).AddConnection(connectionInfo.Address, connectionInfo.Port);
+                    var connectionInfo = ((ConnectionListener)GetTask(ConnectionListener)).GetConnectionInfo(newConnection.Get().Item1);
+                    ((FanoutService)GetTask(FanoutService)).AddConnection(connectionInfo.Address,
+                        newConnection.Get().Item2,
+                        newConnection.Get().Item3);
                 }
             }
         }

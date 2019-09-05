@@ -1,4 +1,4 @@
-﻿using Multiplayer.Util;
+﻿using Multiplayer.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,6 @@ namespace Multiplayer.Actor.Runtime
         dynamic result;
         bool ready;
         private readonly int methodCallWaitPeriod = 50;
-        private List<int> DefaultedArgs;
         public dynamic Result
         {
             [DebuggerStepThrough]
@@ -62,7 +61,6 @@ namespace Multiplayer.Actor.Runtime
         {
             
             Arguments = new Queue<dynamic>();
-            DefaultedArgs = new List<int>();
             Fault = false;
             Type = FaultType.None;
             ready = false;
@@ -127,12 +125,12 @@ namespace Multiplayer.Actor.Runtime
             {
                 if (Fault)
                 {
-
                     return;
                 }
                 Thread.Sleep(methodCallWaitPeriod);
             }
         }
+
         public void Dispose()
         {
             Arguments.Clear();

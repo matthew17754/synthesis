@@ -1,20 +1,19 @@
-﻿using System.Net.Sockets;
+﻿using Grpc.Core;
 using MatchmakingService;
-using System.Collections.Generic;
-using System;
-using Grpc;
-using System.Threading.Tasks;
-using Multiplayer.Server.UDP;
-using Multiplayer.Actor.Runtime;
-using static Multiplayer.Actor.ActorHelper;
-using Grpc.Core;
-using System.Threading;
-using Multiplayer.Common;
-using Multiplayer.Attribute;
-using System.Net;
-using Multiplayer.Util;
 using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
+using Multiplayer.Attribute;
+using Multiplayer.Common;
 using Multiplayer.IO;
+using Multiplayer.IPC;
+using Multiplayer.Server.UDP;
+using Multiplayer.Networking;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using static Multiplayer.Actor.ActorHelper;
 
 namespace Multiplayer.Common
 {
@@ -43,6 +42,7 @@ namespace Multiplayer.Server.gRPC
             public Guid JobId;
             public Status JobStatus;
             public IPEndPoint Ip;
+            public int LocalPort, RemotePort;
         }
 
         public bool Initialized { get; private set; }
@@ -52,20 +52,20 @@ namespace Multiplayer.Server.gRPC
         protected Grpc.Core.Server Server;
         protected Guid ListenerPid;
         protected int Port;
-        protected Channel<Guid> CompletedJobs;
+        protected Channel<(Guid, int, int)> CompletedJobs;
         public LobbyHandler(Guid listenerPid, int port = 33002)
         {
             ListenerPid = listenerPid;
             Port = port;
-            CompletedJobs = new Channel<Guid>();
+            CompletedJobs = new Channel<(Guid, int, int)>();
         }
 
         private class LobbyGrpcServer : ServerHost.ServerHostBase
         {
             Guid ListenerPid;
             Dictionary<Guid, Job> Jobs;
-            Channel<Guid> CompletedJobs;
-            public LobbyGrpcServer(Guid listener, Channel<Guid> completedJobs)
+            Channel<(Guid, int, int)> CompletedJobs;
+            public LobbyGrpcServer(Guid listener, Channel<(Guid, int, int)> completedJobs)
             {
                 ListenerPid = listener;
                 Jobs = new Dictionary<Guid, Job>();
@@ -74,18 +74,24 @@ namespace Multiplayer.Server.gRPC
 
             public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest req, ServerCallContext context)
             {
+                if (req.BestPort == 0)
+                    new Exception("No best port provided");
                 var job = new Job
                 {
                     JobId = Guid.NewGuid(),
                     JobStatus = Job.Status.Started,
-                    Ip = new IPEndPoint(IPAddress.Parse(context.Host.Split(':')[0]), int.Parse(context.Host.Split(':')[1]))
+                    Ip = new IPEndPoint(IPAddress.Parse(context.Host.Split(':')[0]), int.Parse(context.Host.Split(':')[1])),
+                    LocalPort = PortUtils.GetAvailablePort(33010, 
+                        context.Peer.Substring(5, context.Peer.LastIndexOf(':')-5) == "127.0.0.1" ? req.BestPort : 0),
+                    RemotePort = req.BestPort
                 };
                 Jobs.Add(job.JobId, job);
                 Info.Log("New join request");
                 return Task.FromResult(new JoinLobbyResponse
                 {
                     Api = "v1",
-                    JobId = job.JobId.ToString()
+                    JobId = job.JobId.ToString(),
+                    BestPort = job.LocalPort,           
                 });
             }
 
@@ -104,7 +110,9 @@ namespace Multiplayer.Server.gRPC
                                 Api = "v1",
                                 Status = JoinLobbyStatusResponse.Types.Status.Connected
                             });
-                            CompletedJobs.Send(new Guid(requestStream.Current.JobId));
+                            CompletedJobs.Send((new Guid(requestStream.Current.JobId), 
+                                Jobs[new Guid(requestStream.Current.JobId)].LocalPort,
+                                Jobs[new Guid(requestStream.Current.JobId)].RemotePort));
                         }
                     }
                     else

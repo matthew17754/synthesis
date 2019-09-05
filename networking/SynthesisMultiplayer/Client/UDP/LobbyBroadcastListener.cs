@@ -1,19 +1,16 @@
 ﻿using MatchmakingService;
+using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
 using Multiplayer.Attribute;
 using Multiplayer.Common;
 using Multiplayer.IO;
-using Multiplayer.Actor;
-using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
+using Multiplayer.IPC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using static MatchmakingService.SessionBroadcastMessage.Types;
 using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 
 namespace Multiplayer.Common
@@ -203,7 +200,7 @@ namespace Multiplayer.Client.UDP
 
         public override void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Do(Methods.Server.Shutdown).Wait();
+            this.Call(Methods.Server.Shutdown);
             Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
     }

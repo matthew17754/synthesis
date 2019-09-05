@@ -1,12 +1,14 @@
-﻿using Multiplayer.Attribute;
+﻿using Multiplayer.Actor;
+using Multiplayer.Actor.Runtime;
+using Multiplayer.Attribute;
 using Multiplayer.Client.gRPC;
 using Multiplayer.Client.UDP;
+using Multiplayer.Collections;
 using Multiplayer.Common;
 using Multiplayer.Common.UDP;
 using Multiplayer.IO;
-using Multiplayer.Actor;
-using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
+using Multiplayer.IPC;
+using Multiplayer.Server;
 using System;
 using System.Net;
 using static Multiplayer.Actor.ActorHelper;
@@ -83,7 +85,7 @@ namespace Multiplayer.Service
         public void JoinLobby(IPEndPoint endpoint = null)
         {
             lobbyEndpoint = endpoint ?? lobbyEndpoint;
-            Call(LobbyClient, Methods.LobbyClient.JoinLobby, lobbyEndpoint).Wait();
+            Call(LobbyClient, Methods.LobbyClient.JoinLobby, lobbyEndpoint);
         }
         public void JoinLobby(string Ip)
         {
@@ -100,11 +102,11 @@ namespace Multiplayer.Service
         {
             var (ip, lobbyPort) = GetArgs<string, int>(handle);
             JoinLobby(ip);
-            StreamSender = Start(new StreamSender(lobbyEndpoint.Address, lobbyPort+1));
-            StreamListener = Start(new StreamListener(lobbyEndpoint.Address, lobbyPort));
+            StreamSender = Start(new StreamSender(lobbyEndpoint.Address, ((LobbyClient)GetTask(LobbyClient)).RemotePort));
+            StreamListener = Start(new StreamListener(lobbyEndpoint.Address, ((LobbyClient)GetTask(LobbyClient)).LocalPort));
             ((StreamSender)GetTask(StreamSender)).Serve();
             ((StreamListener)GetTask(StreamListener)).Serve();
-            while(!((StreamSender)GetTask(StreamSender)).Initialized && !((StreamListener)GetTask(StreamListener)).Initialized) { }
+            while (!((StreamSender)GetTask(StreamSender)).Initialized && !((StreamListener)GetTask(StreamListener)).Initialized) { }
             Connected = true;
             handle.Done();
         }
@@ -119,6 +121,6 @@ namespace Multiplayer.Service
             handle.Done();
         }
         public void Connect(string ip) =>
-            this.Call(Methods.LobbyClientService.Connect, ip).Wait();
+            this.Call(Methods.LobbyClientService.Connect, ip);
     }
 }

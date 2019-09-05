@@ -107,7 +107,7 @@ namespace Synthesis
                         TargetPlatform = EmulatorManager.programType == UserProgram.Type.JAVA ? TargetPlatform.Java : TargetPlatform.Native,
                     }))
                     {
-                        while (await call.ResponseStream.MoveNext())
+                        while (await call.ResponseStream.MoveNext(new System.Threading.CancellationToken()))
                         {
                             receiverConnected = true;
                             EmulatedRoboRIO.RobotOutputs = call.ResponseStream.Current.OutputData;

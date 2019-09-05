@@ -1,17 +1,17 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Net;
-using System.Collections.Generic;
-using System.Threading;
+﻿using MatchmakingService;
 using Multiplayer.Actor;
 using Multiplayer.Actor.Runtime;
-using Multiplayer.Common;
-using Multiplayer.Util;
-using MatchmakingService;
-using System.Text;
 using Multiplayer.Attribute;
-using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
+using Multiplayer.Common;
 using Multiplayer.IO;
+using Multiplayer.IPC;
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using static Multiplayer.Actor.Runtime.ArgumentUnpacker;
 
 namespace Multiplayer.Common
 {
@@ -77,7 +77,7 @@ namespace Multiplayer.Server.UDP
             }
         }
         public IPEndPoint GetConnectionInfo(Guid id) =>
-            this.Call(Methods.ConnectionListener.GetConnectionInfo, id).Result;
+            this.Call(Methods.ConnectionListener.GetConnectionInfo, id);
         public override void Loop()
         {
             if (Serving)
@@ -186,7 +186,7 @@ namespace Multiplayer.Server.UDP
 
         public override void Terminate(string reason = null, params dynamic[] args)
         {
-            this.Do(Methods.Server.Shutdown).Wait();
+            this.Call(Methods.Server.Shutdown);
             Info.Log("Server closed: '" + (reason ?? "No reason provided") + "'");
         }
     }

@@ -1,17 +1,14 @@
-﻿using Google.Protobuf;
-using Multiplayer.Attribute;
-using Multiplayer.Common;
-using Multiplayer.IO;
-using Multiplayer.Actor;
+﻿using Multiplayer.Actor;
 using Multiplayer.Actor.Runtime;
-using Multiplayer.Util;
+using Multiplayer.Attribute;
+using Multiplayer.IO;
+using Multiplayer.IPC;
+using Multiplayer.Server;
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-
 namespace Multiplayer.Common
 {
     public partial class Methods
@@ -52,7 +49,7 @@ namespace Multiplayer.Common.UDP
 
         public void Send(string data)
         {
-            this.Call(Methods.ClientSender.Send, Encoding.ASCII.GetBytes(data)).Wait();
+            this.Do(Methods.ClientSender.Send, Encoding.ASCII.GetBytes(data));
         }
 
         [Callback(Methods.ClientSender.Send, "sendData")]

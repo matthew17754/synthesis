@@ -19,6 +19,10 @@ using Synthesis.Robot;
 using Synthesis.Field;
 using System;
 using System.Diagnostics;
+using Multiplayer.Service;
+using static Multiplayer.Actor.ActorHelper;
+using Multiplayer.Common;
+using Multiplayer.IO;
 
 namespace Synthesis.GUI
 {
@@ -86,7 +90,23 @@ namespace Synthesis.GUI
         {
             base.Awake();
             instance = this;
-
+            Multiplayer.IO.Logger.RegisterLogger(Multiplayer.IO.Logger.LogLevel.Info, 
+                new LogWriter((o) => UnityEngine.Debug.Log(o)));
+            Multiplayer.IO.Logger.RegisterLogger(Multiplayer.IO.Logger.LogLevel.Debug, 
+                new LogWriter((o) => UnityEngine.Debug.Log(o)));
+            Multiplayer.IO.Logger.RegisterLogger(Multiplayer.IO.Logger.LogLevel.Warning, 
+                new LogWriter((o) => UnityEngine.Debug.LogWarning(o)));
+            Multiplayer.IO.Logger.RegisterLogger(Multiplayer.IO.Logger.LogLevel.Error, 
+                new LogWriter((o) => UnityEngine.Debug.LogError(o)));
+            Info.Log("test");
+            Start(new LobbyClientService(), "lobby");
+            try
+            {
+                ((LobbyClientService)GetTask("lobby")).Connect("127.0.0.1:33005");
+            } catch
+            {
+                UnityEngine.Debug.Log("Failed");
+            }
             UpdateJoystickStates(false);
         }
 
@@ -130,6 +150,7 @@ namespace Synthesis.GUI
             }
             UpdateJoystickStates();
             HighlightTabs();
+            UnityEngine.Debug.Log(((LobbyService)GetTask("lobby")).Initialized);
         }
 
         private void OnGUI()
