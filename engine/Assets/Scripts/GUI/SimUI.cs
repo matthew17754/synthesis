@@ -482,12 +482,12 @@ namespace Synthesis.GUI
                     "Robot - Exported",
                     AnalyticsLedger.getMilliseconds().ToString());
 
-                robotCameraManager.DetachCamerasFromRobot(State.robotManager.MainRobot);
-                sensorManager.RemoveSensorsFromRobot(State.robotManager.MainRobot);
+                robotCameraManager.DetachCamerasFromRobot(State.RobotManager.MainRobot);
+                sensorManager.RemoveSensorsFromRobot(State.RobotManager.MainRobot);
 
-                State.robotManager.ChangeRobot(
+                State.RobotManager.ChangeRobot(
                     tabStateMachine.CurrentState is MultiplayerToolbarState ?
-                        StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>().ActiveTab : State.robotManager.MainRobotIndex,
+                        StateMachine.SceneGlobal.GetComponent<LocalMultiplayer>().ActiveTab : State.RobotManager.MainRobotIndex,
                     directory,
                     false);
                 RobotTypeManager.IsMixAndMatch = false;
@@ -503,23 +503,30 @@ namespace Synthesis.GUI
         /// </summary>
         public void MaMChangeRobot(string robotDirectory, string manipulatorDirectory)
         {
-            MaMRobot mamRobot = State.robotManager.MainRobot as MaMRobot;
+            MaMRobot mamRobot = State.RobotManager.MainRobot as MaMRobot;
 
-            robotCameraManager.DetachCamerasFromRobot(State.robotManager.MainRobot);
-            sensorManager.RemoveSensorsFromRobot(State.robotManager.MainRobot);
+            robotCameraManager.DetachCamerasFromRobot(State.RobotManager.MainRobot);
+            sensorManager.RemoveSensorsFromRobot(State.RobotManager.MainRobot);
 
             //If the current robot has a manipulator, destroy the manipulator
             if (mamRobot != null && mamRobot.RobotHasManipulator)
                 State.DeleteManipulatorNodes();
 
-            if (!State.robotManager.ChangeRobot(robotDirectory, true)) {
+            if (!State.RobotManager.ChangeRobot(robotDirectory, true)) {
                 AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
+            }
+
+            mamRobot = State.RobotManager.MainRobot as MaMRobot;
+
+            if (mamRobot == null)
+            {
+                AppModel.ErrorToMenu("ROBOT_SELECT|Mix and match robot error");
             }
 
             //If the new robot has a manipulator, load the manipulator
             if (RobotTypeManager.HasManipulator)
-                State.LoadManipulator(manipulatorDirectory);
-            else if (mamRobot != null)
+                mamRobot.LoadManipulator(manipulatorDirectory);
+            else
                 mamRobot.RobotHasManipulator = false;
         }
 
@@ -571,6 +578,7 @@ namespace Synthesis.GUI
                 //FieldDataHandler.LoadFieldMetaData(directory);
                 //DPMDataHandler.Load();
                 //Controls.Load();
+                //CollisionTracker.Reset();
                 SceneManager.LoadScene("Scene");
 
                 AnalyticsManager.GlobalInstance.StartTime(AnalyticsLedger.TimingLabel.ChangeField,
@@ -720,18 +728,7 @@ namespace Synthesis.GUI
 
         private void UpdateOverviewWindow()
         {
-            if (camera.ActiveState.GetType().Equals(typeof(DynamicCamera.OverviewState)) && !overviewWindowClosed)
-            {
-                if (!overviewWindowClosed)
-                {
-                    overviewCameraWindow.SetActive(true);
-                }
-
-            }
-            else if (!camera.ActiveState.GetType().Equals(typeof(DynamicCamera.OverviewState)))
-            {
-                overviewCameraWindow.SetActive(false);
-            }
+            overviewCameraWindow.SetActive(camera.ActiveState is DynamicCamera.OverviewState && !overviewWindowClosed);
         }
 
         /// <summary>
@@ -748,7 +745,7 @@ namespace Synthesis.GUI
         /// </summary>
         private void UpdateDriverStationPanel()
         {
-            driverStationPanel.SetActive(camera.ActiveState.GetType().Equals(typeof(DynamicCamera.DriverStationState)));
+            driverStationPanel.SetActive(camera.ActiveState is DynamicCamera.DriverStationState);
         }
 
         /// <summary>
@@ -760,59 +757,14 @@ namespace Synthesis.GUI
             camera.SwitchCameraState(new DynamicCamera.DriverStationState(camera, oppositeSide));
         }
         #endregion
-        #region orient button functions
 
-        #endregion
-        #region reset functions
         /// <summary>
         /// Pop reset instructions when main is in reset spawnpoint mode, enable orient robot at the same time
         /// </summary>
         private void UpdateSpawnpointWindow()
         {
-            resetRobotUI.SetActive(State.robotManager.MainRobot.IsResetting);
+            resetRobotUI.SetActive(State.RobotManager.MainRobot.IsResetting);
         }
-
-        /// <summary>
-        /// Allows for user to reset their robot to the default spawnpoint 
-        /// </summary>
-        public void RevertToDefaultSpawnPoint()
-        {
-            State.RevertSpawnpoint();
-        }
-
-        /// <summary>
-        /// Toggles between quick reset and reset spawnpoint
-        /// </summary>
-        /// <param name="i"></param>
-        public void ChooseResetMode(int i)
-        {
-            switch (i)
-            {
-                case 1:
-                    State.BeginRobotReset();
-                    State.EndRobotReset();
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
-                    break;
-                case 2:
-                    EndOtherProcesses();
-                    DynamicCamera.ControlEnabled = true;
-                    State.BeginRobotReset();
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
-                    break;
-                case 3:
-                    Auxiliary.FindObject(GameObject.Find("Reset Robot Dropdown"), "Dropdown List").SetActive(false);
-                    Auxiliary.FindObject(GameObject.Find("Canvas"), "LoadingPanel").SetActive(true);
-
-                    AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
-                        AnalyticsLedger.TimingVarible.Playing,
-                        AnalyticsLedger.TimingLabel.ResetField);
-
-                    SceneManager.LoadScene("Scene");
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
-                    break;
-            }
-        }
-        #endregion
 
         /// <summary>
         /// Exit to main menu window

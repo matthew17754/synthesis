@@ -457,7 +457,7 @@ namespace Synthesis.States
         private void PushSaveReplayState()
         {
             MainState mainState = StateMachine.FindState<MainState>();
-            foreach (SimulatorRobot robot in mainState.robotManager.GetSpawnedRobots())
+            foreach (SimulatorRobot robot in mainState.RobotManager.GetSpawnedRobots())
             {
                 if (robot is MaMRobot)
                 {

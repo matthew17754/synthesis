@@ -301,10 +301,10 @@ namespace Synthesis.GUI
         /// </summary>
         public void UpdateStatsWindow()
         {
-            speedEntry.GetComponent<InputField>().text = State.robotManager.MainRobot.Speed.ToString();
-            accelerationEntry.GetComponent<InputField>().text = State.robotManager.MainRobot.Acceleration.ToString();
-            angularVelocityEntry.GetComponent<InputField>().text = State.robotManager.MainRobot.AngularVelocity.ToString();
-            weightEntry.GetComponent<InputField>().text = State.robotManager.MainRobot.Weight.ToString();
+            speedEntry.GetComponent<InputField>().text = State.RobotManager.MainRobot.Speed.ToString();
+            accelerationEntry.GetComponent<InputField>().text = State.RobotManager.MainRobot.Acceleration.ToString();
+            angularVelocityEntry.GetComponent<InputField>().text = State.RobotManager.MainRobot.AngularVelocity.ToString();
+            weightEntry.GetComponent<InputField>().text = State.RobotManager.MainRobot.Weight.ToString();
             //Use correct units depending on the measure system used
             if (State.IsMetric)
             {

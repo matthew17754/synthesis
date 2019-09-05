@@ -241,7 +241,7 @@ namespace Synthesis.Robot
             Robots[index] = robot;
 
             DPMDataHandler.Load(robot.FilePath);
-            return robot.InitializeManipulator(manipulatorDirectory);
+            return robot.LoadManipulator(manipulatorDirectory);
         }
 
         /// <summary>

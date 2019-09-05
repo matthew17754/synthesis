@@ -89,10 +89,10 @@ namespace Synthesis.FEA
         }
 
         /// <summary>
-        /// Clears the FixedQueue with the given value.
+        /// Fills the FixedQueue with the given value.
         /// </summary>
         /// <param name="value"></param>
-        public void Clear(T value)
+        public void Fill(T value)
         {
             marker = 0;
 

@@ -20962,7 +20962,7 @@ GameObject:
   - component: {fileID: 367838686}
   - component: {fileID: 367838684}
   m_Layer: 5
-  m_Name: ResetRobotDropdown
+  m_Name: ResetDropdown
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20980,10 +20980,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 3.3333335, z: 1}
   m_Children:
   - {fileID: 1869321203}
-  - {fileID: 1941047081}
   - {fileID: 550923992}
   - {fileID: 544908762}
   - {fileID: 2002520313}
+  - {fileID: 1941047081}
   m_Father: {fileID: 1667613369}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -29691,7 +29691,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 367838683}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -30336,7 +30336,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 367838683}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -55914,7 +55914,7 @@ GameObject:
   - component: {fileID: 993896649}
   - component: {fileID: 993896648}
   m_Layer: 5
-  m_Name: Item Label2
+  m_Name: Item Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -81213,7 +81213,7 @@ GameObject:
   - component: {fileID: 1464264537}
   - component: {fileID: 1464264539}
   m_Layer: 5
-  m_Name: Template2
+  m_Name: Template
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -83258,7 +83258,7 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_Sprite: {fileID: 21300000, guid: 0f3c0e8b210a9994e9ab65632f7664c5, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -91817,7 +91817,7 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: bc437f6711e52d34180d32b0efb45235, type: 3}
     m_FontSize: 12
     m_FontStyle: 0
     m_BestFit: 0
@@ -94479,7 +94479,7 @@ GameObject:
   - component: {fileID: 1736328101}
   - component: {fileID: 1736328100}
   m_Layer: 5
-  m_Name: OptionImage2
+  m_Name: OptionImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -105982,7 +105982,7 @@ RectTransform:
   m_Children:
   - {fileID: 1740240631}
   m_Father: {fileID: 367838683}
-  m_RootOrder: 1
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
@@ -109733,7 +109733,7 @@ GameObject:
   - component: {fileID: 2002520315}
   - component: {fileID: 2002520314}
   m_Layer: 5
-  m_Name: ResetRobotTooltip
+  m_Name: ResetTooltip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -109751,7 +109751,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 367838683}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}

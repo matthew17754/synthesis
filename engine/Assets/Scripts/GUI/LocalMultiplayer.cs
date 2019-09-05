@@ -55,7 +55,7 @@ namespace Synthesis.GUI
                 robotTabs[j].GetComponent<Button>().onClick.AddListener(() =>
                 {
                     ActiveTab = j;
-                    SimUI.getSimUI().SetAddRobotPanelActive(State.robotManager.Robots[j] == null);
+                    SimUI.getSimUI().SetAddRobotPanelActive(State.RobotManager.Robots[j] == null);
                 });
             }
         }
@@ -66,9 +66,9 @@ namespace Synthesis.GUI
         /// <param name="index">the index of the new main robot</param>
         public void ChangeMainRobot()
         {
-            if (State.robotManager.Robots[ActiveTab] != null)
+            if (State.RobotManager.Robots[ActiveTab] != null)
             {
-                State.robotManager.SetMainRobot(ActiveTab);
+                State.RobotManager.SetMainRobot(ActiveTab);
                 UpdateUI();
             }
         }
@@ -88,7 +88,7 @@ namespace Synthesis.GUI
             if (Directory.Exists(directory))
             {
                 PlayerPrefs.SetString("simSelectedReplay", string.Empty);
-                State.robotManager.LoadRobot(ActiveTab, directory, false);
+                State.RobotManager.LoadRobot(ActiveTab, directory, false);
             }
             else
             {
@@ -106,9 +106,9 @@ namespace Synthesis.GUI
         public void AddMaMRobot(string baseDirectory, string manipulatorDirectory, bool hasManipulator)
         {
             if (hasManipulator)
-                State.robotManager.LoadRobotWithManipulator(ActiveTab, baseDirectory, manipulatorDirectory);
+                State.RobotManager.LoadRobotWithManipulator(ActiveTab, baseDirectory, manipulatorDirectory);
             else
-                State.robotManager.LoadRobot(ActiveTab, baseDirectory, true);
+                State.RobotManager.LoadRobot(ActiveTab, baseDirectory, true);
 
             UpdateUI();
         }
@@ -118,11 +118,11 @@ namespace Synthesis.GUI
         /// </summary>
         public void RemoveRobot()
         {
-            if (State.robotManager.GetRobotCount() > 1)
+            if (State.RobotManager.GetRobotCount() > 1)
             {
-                State.robotManager.RemoveRobot(ActiveTab);
+                State.RobotManager.RemoveRobot(ActiveTab);
 
-                ActiveTab = State.robotManager.GetNextMainRobotIndex();
+                ActiveTab = State.RobotManager.GetNextMainRobotIndex();
 
                 UpdateUI();
             }
@@ -153,13 +153,13 @@ namespace Synthesis.GUI
         /// </summary>
         public void UpdateUI()
         {
-            if (State.robotManager.Robots[ActiveTab] != null)
+            if (State.RobotManager.Robots[ActiveTab] != null)
             { // Only update once adding robot completes or is abandoned
               // Update tabs
                 for (int i = 0; i < MAX_ROBOT_COUNT; i++)
                 {
                     robotTabs[i].GetComponent<Image>().sprite = (i == ActiveTab) ? selectedTabImage : defaultTabImage;
-                    if (State.robotManager.Robots[i] != null)
+                    if (State.RobotManager.Robots[i] != null)
                     {
                         robotTabs[i].GetComponentInChildren<Text>().color = new Color(1, 1, 1, 1);
                     }
@@ -170,12 +170,12 @@ namespace Synthesis.GUI
                 }
 
                 // Update configuration window
-                robotNameLabel.text = State.robotManager.Robots[ActiveTab].RobotName;
+                robotNameLabel.text = State.RobotManager.Robots[ActiveTab].RobotName;
             }
 
             for (int i = 0; i < MAX_ROBOT_COUNT; i++)
             {
-                Auxiliary.FindObject(robotTabs[i], "MainRobotImage").SetActive(i == State.robotManager.MainRobotIndex);
+                Auxiliary.FindObject(robotTabs[i], "MainRobotImage").SetActive(i == State.RobotManager.MainRobotIndex);
             }
         }
 

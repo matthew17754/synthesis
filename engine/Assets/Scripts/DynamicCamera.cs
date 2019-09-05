@@ -63,7 +63,7 @@ public class DynamicCamera : MonoBehaviour
         {
             try
             {
-                return StateMachine.SceneGlobal.FindState<MainState>().robotManager.MainRobot.GetPrimaryGameObject();
+                return StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.GetPrimaryGameObject();
             }
             catch (Exception)
             {
@@ -118,7 +118,7 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
-            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().robotManager.MainRobot.IsResetting)
+            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.IsResetting)
             {
                 //var delta = InputControl.GetAxis(Controls.Global.GetAxes().cameraLateral) * new Vector3(1, 0, 0) * transformSpeed * Time.deltaTime;
                 //currentPosition += opposite ? -delta : delta;
@@ -348,7 +348,7 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
-            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().robotManager.MainRobot.IsResetting && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.IsResetting && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             {
                 if (InputControl.GetMouseButton(0))
                 {

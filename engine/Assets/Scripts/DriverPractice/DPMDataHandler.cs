@@ -27,7 +27,7 @@ namespace Synthesis.DriverPractice
             XElement robot = new XElement("RobotData", null); //parent
             robot.Add(DriverPracticeData());
             //save function - saves to main robot instead of SimSelectedRobot to support multiplayer
-            robot.Save(StateMachine.SceneGlobal.FindState<MainState>().robotManager.MainRobot.FilePath + Path.DirectorySeparatorChar + "robot_data.xml");
+            robot.Save(StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.FilePath + Path.DirectorySeparatorChar + "robot_data.xml");
         }
         /// <summary>
         /// Get Driver Practice "Mode" Data as an XElement - Split into Red and Blue Goals
