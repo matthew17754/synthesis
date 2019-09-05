@@ -510,7 +510,7 @@ namespace Synthesis.GUI
 
             //If the current robot has a manipulator, destroy the manipulator
             if (mamRobot != null && mamRobot.RobotHasManipulator)
-                State.DeleteManipulatorNodes();
+                mamRobot.DeleteManipulatorNodes();
 
             if (!State.RobotManager.ChangeRobot(robotDirectory, true)) {
                 AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
@@ -555,31 +555,22 @@ namespace Synthesis.GUI
         public void ChangeField()
         {
             GameObject panel = GameObject.Find("FieldListPanel");
-            string directory = PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + panel.GetComponent<ChangeFieldScrollable>().selectedEntry;
-            if (Directory.Exists(directory))
+            name = panel.GetComponent<ChangeFieldScrollable>().selectedEntry;
+            if (FieldManager.CheckForFieldDirectory(name))
             {
                 panel.SetActive(false);
                 changeFieldPanel.SetActive(false);
-                InputControl.EnableSimControls();
                 loadingPanel.SetActive(true);
-                PlayerPrefs.SetString("simSelectedReplay", string.Empty);
-                PlayerPrefs.SetString("simSelectedField", directory);
-                PlayerPrefs.SetString("simSelectedFieldName", panel.GetComponent<ChangeFieldScrollable>().selectedEntry);
-                PlayerPrefs.Save();
 
                 AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
                     AnalyticsLedger.TimingVarible.Playing,
                     AnalyticsLedger.TimingLabel.ResetField);
                 AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.ChangeField,
                     AnalyticsLedger.EventAction.Changed,
-                    panel.GetComponent<ChangeFieldScrollable>().selectedEntry.ToString(),
+                    name.ToString(),
                     AnalyticsLedger.getMilliseconds().ToString());
 
-                //FieldDataHandler.LoadFieldMetaData(directory);
-                //DPMDataHandler.Load();
-                //Controls.Load();
-                //CollisionTracker.Reset();
-                SceneManager.LoadScene("Scene");
+                State.FieldManager.ChangeField(name);
 
                 AnalyticsManager.GlobalInstance.StartTime(AnalyticsLedger.TimingLabel.ChangeField,
                     AnalyticsLedger.TimingVarible.Playing); // start timer for current field
@@ -596,19 +587,13 @@ namespace Synthesis.GUI
         public void LoadEmptyGrid()
         {
             changeFieldPanel.SetActive(false);
-            InputControl.EnableSimControls();
             loadingPanel.SetActive(true);
-
-            PlayerPrefs.SetString("simSelectedField", PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + UnityFieldDefinition.EmptyGridName);
-            PlayerPrefs.SetString("simSelectedFieldName", UnityFieldDefinition.EmptyGridName);
-            PlayerPrefs.Save();
-            FieldDataHandler.LoadFieldMetaData(PlayerPrefs.GetString("simSelectedField"));
 
             AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
                 AnalyticsLedger.TimingVarible.Playing,
                 AnalyticsLedger.TimingLabel.ResetField);
 
-            SceneManager.LoadScene("Scene");
+            State.FieldManager.LoadEmptyGrid();
 
             AnalyticsManager.GlobalInstance.StartTime(AnalyticsLedger.TimingLabel.ChangeField,
                 AnalyticsLedger.TimingVarible.Playing); // start timer for current field
@@ -699,13 +684,13 @@ namespace Synthesis.GUI
         /// </summary>
         public void CameraToolTips()
         {
-            if (camera.ActiveState.GetType().Equals(typeof(DynamicCamera.DriverStationState)))
+            if (camera.ActiveState is DynamicCamera.DriverStationState)
                 camera.GetComponent<Text>().text = "Driver Station";
-            else if (camera.ActiveState.GetType().Equals(typeof(DynamicCamera.FreeroamState)))
+            else if (camera.ActiveState is DynamicCamera.FreeroamState)
                 camera.GetComponent<Text>().text = "Freeroam";
-            else if (camera.ActiveState.GetType().Equals(typeof(DynamicCamera.OrbitState)))
+            else if (camera.ActiveState is DynamicCamera.OrbitState)
                 camera.GetComponent<Text>().text = "Orbit Robot";
-            else if (camera.ActiveState.GetType().Equals(typeof(DynamicCamera.OverviewState)))
+            else if (camera.ActiveState is DynamicCamera.OverviewState)
                 camera.GetComponent<Text>().text = "Overview";
         }
 
@@ -720,10 +705,7 @@ namespace Synthesis.GUI
         public void CloseNavigationTooltip(bool keepClosed = false)
         {
             navigationTooltip.SetActive(false);
-            if (keepClosed)
-            {
-                navigationTooltipClosed = true;
-            }
+            navigationTooltipClosed = navigationTooltipClosed || keepClosed;
         }
 
         private void UpdateOverviewWindow()

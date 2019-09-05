@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Synthesis.Field
 {
@@ -14,8 +15,12 @@ namespace Synthesis.Field
     /// </summary>
     public class FieldManager
     {
+        public const string EmptyGridName = "Empty Grid";
+
         private GameObject fieldObject = null;
         private UnityFieldDefinition fieldDefinition = null;
+
+        public static string FieldDirectory { get; private set; }
 
         public FieldManager()
         {
@@ -41,7 +46,7 @@ namespace Synthesis.Field
                 return new UnityFieldDefinition(guid, name);
             };
 
-            bool isEmptyGrid = directory == "" || new DirectoryInfo(directory).Name == UnityFieldDefinition.EmptyGridName;
+            bool isEmptyGrid = directory == "" || new DirectoryInfo(directory).Name == EmptyGridName;
 
             if (!File.Exists(directory + Path.DirectorySeparatorChar + "definition.bxdf") && !isEmptyGrid)
                 return false;
@@ -61,6 +66,62 @@ namespace Synthesis.Field
             // Debug.Log("Field load result: " + loadResult);
             fieldDefinition.CreateTransform(fieldObject.transform);
             return fieldDefinition.CreateMesh(directory + Path.DirectorySeparatorChar + "mesh.bxda");
+        }
+
+        /// <summary>
+        /// Reset to the empty grid
+        /// </summary>
+        public void LoadEmptyGrid()
+        {
+            InputControl.EnableSimControls();
+
+            PlayerPrefs.SetString("simSelectedField", GetFieldDirectory(EmptyGridName));
+            PlayerPrefs.SetString("simSelectedFieldName", EmptyGridName);
+            PlayerPrefs.Save();
+
+            SceneManager.LoadScene("Scene");
+        }
+
+        public bool ChangeField(string name)
+        {
+            UpdateFieldDirectory();
+            if (!CheckForFieldDirectory(name))
+            {
+                return false;
+            }
+            InputControl.EnableSimControls();
+            PlayerPrefs.SetString("simSelectedReplay", string.Empty);
+            PlayerPrefs.SetString("simSelectedField", GetFieldDirectory(name)); // TODO delete this player pref
+            PlayerPrefs.SetString("simSelectedFieldName", name);
+            PlayerPrefs.Save();
+
+            //FieldDataHandler.LoadFieldMetaData(directory);
+            //DPMDataHandler.Load();
+            //Controls.Load();
+            //CollisionTracker.Reset();
+            SceneManager.LoadScene("Scene");
+            return true;
+        }
+
+        public void ReloadField()
+        {
+            SceneManager.LoadScene("Scene");
+        }
+
+        private static void UpdateFieldDirectory()
+        {
+            FieldDirectory = PlayerPrefs.GetString("FieldDirectory");
+        }
+
+        public static string GetFieldDirectory(string name)
+        {
+            return FieldDirectory + Path.DirectorySeparatorChar + name;
+        }
+
+        public static bool CheckForFieldDirectory(string name)
+        {
+            UpdateFieldDirectory();
+            return Directory.Exists(GetFieldDirectory(name));
         }
 
         public void MovePlane()

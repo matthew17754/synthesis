@@ -1,20 +1,12 @@
 ﻿using Synthesis.FSM;
-using Synthesis.DriverPractice;
 using Synthesis.States;
 using Synthesis.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Synthesis.GUI;
 using Synthesis.Input;
 using Synthesis.Sensors;
 using Synthesis.Camera;
-using Synthesis.Field;
 using BulletUnity;
 using BulletSharp;
 
@@ -159,7 +151,7 @@ namespace Synthesis.GUI
                 case 3:
                     resetDropdown.SetActive(false);
                     Auxiliary.FindObject(canvas, "LoadingPanel").SetActive(true);
-                    SceneManager.LoadScene("Scene");
+                    State.FieldManager.ReloadField();
 
                     AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.Reset,
                         AnalyticsLedger.EventAction.Clicked,

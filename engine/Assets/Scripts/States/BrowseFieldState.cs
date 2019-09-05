@@ -19,8 +19,8 @@ namespace Synthesis.States
             if (!string.IsNullOrEmpty(PlayerPrefs.GetString("FieldDirectory")) &&
                 (string.IsNullOrEmpty(PlayerPrefs.GetString("simSelectedField")) || string.IsNullOrEmpty(PlayerPrefs.GetString("simSelectedFieldName"))))
             {
-                PlayerPrefs.SetString("simSelectedField", PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + Field.UnityFieldDefinition.EmptyGridName);
-                PlayerPrefs.SetString("simSelectedFieldName", Field.UnityFieldDefinition.EmptyGridName);
+                PlayerPrefs.SetString("simSelectedField", PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + Field.FieldManager.EmptyGridName);
+                PlayerPrefs.SetString("simSelectedFieldName", Field.FieldManager.EmptyGridName);
             }
         }
     }

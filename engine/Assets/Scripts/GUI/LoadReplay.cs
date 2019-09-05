@@ -1,17 +1,10 @@
-﻿using Synthesis.FSM;
-using Synthesis.GUI.Scrollables;
+﻿using Synthesis.GUI.Scrollables;
 using Synthesis.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using Synthesis.GUI;
-using Synthesis.FEA;
 using Button = UnityEngine.UI.Button;
 
 namespace Synthesis.States
@@ -27,8 +20,6 @@ namespace Synthesis.States
         Button deleteButton;
         Button cancelButton;
         Button launchButton;
-
-        MainState mainState;
 
         /// <summary>
         /// Initializes references to requried <see cref="GameObject"/>s.

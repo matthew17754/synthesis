@@ -169,7 +169,10 @@ namespace Synthesis.States
                     {
                         AppModel.ErrorToMenu("ROBOT_SELECT|Mix and match robot error");
                     }
-                    Debug.Log(mamRobot.LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
+                    else
+                    {
+                        Debug.Log(mamRobot.LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
+                    }
                 }
             }
             else
@@ -222,15 +225,15 @@ namespace Synthesis.States
             {
                 foreach (var player in Controls.Players)
                 {
-                    if (InputControl.GetButtonDown(player.GetButtons().switchMainRobot)) RobotManager.SetMainRobot(RobotManager.GetNextMainRobotIndex());
+                    if (InputControl.GetButtonDown(player.GetButtons().switchMainRobot))
+                        RobotManager.SetMainRobot(RobotManager.GetNextMainRobotIndex());
                 }
             }
-
 
             if (InputControl.GetButtonDown(Controls.Global.GetButtons().resetField))
             {
                 Auxiliary.FindObject(GameObject.Find("Canvas"), "LoadingPanel").SetActive(true);
-                SceneManager.LoadScene("Scene");
+                FieldManager.ReloadField();
 
                 AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
                     AnalyticsLedger.TimingVarible.Playing,
@@ -238,28 +241,13 @@ namespace Synthesis.States
             }
 
             // Toggles between the different camera states if the camera toggle button is pressed
-            if ((InputControl.GetButtonDown(Controls.Global.GetButtons().cameraToggle)) &&
-                DynamicCameraObject.activeSelf && DynamicCamera.ControlEnabled)
+            if (InputControl.GetButtonDown(Controls.Global.GetButtons().cameraToggle) && DynamicCameraObject.activeSelf && DynamicCamera.ControlEnabled)
                 dynamicCamera.ToggleCameraState(dynamicCamera.ActiveState);
 
             // Switches to replay mode
             if (!RobotManager.MainRobot.IsResetting && InputControl.GetButtonDown(Controls.Global.GetButtons().replayMode))
             {
                 StateMachine.PushState(new ReplayState(PlayerPrefs.GetString("simSelectedField"), CollisionTracker.ContactPoints));
-            }
-        }
-
-        /// <summary>
-        /// Called at a fixed rate - updates robot packet information.
-        /// </summary>
-        public override void FixedUpdate()
-        {
-            //This line is essential for the reset to work accurately
-            //robotCameraObject.transform.position = activeRobot.transform.GetChild(0).transform.position;
-            if (RobotManager.MainRobot == null)
-            {
-                AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
-                return;
             }
         }
 
@@ -293,7 +281,7 @@ namespace Synthesis.States
             }
         }
 
-        public bool MyRemoteCertificateValidationCallback(System.Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        public bool MyRemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             bool isOk = true;
             // If there are errors in the certificate chain, look at each error to determine the cause.
@@ -316,15 +304,6 @@ namespace Synthesis.States
                 }
             }
             return isOk;
-        }
-
-        /// <summary>
-        /// Used to delete manipulator nodes in MaM mode
-        /// </summary>
-        public void DeleteManipulatorNodes()
-        {
-            MaMRobot mamRobot = RobotManager.MainRobot as MaMRobot;
-            mamRobot?.DeleteManipulatorNodes();
         }
 
         #region Replay Functions
@@ -405,6 +384,22 @@ namespace Synthesis.States
         }
 
         /// <summary>
+        /// Starts the replay state.
+        /// </summary>
+        public void EnterReplayState()
+        {
+            if (!RobotManager.MainRobot.IsResetting)
+            {
+                StateMachine.PushState(new ReplayState(PlayerPrefs.GetString("simSelectedField"), CollisionTracker.ContactPoints));
+            }
+            else
+            {
+                UserMessageManager.Dispatch("Please finish resetting before entering replay mode!", 5f);
+            }
+        }
+        #endregion
+
+        /// <summary>
         /// Resumes the normal simulation and exits the replay mode, showing all UI elements again
         /// </summary>
         public override void Resume()
@@ -420,22 +415,6 @@ namespace Synthesis.States
         {
             CollisionTracker.Tracking = false;
         }
-
-        /// <summary>
-        /// Starts the replay state.
-        /// </summary>
-        public void EnterReplayState()
-        {
-            if (!RobotManager.MainRobot.IsResetting)
-            {
-                StateMachine.PushState(new ReplayState(PlayerPrefs.GetString("simSelectedField"), CollisionTracker.ContactPoints));
-            }
-            else
-            {
-                UserMessageManager.Dispatch("Please finish resetting before entering replay mode!", 5f);
-            }
-        }
-        #endregion
 
         public UnityEngine.Camera GetCamera()
         {
