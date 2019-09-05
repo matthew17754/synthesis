@@ -12,12 +12,12 @@ public class DynamicCamera : MonoBehaviour
     /// <summary>
     /// User control enabled.
     /// </summary>
-    public static bool ControlEnabled { get; set; }
+    public static bool ControlEnabled { get; set; } = true;
 
     /// <summary>
     /// If true, this camera will move according to the active camera state.
     /// </summary>
-    public static bool MovementEnabled { get; set; }
+    public static bool MovementEnabled { get; set; } = true;
 
     /// <summary>
     /// Gets the state of the camera.
@@ -34,11 +34,6 @@ public class DynamicCamera : MonoBehaviour
         /// The attached camera instance.
         /// </summary>
         protected MonoBehaviour Mono { get; private set; }
-        
-        /// <summary>
-        /// The state's <see cref="IRobotProvider"/> instance for accessing robot information.
-        /// </summary>
-        protected IRobotProvider RobotProvider { get; private set; }
 
         /// <summary>
         /// Initializes a nwe <see cref="CameraState"/> instance.
@@ -47,7 +42,6 @@ public class DynamicCamera : MonoBehaviour
         public CameraState(MonoBehaviour mono)
         {
             Mono = mono;
-            RobotProvider = StateMachine.SceneGlobal.FindState<IRobotProvider>();
         }
 
         /// <summary>
@@ -64,6 +58,18 @@ public class DynamicCamera : MonoBehaviour
         /// End this instance (will be called in SwitchCameraMode()).
         /// </summary>
         public abstract void End();
+
+        protected GameObject GetPrimaryRobotGameObject()
+        {
+            try
+            {
+                return StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.GetPrimaryGameObject();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 
     /// <summary>
@@ -105,14 +111,14 @@ public class DynamicCamera : MonoBehaviour
             else currentPosition = position1Vector;
             Mono.transform.position = currentPosition;
 
-            Mono.transform.LookAt(RobotProvider.Robot.transform.GetChild(0).transform);
+            Mono.transform.LookAt(GetPrimaryRobotGameObject().transform.GetChild(0).transform);
             lookingRotation = Mono.transform.eulerAngles;
             transformSpeed = 2.5f;
         }
 
         public override void Update()
         {
-            if (ControlEnabled && RobotProvider.RobotActive)
+            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.IsResetting)
             {
                 //var delta = InputControl.GetAxis(Controls.Global.GetAxes().cameraLateral) * new Vector3(1, 0, 0) * transformSpeed * Time.deltaTime;
                 //currentPosition += opposite ? -delta : delta;
@@ -220,11 +226,11 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
-            if (RobotProvider.Robot == null)
+            if (GetPrimaryRobotGameObject() == null)
                 return;
 
             // Focus on node 0 of the robot
-            targetVector = RobotProvider.Robot.transform.position;
+            targetVector = GetPrimaryRobotGameObject().transform.position;
 
             bool adjusting = false;
 
@@ -259,11 +265,11 @@ public class DynamicCamera : MonoBehaviour
                 // Unlocks the camera position for adjustment
                 rotateVector = RotateXZ(rotateVector, targetVector, panValue, magnification);
                 rotateVector.y = targetVector.y + magnification * Mathf.Sin(cameraAngle * Mathf.Deg2Rad);
-                lockedVector = RobotProvider.Robot.transform.GetChild(0).InverseTransformPoint(rotateVector);
+                lockedVector = GetPrimaryRobotGameObject().transform.GetChild(0).InverseTransformPoint(rotateVector);
             }
             else
             {
-                rotateVector = RobotProvider.Robot.transform.GetChild(0).TransformPoint(lockedVector);
+                rotateVector = GetPrimaryRobotGameObject().transform.GetChild(0).TransformPoint(lockedVector);
                 rotateVector.y = targetVector.y + Mathf.Abs(rotateVector.y - targetVector.y);
             }
 
@@ -272,11 +278,11 @@ public class DynamicCamera : MonoBehaviour
                 // Unlocks the camera position for adjustment
                 rotateVector = RotateXZ(rotateVector, targetVector, panValue, magnification);
                 rotateVector.y = targetVector.y + magnification * Mathf.Sin(cameraAngle * Mathf.Deg2Rad);
-                lockedVector = RobotProvider.Robot.transform.InverseTransformPoint(rotateVector);
+                lockedVector = GetPrimaryRobotGameObject().transform.InverseTransformPoint(rotateVector);
             }
             else
             {
-                rotateVector = RobotProvider.Robot.transform.TransformPoint(lockedVector);
+                rotateVector = GetPrimaryRobotGameObject().transform.TransformPoint(lockedVector);
                 rotateVector.y = targetVector.y + Mathf.Abs(rotateVector.y - targetVector.y);
             }
 
@@ -342,7 +348,7 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
-            if (ControlEnabled && RobotProvider.RobotActive && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (ControlEnabled && !StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.IsResetting && !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             {
                 if (InputControl.GetMouseButton(0))
                 {
@@ -470,8 +476,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
-            if (RobotProvider.Robot != null && RobotProvider.Robot.transform.childCount > 0)
-                targetPosition = RobotProvider.Robot.transform.position;
+            if (GetPrimaryRobotGameObject() != null && GetPrimaryRobotGameObject().transform.childCount > 0)
+                targetPosition = GetPrimaryRobotGameObject().transform.position;
 
             Mono.transform.position = targetPosition + targetOffset;
             Mono.transform.rotation = Quaternion.Euler(rotationVector);
@@ -547,7 +553,7 @@ public class DynamicCamera : MonoBehaviour
         public ConfigurationState(MonoBehaviour mono, GameObject targetObject = null)
             : base(mono)
         {
-            target = targetObject ?? RobotProvider.Robot;
+            target = targetObject ?? GetPrimaryRobotGameObject();
             target.transform.Translate(new Vector3(0.0001f, 0, 0));
         }
 

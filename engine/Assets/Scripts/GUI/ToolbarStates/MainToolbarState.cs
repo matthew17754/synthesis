@@ -1,20 +1,12 @@
 ﻿using Synthesis.FSM;
-using Synthesis.DriverPractice;
 using Synthesis.States;
 using Synthesis.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Synthesis.GUI;
 using Synthesis.Input;
 using Synthesis.Sensors;
 using Synthesis.Camera;
-using Synthesis.Field;
 using BulletUnity;
 using BulletSharp;
 
@@ -64,7 +56,7 @@ namespace Synthesis.GUI
             changeFieldPanel = Auxiliary.FindObject(canvas, "ChangeFieldPanel");
             pointImpulsePanel = Auxiliary.FindObject(canvas, "PointImpulsePanel");
 
-            resetDropdown = GameObject.Find("ResetRobotDropdown");
+            resetDropdown = GameObject.Find("ResetDropdown");
 
             stopwatchWindow = Auxiliary.FindObject(canvas, "StopwatchPanel");
             statsWindow = Auxiliary.FindObject(canvas, "StatsPanel");
@@ -131,7 +123,7 @@ namespace Synthesis.GUI
         /// naming conventions.
         /// </summary>
         /// <param name="i"></param>
-        public void OnResetRobotDropdownValueChanged(int i) {
+        public void OnResetDropdownValueChanged(int i) {
             AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.Reset,
                 AnalyticsLedger.EventAction.Clicked,
                 "Reset - Dropdown",
@@ -139,9 +131,7 @@ namespace Synthesis.GUI
 
             switch (i) {
                 case 1:
-                    State.BeginRobotReset();
-                    State.EndRobotReset();
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
+                    State.RobotManager.MainRobot.Reset();
 
                     AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.Reset,
                         AnalyticsLedger.EventAction.Clicked,
@@ -151,8 +141,7 @@ namespace Synthesis.GUI
                 case 2:
                     GameObject.Destroy(GameObject.Find("Dropdown List"));
                     EndOtherProcesses();
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
-                    State.BeginRobotReset();
+                    State.RobotManager.MainRobot.BeginReset();
 
                     AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.Reset,
                         AnalyticsLedger.EventAction.Clicked,
@@ -160,10 +149,9 @@ namespace Synthesis.GUI
                         AnalyticsLedger.getMilliseconds().ToString());
                     break;
                 case 3:
-                    Auxiliary.FindObject(canvas, "ResetRobotDropdown").SetActive(false);
+                    resetDropdown.SetActive(false);
                     Auxiliary.FindObject(canvas, "LoadingPanel").SetActive(true);
-                    SceneManager.LoadScene("Scene");
-                    resetDropdown.GetComponent<Dropdown>().value = 0;
+                    State.FieldManager.ReloadField();
 
                     AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.Reset,
                         AnalyticsLedger.EventAction.Clicked,
@@ -174,6 +162,7 @@ namespace Synthesis.GUI
                         AnalyticsLedger.TimingLabel.ResetField);
                     break;
             }
+            resetDropdown.GetComponent<Dropdown>().value = 0;
         }
 
         /// <summary>
@@ -185,7 +174,7 @@ namespace Synthesis.GUI
             //if (multiplayerState != null)
             //    multiplayerState.ActiveRobot.CmdResetRobot();
 
-            State.ActiveRobot.ResetRobotOrientation();
+            State.RobotManager.MainRobot.ResetRobotOrientation();
         }
 
         /// <summary>

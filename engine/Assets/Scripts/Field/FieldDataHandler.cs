@@ -146,12 +146,12 @@ namespace Synthesis.Field
             string targetFile = fieldPath + Path.DirectorySeparatorChar + "field_data.xml";
             if (!File.Exists(targetFile))
             {
-                if (!string.IsNullOrEmpty(fieldPath) && new DirectoryInfo(fieldPath).Name == UnityFieldDefinition.EmptyGridName)
+                if (!string.IsNullOrEmpty(fieldPath) && new DirectoryInfo(fieldPath).Name == FieldManager.EmptyGridName)
                 {
                     gamepieces = new List<Gamepiece>();
                     redGoals = new List<List<GameObject>>();
                     blueGoals = new List<List<GameObject>>();
-                    if (fieldPath == PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + UnityFieldDefinition.EmptyGridName &&
+                    if (fieldPath == PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + FieldManager.EmptyGridName &&
                         fieldPath == PlayerPrefs.GetString("simSelectedField"))
                     {
                         if (!string.IsNullOrEmpty(PlayerPrefs.GetString("FieldDirectory")) && Directory.Exists(PlayerPrefs.GetString("FieldDirectory")))
@@ -192,7 +192,7 @@ namespace Synthesis.Field
             }
             else
             {
-                if (!string.IsNullOrEmpty(fieldPath) && new DirectoryInfo(fieldPath).Name == UnityFieldDefinition.EmptyGridName)
+                if (!string.IsNullOrEmpty(fieldPath) && new DirectoryInfo(fieldPath).Name == FieldManager.EmptyGridName)
                 {
                     gamepieces = new List<Gamepiece>();
                     if (!CreateDefaultGridFiles(fieldPath))

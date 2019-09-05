@@ -61,18 +61,18 @@ namespace Synthesis.DriverPractice
             {
                 if (dpmRobot == null)
                 {
-                    dpmRobot = mainState.ActiveRobot.GetDriverPractice();
+                    dpmRobot = mainState.RobotManager.MainRobot.GetDriverPractice();
                     FindElements();
                 }
-                if (mainState.ActiveRobot.GetDriverPractice() != dpmRobot) OnActiveRobotChange(); //update active robot
+                if (mainState.RobotManager.MainRobot.GetDriverPractice() != dpmRobot) OnMainRobotChange(); //update main robot
                 SetGamepieceIndex();
                 if (trajectory && !editing) UpdateTrajectoryValues(); 
                 if (dpmRobot.drawing &&
                     FieldDataHandler.gamepieces.Count > 0 &&
                     DPMDataHandler.dpmodes.Where(d => d.gamepiece.Equals(FieldDataHandler.gamepieces[gamepieceIndex].name)).ToArray().Length > 0) DrawTrajectory();
                 else trajectoryLine.GetComponent<LineRenderer>().enabled = false;
-                if (mainState.ActiveRobot.IsResetting && trajectoryPanel.activeSelf) HideEditor();
-                else if (!mainState.ActiveRobot.IsResetting && !trajectoryPanel.activeSelf && trajectory) ShowEditor();
+                if (mainState.RobotManager.MainRobot.IsResetting && trajectoryPanel.activeSelf) HideEditor();
+                else if (!mainState.RobotManager.MainRobot.IsResetting && !trajectoryPanel.activeSelf && trajectory) ShowEditor();
             }
         }
         void FindElements()
@@ -405,11 +405,11 @@ namespace Synthesis.DriverPractice
             return arrows;
         }
         /// <summary>
-        /// Change trajectory line and move arrows to new active robot
+        /// Change trajectory line and move arrows to new main robot
         /// </summary>
-        private void OnActiveRobotChange()
+        private void OnMainRobotChange()
         {
-            dpmRobot = mainState.ActiveRobot.GetDriverPractice();
+            dpmRobot = mainState.RobotManager.MainRobot.GetDriverPractice();
             trajectoryLine.transform.parent = dpmRobot.transform;
             Destroy(moveArrows);
             if (Auxiliary.FindGameObject("Field") != null && FieldDataHandler.gamepieces.Count > 0) {

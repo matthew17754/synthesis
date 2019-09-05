@@ -83,8 +83,13 @@ namespace Synthesis.Input
             }
             if (failure)
             {
-                GUI.UserMessageManager.Dispatch("Error loading controls. Resetting to defaults.", 5);
+                DispatchLoadError();
             }
+        }
+
+        public static void DispatchLoadError()
+        {
+            GUI.UserMessageManager.Dispatch("Error loading controls. Resetting to defaults.", 5);
         }
 
         public static void UpdateFieldControls()

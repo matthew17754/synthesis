@@ -25,7 +25,7 @@ namespace Synthesis.Robot
         /// <summary>
         /// If true, this robot has a manipulator.
         /// </summary>
-        public bool RobotHasManipulator { get; set; }
+        public bool RobotHasManipulator { get; set; } = false;
         
 
         private RigidNode manipulatorNode;
@@ -48,7 +48,7 @@ namespace Synthesis.Robot
         /// </summary>
         /// <param name="directory">Folder directory of the manipulator</param>
         /// <param name="robotGameObject">GameObject of the robot the manipulator will be attached to</param>
-        public bool InitializeManipulator(string directory)
+        public bool LoadManipulator(string directory)
         {
             ManipulatorObject = new GameObject("Manipulator");
             ManipulatorObject.transform.position = robotStartPosition + manipulatorOffset;
@@ -121,6 +121,7 @@ namespace Synthesis.Robot
             }
 
             Destroy(ManipulatorObject);
+            RobotHasManipulator = false;
         }
 
         /// <summary>

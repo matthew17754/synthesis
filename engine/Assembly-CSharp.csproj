@@ -221,6 +221,7 @@
     <Compile Include="Assets\Scripts\FEA\StateDescriptor.cs" />
     <Compile Include="Assets\Scripts\FEA\Tracker.cs" />
     <Compile Include="Assets\Scripts\Field\FieldDataHandler.cs" />
+    <Compile Include="Assets\Scripts\Field\FieldManager.cs" />
     <Compile Include="Assets\Scripts\Field\Gamepiece.cs" />
     <Compile Include="Assets\Scripts\Field\UnityFieldDefinition.cs" />
     <Compile Include="Assets\Scripts\FSM\LinkedMonoBehaviour.cs" />
@@ -316,6 +317,7 @@
     <Compile Include="Assets\Scripts\Robot\NetworkRobotClient.cs" />
     <Compile Include="Assets\Scripts\Robot\NetworkRobotServer.cs" />
     <Compile Include="Assets\Scripts\Robot\RobotBase.cs" />
+    <Compile Include="Assets\Scripts\Robot\RobotManager.cs" />
     <Compile Include="Assets\Scripts\Robot\SimulatorRobot.cs" />
     <Compile Include="Assets\Scripts\Sensors\BeamBreaker.cs" />
     <Compile Include="Assets\Scripts\Sensors\Encoder.cs" />

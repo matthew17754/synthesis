@@ -13,9 +13,14 @@ namespace Synthesis.FEA
 {
     public class Tracker : LinkedMonoBehaviour<MainState>
     {
-        private const float fixedTimeStep = 1f / 60f;
+        /// <summary>
+        /// The number of samples per second
+        /// </summary>
+        private const float SampleRate = 60f;
 
-        private BPhysicsWorld physicsWorld;
+        /// <summary>
+        /// The rigid body to track
+        /// </summary>
         private RigidBody rigidBody;
 
         /// <summary>
@@ -31,7 +36,7 @@ namespace Synthesis.FEA
         /// <summary>
         /// The number of states in the queue.
         /// </summary>
-        public const int Length = (int)(Lifetime / fixedTimeStep);
+        public const int Length = (int)(Lifetime * SampleRate);
 
         /// <summary>
         /// If true, lines will be drawn showing the history of the parent's motion.
@@ -60,29 +65,29 @@ namespace Synthesis.FEA
         /// </summary>
         public void Clear()
         {
-            States.Clear(StateDescriptor);
+            States.Fill(StateDescriptor);
         }
 
         /// <summary>
         /// Adds the current state to the states queue.
         /// </summary>
-        public void AddState(DynamicsWorld world, float timeStep, int numSteps)
+        public void AddState(DynamicsWorld world, float timeStep, int framesPassed)
         {
-            if (State == null || !State.Tracking)
+            if (State == null || !CollisionTracker.Tracking)
                 return;
 
             StateDescriptor nextState = StateDescriptor;
 
-            if (numSteps == 1) // This will be the case the vast majority of the time
+            if (framesPassed == 1) // This will be the case the vast majority of the time
             {
                 States.Add(StateDescriptor);
             }
             else // If there's some random lag spike
             {
                 StateDescriptor lastState = States.Front;
-                float lerpAmount = 1f / numSteps;
+                float lerpAmount = 1f / framesPassed;
 
-                for (int i = 0; i < numSteps; i++)
+                for (int i = 0; i < framesPassed; i++)
                 {
                     float percent = (i + 1) * lerpAmount;
 
@@ -104,7 +109,6 @@ namespace Synthesis.FEA
         {
             base.Awake();
 
-            physicsWorld = BPhysicsWorld.Get();
             rigidBody = (RigidBody)GetComponent<BRigidBody>().GetCollisionObject();
 
             States = new FixedQueue<StateDescriptor>(Length, StateDescriptor);
@@ -115,7 +119,7 @@ namespace Synthesis.FEA
         /// <summary>
         /// Called when the Tracker is destroyed.
         /// </summary>
-        void OnDestroy()
+        protected void OnDestroy()
         {
             BPhysicsTickListener.Instance.OnTick -= AddState;
         }

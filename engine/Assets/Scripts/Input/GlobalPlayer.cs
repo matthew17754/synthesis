@@ -54,6 +54,7 @@ namespace Synthesis.Input
                 catch (Exception)
                 {
                     Reset();
+                    Save();
                     throw;
                 }
             }

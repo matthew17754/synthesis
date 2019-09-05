@@ -12,7 +12,7 @@ namespace Synthesis.FEA
 {
     public class CollisionTracker : ICollisionCallback
     {
-        private MainState mainState;
+        public static bool Tracking;
         private BPhysicsWorld physicsWorld;
         private int lastFrameCount;
         private int framesPassed;
@@ -26,9 +26,8 @@ namespace Synthesis.FEA
         /// Creates a new CollisionTracker instance.
         /// </summary>
         /// <param name="mainState"></param>
-        public CollisionTracker(MainState mainState)
+        public CollisionTracker()
         {
-            this.mainState = mainState;
             physicsWorld = BPhysicsWorld.Get();
             lastFrameCount = physicsWorld.frameCount;
             framesPassed = -1;
@@ -41,7 +40,11 @@ namespace Synthesis.FEA
         /// </summary>
         public void Reset()
         {
-            ContactPoints.Clear(null);
+            ContactPoints.Fill(null);
+            foreach (Tracker t in UnityEngine.Object.FindObjectsOfType<Tracker>())
+            {
+                t.Clear();
+            }
             lastFrameCount = physicsWorld.frameCount - 1;
         }
 
@@ -51,7 +54,7 @@ namespace Synthesis.FEA
         /// <param name="pm"></param>
         public void OnVisitPersistentManifold(PersistentManifold pm)
         {
-            if (!mainState.Tracking)
+            if (!Tracking)
                 return;
 
             if (framesPassed == -1)
@@ -91,6 +94,9 @@ namespace Synthesis.FEA
         /// </summary>
         public void OnFinishedVisitingManifolds()
         {
+            if (!Tracking)
+                return;
+
             if (framesPassed == -1)
             {
                 framesPassed = physicsWorld.frameCount - lastFrameCount;

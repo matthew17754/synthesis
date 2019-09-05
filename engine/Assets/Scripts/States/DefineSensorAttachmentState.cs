@@ -78,7 +78,7 @@ namespace Synthesis.States
                 {
                     RevertNodeColors(hoveredNode, hoveredColors);
                 }
-                else if (collisionObject.transform.parent == StateMachine.SceneGlobal.FindState<MainState>().ActiveRobot.transform)
+                else if (collisionObject.transform.parent == StateMachine.SceneGlobal.FindState<MainState>().RobotManager.MainRobot.transform)
                 {
                     if (hoveredNode != collisionObject)
                     {

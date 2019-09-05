@@ -15,7 +15,7 @@ namespace Synthesis.Sensors
     /// <summary>
     /// This class handles every sensor-related GUI element in Unity
     /// </summary>
-    class SensorManagerGUI : LinkedMonoBehaviour<MainState>
+    public class SensorManagerGUI : LinkedMonoBehaviour<MainState>
     {
         private StateMachine tabStateMachine;
 

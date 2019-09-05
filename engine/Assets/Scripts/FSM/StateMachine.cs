@@ -124,7 +124,7 @@ namespace Synthesis.FSM
             if (freezeRobot)
             {
                 unfreeze = true;
-                foreach (Tracker t in FindObjectsOfType<Tracker>().ToList())
+                foreach (Tracker t in FindObjectsOfType<Tracker>().ToList()) // Zero collision trackers
                 {
                     RigidBody r = (RigidBody)t.GetComponent<BRigidBody>().GetCollisionObject();
                     r.LinearVelocity = r.AngularVelocity = BulletSharp.Math.Vector3.Zero;
@@ -175,7 +175,7 @@ namespace Synthesis.FSM
             if (unfreeze)
             {
                 unfreeze = false;
-                foreach (Tracker t in UnityEngine.Object.FindObjectsOfType<Tracker>().ToList())
+                foreach (Tracker t in FindObjectsOfType<Tracker>().ToList()) // Re-populate trackers with previous state
                 {
                     StateDescriptor currentState = t.States.First();
 

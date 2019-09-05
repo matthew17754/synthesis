@@ -174,7 +174,7 @@ namespace Synthesis.MixAndMatch
         #region Change or Add MaM Robot
         /// <summary>
         /// Called when the "next" button on the MaM panel is clicked within the simulator. 
-        /// Determines if the user wants to change the active robot or add a robot for local multiplayer and calls the correct function.
+        /// Determines if the user wants to change the main robot or add a robot for local multiplayer and calls the correct function.
         /// </summary>
         bool changeMaMRobot = true;
         public void ChangeOrAddMaMRobot()

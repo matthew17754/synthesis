@@ -74,6 +74,7 @@ namespace Synthesis.Input
                 catch (Exception)
                 {
                     profiles[(int)activeProfileMode].Reset(index, activeProfileMode);
+                    SaveActiveProfile();
                     throw;
                 }
             }

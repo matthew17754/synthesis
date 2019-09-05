@@ -9,19 +9,13 @@ using Synthesis.Field;
 using Synthesis.FSM;
 using Synthesis.GUI;
 using Synthesis.Input;
-using Synthesis.MixAndMatch;
 using Synthesis.RN;
 using Synthesis.Sensors;
 using Synthesis.States;
 using Synthesis.Utils;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Synthesis.Robot
@@ -37,8 +31,6 @@ namespace Synthesis.Robot
 
         private const float ResetVelocity = 5f;
         private const float HoldTime = 0.8f;
-
-        private readonly SensorManager sensorManager;
 
         private DriverPracticeRobot dpmRobot;
 
@@ -174,20 +166,13 @@ namespace Synthesis.Robot
             {
                 keyDownTime = Time.time;
             }
-            else if (InputControl.GetButtonDown(Controls.Global.GetButtons().resetField))
-            {
-                Auxiliary.FindObject(GameObject.Find("Canvas"), "LoadingPanel").SetActive(true);
-                SceneManager.LoadScene("Scene");
-
-                AnalyticsManager.GlobalInstance.LogTimingAsync(AnalyticsLedger.TimingCatagory.MainSimulator,
-                    AnalyticsLedger.TimingVarible.Playing,
-                    AnalyticsLedger.TimingLabel.ChangeField);
-            }
             else if (InputControl.GetButton(Controls.Players[ControlIndex].GetButtons().resetRobot) &&
-                !state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState.GetType().Equals(typeof(DynamicCamera.ConfigurationState)))
-            {
+                !(state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState is DynamicCamera.ConfigurationState)
+            ){
                 if (Time.time - keyDownTime > HoldTime)
+                {
                     BeginReset();
+                }
             }
             else if (InputControl.GetButtonUp(Controls.Players[ControlIndex].GetButtons().resetRobot))
             {
@@ -241,66 +226,72 @@ namespace Synthesis.Robot
         /// <summary>
         /// Returns the robot to a default starting spawnpoint
         /// </summary>
-        public void BeginRevertSpawnpoint()
+        public void RevertSpawnpoint()
         {
-            robotStartPosition = new Vector3(0f, 1f, 0f);
-            state.BeginRobotReset();
-            state.EndRobotReset();
-            state.BeginRobotReset();
+            robotStartPosition = DefaultStartPosition;
+            robotStartOrientation = DefaultStartOrientation;
+            BeginReset();
+            EndReset();
+            BeginReset();
+        }
+
+        public void Reset()
+        {
+            BeginReset();
+            EndReset();
         }
 
         /// <summary>
         /// Return the robot to robotStartPosition and destroy extra game pieces
         /// </summary>
         /// <param name="resetTransform"></param>
-        public void BeginReset()
+        public override void BeginReset()
         {
-            //GetDriverPractice().DestroyAllGamepieces();
-
-            InputControl.freeze = true;
-            if (canvas == null) canvas = GameObject.Find("Canvas");
-            if (resetCanvas == null) resetCanvas = Auxiliary.FindObject(UnityEngine.Camera.main.gameObject, "ResetRobotSpawnpointUI");
-            canvas.GetComponent<Canvas>().enabled = false;
-            resetCanvas.SetActive(true);
-
-            #region init
-            if (toolbar == null) toolbar = Auxiliary.FindObject(resetCanvas, "ResetStateToolbar");
-            #endregion
-
-            Button resetButton = Auxiliary.FindObject(resetCanvas, "ResetButton").GetComponent<Button>();
-            resetButton.onClick.RemoveAllListeners();
-            resetButton.onClick.AddListener(BeginRevertSpawnpoint);
-            Button returnButton = Auxiliary.FindObject(resetCanvas, "ReturnButton").GetComponent<Button>();
-            returnButton.onClick.RemoveAllListeners();
-            returnButton.onClick.AddListener(EndReset);
-
-            DynamicCamera dynamicCamera = UnityEngine.Camera.main.transform.GetComponent<DynamicCamera>();
-            lastCameraState = dynamicCamera.ActiveState;
-            dynamicCamera.SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
-
-            foreach (SimulatorRobot robot in state.SpawnedRobots)
-                foreach (BRigidBody rb in robot.GetComponentsInChildren<BRigidBody>())
-                    if (rb != null && !rb.GetCollisionObject().IsActive)
-                        rb.GetCollisionObject().Activate();
-
-            if (!state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState.GetType().Equals(typeof(DynamicCamera.ConfigurationState)))
+            if (state.DynamicCameraObject.GetComponent<DynamicCamera>().ActiveState is DynamicCamera.ConfigurationState)
             {
-                IsResetting = true;
+                UserMessageManager.Dispatch("Please don't reset robot during configuration!", 5f);
+            }
+            else
+            {
+                //GetDriverPractice().DestroyAllGamepieces();
 
-                BeginRobotReset();
+                InputControl.freeze = true;
+                if (canvas == null) canvas = GameObject.Find("Canvas");
+                if (resetCanvas == null) resetCanvas = Auxiliary.FindObject(UnityEngine.Camera.main.gameObject, "ResetRobotSpawnpointUI");
+                canvas.GetComponent<Canvas>().enabled = false;
+                resetCanvas.SetActive(true);
+
+                if (toolbar == null) toolbar = Auxiliary.FindObject(resetCanvas, "ResetStateToolbar");
+
+                Button resetButton = Auxiliary.FindObject(resetCanvas, "ResetButton").GetComponent<Button>();
+                resetButton.onClick.RemoveAllListeners();
+                resetButton.onClick.AddListener(RevertSpawnpoint);
+                Button returnButton = Auxiliary.FindObject(resetCanvas, "ReturnButton").GetComponent<Button>();
+                returnButton.onClick.RemoveAllListeners();
+                returnButton.onClick.AddListener(EndReset);
+
+                DynamicCamera dynamicCamera = UnityEngine.Camera.main.transform.GetComponent<DynamicCamera>();
+                lastCameraState = dynamicCamera.ActiveState;
+                dynamicCamera.SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
+
+                foreach (SimulatorRobot robot in state.RobotManager.GetSpawnedRobots())
+                    foreach (BRigidBody rb in robot.GetComponentsInChildren<BRigidBody>())
+                        if (rb != null && !rb.GetCollisionObject().IsActive)
+                            rb.GetCollisionObject().Activate();
+
+                ///////////////
+
+                IsResetting = true;
+                base.BeginReset();
                 OnBeginReset();
 
                 //Where "save orientation" works
                 RotateRobot(robotStartOrientation);
 
                 AttachMoveArrows();
-            }
-            else
-            {
-                UserMessageManager.Dispatch("Please don't reset robot during configuration!", 5f);
-            }
 
-            SimUI.getSimUI().OpenNavigationTooltip();
+                SimUI.getSimUI().OpenNavigationTooltip();
+            }
         }
 
         /// <summary>
@@ -358,11 +349,11 @@ namespace Synthesis.Robot
         /// <summary>
         /// End the reset process and puts the robot back down
         /// </summary>
-        public void EndReset()
+        public override void EndReset()
         {
-            IsResetting = false;
+            base.EndReset();
 
-            EndRobotReset();
+            IsResetting = false;
 
             if (lastCameraState != null)
             {
@@ -489,5 +480,10 @@ namespace Synthesis.Robot
         /// </summary>
         /// <param name="transposition"></param>
         protected virtual void OnTransposeRobot(Vector3 transposition) { }
+
+        public GameObject GetPrimaryGameObject()
+        {
+            return transform.GetChild(0).gameObject ?? gameObject;
+        }
     }
 }

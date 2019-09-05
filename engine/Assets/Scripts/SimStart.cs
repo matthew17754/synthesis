@@ -41,8 +41,8 @@ public class SimStart : MonoBehaviour
             (string.IsNullOrEmpty(PlayerPrefs.GetString("simSelectedField")) || string.IsNullOrEmpty(PlayerPrefs.GetString("simSelectedFieldName")))
         )
         {
-            PlayerPrefs.SetString("simSelectedField", PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + Synthesis.Field.UnityFieldDefinition.EmptyGridName);
-            PlayerPrefs.SetString("simSelectedFieldName", Synthesis.Field.UnityFieldDefinition.EmptyGridName);
+            PlayerPrefs.SetString("simSelectedField", PlayerPrefs.GetString("FieldDirectory") + Path.DirectorySeparatorChar + Synthesis.Field.FieldManager.EmptyGridName);
+            PlayerPrefs.SetString("simSelectedFieldName", Synthesis.Field.FieldManager.EmptyGridName);
         }
 
         PlayerPrefs.Save();

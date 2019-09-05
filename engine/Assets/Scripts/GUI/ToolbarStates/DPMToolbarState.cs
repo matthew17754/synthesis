@@ -78,8 +78,8 @@ namespace Synthesis.GUI
 
         public override void Update()
         {
-            if (dpmRobot == null) dpmRobot = mainState.ActiveRobot.GetDriverPractice();
-            if (mainState.ActiveRobot.GetDriverPractice() != dpmRobot) dpmRobot = mainState.ActiveRobot.GetDriverPractice(); //updates active robot to current active robot
+            if (dpmRobot == null) dpmRobot = mainState.RobotManager.MainRobot.GetDriverPractice();
+            if (mainState.RobotManager.MainRobot.GetDriverPractice() != dpmRobot) dpmRobot = mainState.RobotManager.MainRobot.GetDriverPractice(); //updates main robot to current main robot
         }
 
         public void OnGamepieceDropdownValueChanged(int value)
