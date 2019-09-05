@@ -367,6 +367,7 @@
     <Compile Include="Assets\Scripts\Utils\Either.cs" />
     <Compile Include="Assets\Scripts\Utils\GeometryUtilEx.cs" />
     <Compile Include="Assets\Scripts\Utils\Optional.cs" />
+    <Compile Include="Assets\Scripts\Utils\PlayerPrefsManager.cs" />
     <Compile Include="Assets\Scripts\VersionManager.cs" />
     <Compile Include="Assets\Scripts\Wireframe.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\IStandaloneFileBrowser.cs" />

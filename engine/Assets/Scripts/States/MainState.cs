@@ -34,8 +34,6 @@ namespace Synthesis.States
     /// </summary>
     public class MainState : State
     {
-        public const string CurrentVersion = "4.3.1.1";
-
         private const int SolverIterations = 100;
 
         private BPhysicsWorld physicsWorld;
@@ -68,7 +66,7 @@ namespace Synthesis.States
             QualitySettings.SetQualityLevel(PlayerPrefs.GetInt("qualityLevel"));
             Screen.fullScreenMode = (FullScreenMode)PlayerPrefs.GetInt("fullscreen", 1);
 
-            GameObject.Find("VersionNumber").GetComponent<Text>().text = "Version " + CurrentVersion;
+            GameObject.Find("VersionNumber").GetComponent<Text>().text = "Version " + AppModel.Version;
 
             if (CheckConnection())
             {
@@ -78,7 +76,7 @@ namespace Synthesis.States
                 VersionManager update = JsonConvert.DeserializeObject<VersionManager>(json);
                 SimUI.updater = update.URL;
 
-                var localVersion = new Version(CurrentVersion);
+                var localVersion = new Version(AppModel.Version);
                 var globalVersion = new Version(update.Version);
 
                 var check = localVersion.CompareTo(globalVersion);

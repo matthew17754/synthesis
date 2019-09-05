@@ -190,7 +190,7 @@ namespace Synthesis.GUI
 
             for (int i = 0; i < 20; i++)
             {
-                AddServerEntry("Test Lobby " + i, "12334", 12, States.MainState.CurrentVersion, "test-field", "Connecting"); // TODO - for testing
+                AddServerEntry("Test Lobby " + i, "12334", 12, AppModel.Version, "test-field", "Connecting"); // TODO - for testing
             }
         }
 
