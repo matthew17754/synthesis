@@ -25,6 +25,13 @@ public class DynamicCamera : MonoBehaviour
     /// <value>The state of the camera.</value>
     public CameraState ActiveState { get; private set; }
 
+
+    /// <summary>
+    /// Gets the instance of the ViewCube
+    /// </summary>
+    /// <value>The 3D cube object that is the viewcube.</value>
+    public static GameObject ViewCube { get; set; }
+
     /// <summary>
     /// Abstract class for defining various states of the camera.
     /// </summary>
@@ -206,6 +213,7 @@ public class DynamicCamera : MonoBehaviour
         float magnification = 5.0f;
         float cameraAngle = 45f;
         float panValue = 0f;
+        float panValueCube = 0f;
 
         public OrbitState(MonoBehaviour mono)
             : base(mono) { }
@@ -216,6 +224,7 @@ public class DynamicCamera : MonoBehaviour
             rotateVector = RotateXZ(new Vector3(-1f, 1f, 0f), Vector3.zero, 0f, magnification);
             lagVector = rotateVector;
             lockedVector = rotateVector;
+            Debug.Log("Viewcube is at : " + ViewCube.transform.rotation);
         }
 
         public override void Update()
@@ -236,6 +245,8 @@ public class DynamicCamera : MonoBehaviour
                     adjusting = true;
                     cameraAngle = Mathf.Max(Mathf.Min(cameraAngle - Input.GetAxis("Mouse Y") * 5f, 90f), 0f);
                     panValue = -Input.GetAxis("Mouse X") / 5f;
+                    panValueCube = Input.GetAxis("Mouse X");
+
                 }
                 else
                 {
@@ -267,28 +278,17 @@ public class DynamicCamera : MonoBehaviour
                 rotateVector.y = targetVector.y + Mathf.Abs(rotateVector.y - targetVector.y);
             }
 
-            if (adjusting)
-            {
-                // Unlocks the camera position for adjustment
-                rotateVector = RotateXZ(rotateVector, targetVector, panValue, magnification);
-                rotateVector.y = targetVector.y + magnification * Mathf.Sin(cameraAngle * Mathf.Deg2Rad);
-                lockedVector = RobotProvider.Robot.transform.InverseTransformPoint(rotateVector);
-            }
-            else
-            {
-                rotateVector = RobotProvider.Robot.transform.TransformPoint(lockedVector);
-                rotateVector.y = targetVector.y + Mathf.Abs(rotateVector.y - targetVector.y);
-            }
-
             // Calculate smooth camera movement
             lagVector = CalculateLagVector(lagVector, rotateVector, lagResponsiveness);
 
             Mono.transform.position = lagVector;
             Mono.transform.LookAt(targetVector);
+            ViewCube.transform.rotation = Quaternion.Euler(cameraAngle, rotateVector.x * 36, 0); ;
         }
 
         public override void End()
         {
+            // Do something or don't re-implement
         }
 
         /// <summary>

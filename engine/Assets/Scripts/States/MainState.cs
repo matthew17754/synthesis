@@ -208,7 +208,12 @@ namespace Synthesis.States
 
             //initializes the dynamic camera
             DynamicCameraObject = GameObject.Find("Main Camera");
+
+            // Stop using Gameobject.find and get rid of assigning script on start if it's not a prefab
+            DynamicCamera.ViewCube = GameObject.Find("ViewCube");
+
             dynamicCamera = DynamicCameraObject.AddComponent<DynamicCamera>();
+
             DynamicCamera.ControlEnabled = true;
 
             sensorManager = GameObject.Find("SensorManager").GetComponent<SensorManager>();
