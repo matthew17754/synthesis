@@ -94,12 +94,15 @@ namespace Synthesis.Field
 
                 GameObject meshObject = new GameObject(node.NodeID + "-mesh");
 
+                Bounds meshBounds = new Bounds();
+
                 if (node.SubMeshID != -1)
                 {
                     KeyValuePair<BXDAMesh.BXDASubMesh, Mesh> currentSubMesh = submeshes[node.SubMeshID];
 
                     BXDAMesh.BXDASubMesh sub = currentSubMesh.Key;
                     Mesh meshu = currentSubMesh.Value;
+                    meshBounds = meshu.bounds;
 
                     meshObject.AddComponent<MeshFilter>().mesh = meshu;
 
@@ -124,87 +127,96 @@ namespace Synthesis.Field
                 // Set the position of the object (scaled by 1/100 to match Unity's scaling correctly).
                 meshObject.transform.position = new Vector3(-node.Position.x * 0.01f, node.Position.y * 0.01f, node.Position.z * 0.01f);
 
+                //Debug.Log(meshObject.name + ": " + meshObject.GetComponent<MeshFilter>().mesh.bounds.size.magnitude);
+                
+
                 if (GetPropertySets().ContainsKey(node.PropertySetID))
                 {
                     PropertySet currentPropertySet = GetPropertySets()[node.PropertySetID];
-                    PropertySet.PropertySetCollider psCollider = currentPropertySet.Collider;
+                    if (meshBounds.size.magnitude > 0.3 || currentPropertySet.Mass != 0) {
+                        PropertySet.PropertySetCollider psCollider = currentPropertySet.Collider;
 
-                    switch (psCollider.CollisionType)
+                        switch (psCollider.CollisionType)
+                        {
+                            case PropertySet.PropertySetCollider.PropertySetCollisionType.BOX:
+                                PropertySet.BoxCollider psBoxCollider = (PropertySet.BoxCollider)psCollider;
+                                BoxCollider dummyBoxCollider = meshObject.AddComponent<BoxCollider>();
+
+                                subObject.transform.localRotation = meshObject.transform.localRotation;
+                                subObject.transform.position = meshObject.transform.TransformPoint(dummyBoxCollider.center);
+
+                                BBoxShape boxShape = subObject.AddComponent<BBoxShape>();
+                                boxShape.Extents = new Vector3(
+                                    dummyBoxCollider.size.x * 0.5f * psBoxCollider.Scale.x,
+                                    dummyBoxCollider.size.y * 0.5f * psBoxCollider.Scale.y,
+                                    dummyBoxCollider.size.z * 0.5f * psBoxCollider.Scale.z);
+
+                                //meshObject.AddComponent<MouseListener>();
+                                UnityEngine.Object.Destroy(dummyBoxCollider);
+
+                                break;
+                            case PropertySet.PropertySetCollider.PropertySetCollisionType.SPHERE:
+                                PropertySet.SphereCollider psSphereCollider = (PropertySet.SphereCollider)psCollider;
+                                SphereCollider dummySphereCollider = meshObject.AddComponent<SphereCollider>();
+
+                                subObject.transform.position = meshObject.transform.TransformPoint(dummySphereCollider.center);
+
+                                BSphereShape sphereShape = subObject.AddComponent<BSphereShape>();
+                                sphereShape.Radius = dummySphereCollider.radius * psSphereCollider.Scale;
+
+                                //meshObject.AddComponent<MouseListener>();
+                                UnityEngine.Object.Destroy(dummySphereCollider);
+
+                                break;
+                            case PropertySet.PropertySetCollider.PropertySetCollisionType.MESH:
+                                PropertySet.MeshCollider psMeshCollider = (PropertySet.MeshCollider)psCollider;
+
+                                if (psMeshCollider.Convex || currentPropertySet.Mass != 0)
+                                {
+                                    MeshCollider dummyMeshCollider = subObject.AddComponent<MeshCollider>();
+                                    dummyMeshCollider.sharedMesh = meshObject.GetComponent<MeshFilter>().mesh;
+
+                                    subObject.transform.position = meshObject.transform.TransformPoint(dummyMeshCollider.bounds.center);
+                                    subObject.transform.rotation = meshObject.transform.rotation;
+
+                                    BConvexHullShape hullshape = subObject.AddComponent<BConvexHullShape>();
+                                    hullshape.HullMesh = Auxiliary.GenerateCollisionMesh(meshObject.GetComponent<MeshFilter>().mesh, dummyMeshCollider.sharedMesh.bounds.center, 0f/*CollisionMargin*/);
+                                    hullshape.GetCollisionShape().Margin = CollisionMargin;
+
+                                    //subObject.AddComponent<MouseListener>();
+                                    UnityEngine.Object.Destroy(dummyMeshCollider);
+                                }
+                                else
+                                {
+                                    subObject.transform.position = meshObject.transform.position;
+                                    subObject.transform.rotation = meshObject.transform.rotation;
+
+                                    BBvhTriangleMeshShape meshShape = subObject.AddComponent<BBvhTriangleMeshShape>();
+                                    meshShape.HullMesh = meshObject.GetComponent<MeshFilter>().mesh.GetScaledCopy(-1f, 1f, 1f);
+                                    meshShape.GetCollisionShape().Margin = CollisionMargin;
+                                }
+                                break;
+                        }
+
+                        BRigidBody rb = subObject.AddComponent<BRigidBody>();
+                        rb.friction = currentPropertySet.Friction * FrictionScale;
+                        rb.rollingFriction = currentPropertySet.Friction * RollingFrictionScale;
+                        rb.mass = currentPropertySet.Mass;
+
+                        if (currentPropertySet.Mass == 0)
+                            rb.collisionFlags = BulletSharp.CollisionFlags.StaticObject;
+                        else
+                        {
+                            subObject.AddComponent<Tracker>();
+                            subObject.name = currentPropertySet.PropertySetID; //sets game elements to the same name as the property set - used to identify proper colliders
+                        }
+
+                        meshObject.transform.parent = subObject.transform;
+                    } else
                     {
-                        case PropertySet.PropertySetCollider.PropertySetCollisionType.BOX:
-                            PropertySet.BoxCollider psBoxCollider = (PropertySet.BoxCollider)psCollider;
-                            BoxCollider dummyBoxCollider = meshObject.AddComponent<BoxCollider>();
-
-                            subObject.transform.localRotation = meshObject.transform.localRotation;
-                            subObject.transform.position = meshObject.transform.TransformPoint(dummyBoxCollider.center);
-
-                            BBoxShape boxShape = subObject.AddComponent<BBoxShape>();
-                            boxShape.Extents = new Vector3(
-                                dummyBoxCollider.size.x * 0.5f * psBoxCollider.Scale.x,
-                                dummyBoxCollider.size.y * 0.5f * psBoxCollider.Scale.y,
-                                dummyBoxCollider.size.z * 0.5f * psBoxCollider.Scale.z);
-
-                            //meshObject.AddComponent<MouseListener>();
-                            UnityEngine.Object.Destroy(dummyBoxCollider);
-
-                            break;
-                        case PropertySet.PropertySetCollider.PropertySetCollisionType.SPHERE:
-                            PropertySet.SphereCollider psSphereCollider = (PropertySet.SphereCollider)psCollider;
-                            SphereCollider dummySphereCollider = meshObject.AddComponent<SphereCollider>();
-
-                            subObject.transform.position = meshObject.transform.TransformPoint(dummySphereCollider.center);
-
-                            BSphereShape sphereShape = subObject.AddComponent<BSphereShape>();
-                            sphereShape.Radius = dummySphereCollider.radius * psSphereCollider.Scale;
-
-                            //meshObject.AddComponent<MouseListener>();
-                            UnityEngine.Object.Destroy(dummySphereCollider);
-
-                            break;
-                        case PropertySet.PropertySetCollider.PropertySetCollisionType.MESH:
-                            PropertySet.MeshCollider psMeshCollider = (PropertySet.MeshCollider)psCollider;
-
-                            if (psMeshCollider.Convex || currentPropertySet.Mass != 0)
-                            {
-                                MeshCollider dummyMeshCollider = subObject.AddComponent<MeshCollider>();
-                                dummyMeshCollider.sharedMesh = meshObject.GetComponent<MeshFilter>().mesh;
-                               
-                                subObject.transform.position = meshObject.transform.TransformPoint(dummyMeshCollider.bounds.center);
-                                subObject.transform.rotation = meshObject.transform.rotation;
-
-                                BConvexHullShape hullshape = subObject.AddComponent<BConvexHullShape>();
-                                hullshape.HullMesh = Auxiliary.GenerateCollisionMesh(meshObject.GetComponent<MeshFilter>().mesh, dummyMeshCollider.sharedMesh.bounds.center, 0f/*CollisionMargin*/);
-                                hullshape.GetCollisionShape().Margin = CollisionMargin;
-
-                                //subObject.AddComponent<MouseListener>();
-                                UnityEngine.Object.Destroy(dummyMeshCollider);
-                            }
-                            else
-                            {
-                                subObject.transform.position = meshObject.transform.position;
-                                subObject.transform.rotation = meshObject.transform.rotation;
-
-                                BBvhTriangleMeshShape meshShape = subObject.AddComponent<BBvhTriangleMeshShape>();
-                                meshShape.HullMesh = meshObject.GetComponent<MeshFilter>().mesh.GetScaledCopy(-1f, 1f, 1f);
-                                meshShape.GetCollisionShape().Margin = CollisionMargin;
-                            }
-                            break;
+                        Debug.Log(meshObject.name + ": X=" + meshBounds.size.x + ", Y=" + meshBounds.size.y + ", Z=" + meshBounds.size.z);
+                        meshObject.transform.parent = unityObject.transform;
                     }
-
-                    BRigidBody rb = subObject.AddComponent<BRigidBody>();
-                    rb.friction = currentPropertySet.Friction * FrictionScale;
-                    rb.rollingFriction = currentPropertySet.Friction * RollingFrictionScale;
-                    rb.mass = currentPropertySet.Mass;
-
-                    if (currentPropertySet.Mass == 0)
-                        rb.collisionFlags = BulletSharp.CollisionFlags.StaticObject;
-                    else
-                    {
-                        subObject.AddComponent<Tracker>();
-                        subObject.name = currentPropertySet.PropertySetID; //sets game elements to the same name as the property set - used to identify proper colliders
-                    }
-
-                    meshObject.transform.parent = subObject.transform;
                 }
                 else
                 {
@@ -238,6 +250,19 @@ namespace Synthesis.Field
             #endregion
 
             return true;
+        }
+
+        public bool qualifyingBounds(Bounds b, float threshold)
+        {
+            bool good = false;
+            if (b.size.x >= threshold)
+                good = true;
+            if (b.size.y >= threshold)
+                good = true;
+            if (b.size.z >= threshold)
+                good = true;
+
+            return good;
         }
     }
 }
