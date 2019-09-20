@@ -220,6 +220,7 @@ pip-log.txt
 #############
 ## Folders
 #############
+Assets/SteamVR
 Assets/BulletUnity
 Assets/BulletUnity.meta
 Assets/Plugins
