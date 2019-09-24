@@ -52,6 +52,7 @@ namespace Synthesis.GUI
         GameObject changeRobotPanel;
         GameObject robotListPanel;
         GameObject changeFieldPanel;
+        GameObject loadEmptyFieldButton;
 
         GameObject mixAndMatchPanel;
         GameObject changePanel;
@@ -197,6 +198,7 @@ namespace Synthesis.GUI
             changeRobotPanel = Auxiliary.FindObject(canvas, "ChangeRobotPanel");
             robotListPanel = Auxiliary.FindObject(changeRobotPanel, "RobotListPanel");
             changeFieldPanel = Auxiliary.FindObject(canvas, "ChangeFieldPanel");
+            loadEmptyFieldButton = Auxiliary.FindObject(changeFieldPanel, "LoadEmptyButton");
 
             resetDropdown = GameObject.Find("Reset Robot Dropdown");
 
@@ -634,6 +636,13 @@ namespace Synthesis.GUI
             {
                 EndOtherProcesses();
                 changeFieldPanel.SetActive(true);
+                if (GameObject.Find("Field").transform.childCount > 1)
+                {
+                    loadEmptyFieldButton.SetActive(true);
+                } else
+                {
+                    loadEmptyFieldButton.SetActive(false);
+                }
                 InputControl.DisableSimControls();
                 Auxiliary.FindObject(changeFieldPanel, "PathLabel").GetComponent<Text>().text = PlayerPrefs.GetString("FieldDirectory");
             }
