@@ -38,11 +38,11 @@ namespace Synthesis.States
     /// </summary>
     public class MainState : State, IRobotProvider
     {
+        const string CurrentVersion = "4.3.1.1";
+
         private string[] SampleRobotGUIDs = { "ee85355c-6daf-4588-ba47-cdf3f9143922", "fde5a9e9-4a1d-4d07-bafd-ae18bada7a8d", "d7f2959a-f9eb-4581-a4bb-898550193bda", "d1859211-db0f-4b75-866c-2d0e81b6732b", "52eb1ada-b051-461a-9cc4-1b5b74764ce5", "decdc6a1-5f76-4dea-add7-4c358f4a9921", "6b5d4484-db3c-425b-98b8-546c06d8d8bf", "c3bb1b94-dad8-4a8c-aa67-9c09eb9379c1", "ef4e3e2b-8cfb-437d-b63d-8bebc05fa3ba", "7d31cb8a-01e8-4eeb-9086-2955a993a374", "1478855a-60bd-42cb-8841-eece4fa0fbeb", "0b43729a-d8d3-4df2-bcbb-684343933c23", "9f19586c-a26f-4b28-9fb9-e06731178166", "f1225b7a-180e-456b-88d1-7315b0086001" };
 
         public string robotDirectory;
-
-        public static int timesLoaded = 0;
 
         private const int SolverIterations = 100;
 
@@ -92,13 +92,6 @@ namespace Synthesis.States
         private const int MAX_ROBOTS = 6;
 
         public bool IsMetric;
-        public bool isEmulationDownloaded = File.Exists(EmulatorManager.emulationDir + "kernel-native") &&
-            File.Exists(EmulatorManager.emulationDir + "rootfs-native.ext4") &&
-            File.Exists(EmulatorManager.emulationDir + "zynq-zed.dtb") &&
-            File.Exists(EmulatorManager.emulationDir + "kernel-java") &&
-            File.Exists(EmulatorManager.emulationDir + "rootfs-java.ext4") &&
-            File.Exists(EmulatorManager.emulationDir + "grpc-bridge.exe");
-        //public bool isEmulationDownloaded = true;
 
         bool reset;
 
@@ -112,9 +105,8 @@ namespace Synthesis.States
         public override void Awake()
         {
             QualitySettings.SetQualityLevel(PlayerPrefs.GetInt("qualityLevel"));
-            Screen.fullScreen = PlayerPrefs.GetInt("fullscreen", 1) == 1 ? true : false;
+            Screen.fullScreenMode = (FullScreenMode)PlayerPrefs.GetInt("fullscreen", 1);
 
-            string CurrentVersion = "4.3.0";
             GameObject.Find("VersionNumber").GetComponent<Text>().text = "Version " + CurrentVersion;
 
             if (CheckConnection())
@@ -136,7 +128,7 @@ namespace Synthesis.States
                 }
             }
 
-            robotDirectory = PlayerPrefs.GetString("RobotDirectory", (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + Path.DirectorySeparatorChar + "Autodesk" + Path.DirectorySeparatorChar + "Synthesis" + Path.DirectorySeparatorChar + "Robots"));
+            robotDirectory = PlayerPrefs.GetString("RobotDirectory");
             Environment.SetEnvironmentVariable("MONO_REFLECTION_SERIALIZER", "yes");
             GImpactCollisionAlgorithm.RegisterAlgorithm((CollisionDispatcher)BPhysicsWorld.Get().world.Dispatcher);
             //BPhysicsWorld.Get().DebugDrawMode = DebugDrawModes.DrawWireframe | DebugDrawModes.DrawConstraints | DebugDrawModes.DrawConstraintLimits;
@@ -238,6 +230,7 @@ namespace Synthesis.States
             else
             {
                 awaitingReplay = true;
+                PlayerPrefs.SetString("simSelectedReplay", "");
                 LoadReplay(selectedReplay);
             }
 
@@ -253,7 +246,7 @@ namespace Synthesis.States
 
             robotCameraManager = GameObject.Find("RobotCameraList").GetComponent<RobotCameraManager>();
 
-            IsMetric = PlayerPrefs.GetString("Measure").Equals("Metric") ? true : false;
+            IsMetric = PlayerPrefs.GetString("Measure").Equals("Metric");
 
             StateMachine.Link<MainState>(GameObject.Find("Main Camera").transform.GetChild(0).gameObject);
             StateMachine.Link<MainState>(GameObject.Find("Main Camera").transform.GetChild(1).gameObject, false);
@@ -265,16 +258,11 @@ namespace Synthesis.States
             StateMachine.Link<SensorSpawnState>(Auxiliary.FindGameObject("ResetSensorSpawnpointUI"));
             StateMachine.Link<DefineSensorAttachmentState>(Auxiliary.FindGameObject("DefineSensorAttachmentUI"));
 
-            string defaultDirectory = (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "Autodesk" + Path.DirectorySeparatorChar + "Synthesis" + Path.DirectorySeparatorChar + "Emulator");
-            string directoryPath = "";
-
-            if (Directory.Exists(defaultDirectory))
-            {
-                directoryPath = defaultDirectory;
-                isEmulationDownloaded = true;
-            }
-
             MediaManager.getInstance();
+
+            Controls.Load();
+            Controls.UpdateFieldControls();
+            Controls.Save(true);
         }
 
         /// <summary>
@@ -429,7 +417,6 @@ namespace Synthesis.States
                 if (singleMesh.bounds.min.y < lowPoint)
                 {
                     lowPoint = singleMesh.bounds.min.y;
-                    Debug.Log("LowPoint: " + lowPoint);
                 }
             }
 
@@ -443,6 +430,10 @@ namespace Synthesis.States
         /// <returns>whether the process was successful</returns>
         bool LoadField(string directory)
         {
+            if (string.IsNullOrEmpty(directory))
+            {
+                UserMessageManager.Dispatch("Field not found", 7);
+            }
             fieldPath = directory;
 
             fieldObject = new GameObject("Field");
@@ -452,19 +443,24 @@ namespace Synthesis.States
                 return new UnityFieldDefinition(guid, name);
             };
 
-            if (!File.Exists(directory + Path.DirectorySeparatorChar + "definition.bxdf"))
+            bool isEmptyGrid = directory == "" || new DirectoryInfo(directory).Name == UnityFieldDefinition.EmptyGridName;
+
+            if (!File.Exists(directory + Path.DirectorySeparatorChar + "definition.bxdf") && !isEmptyGrid)
                 return false;
 
-            FieldDataHandler.Load(fieldPath);
-            timesLoaded++;
+            FieldDataHandler.LoadFieldMetaData(fieldPath);
 
             Controls.Load();
             Controls.UpdateFieldControls();
             if (!Controls.HasBeenSaved())
-                Controls.Save();
+                Controls.Save(true);
 
+            if (isEmptyGrid)
+            {
+                return true;
+            }
             fieldDefinition = (UnityFieldDefinition)BXDFProperties.ReadProperties(directory + Path.DirectorySeparatorChar + "definition.bxdf", out string loadResult);
-            Debug.Log(loadResult);
+            // Debug.Log("Field load result: " + loadResult);
             fieldDefinition.CreateTransform(fieldObject.transform);
             return fieldDefinition.CreateMesh(directory + Path.DirectorySeparatorChar + "mesh.bxda");
         }
@@ -850,17 +846,22 @@ namespace Synthesis.States
 
             ReplayImporter.Read(name, out fieldDirectory, out fieldStates, out robotStates, out gamePieceStates, out contacts);
 
-            if (!LoadField(fieldDirectory))
+            bool hasField = !string.IsNullOrEmpty(fieldDirectory);
+
+            if (hasField)
             {
-                AppModel.ErrorToMenu("Could not load field: " + fieldDirectory + "\nHas it been moved or deleted?");
-                return;
+                if (!LoadField(fieldDirectory))
+                {
+                    AppModel.ErrorToMenu("FIELD_SELECT|Could not load field: " + fieldDirectory + "\nHas it been moved or deleted?");
+                    return;
+                }
             }
 
             foreach (KeyValuePair<string, List<FixedQueue<StateDescriptor>>> rs in robotStates)
             {
                 if (!LoadRobot(rs.Key, false))
                 {
-                    AppModel.ErrorToMenu("Could not load robot: " + rs.Key + "\nHas it been moved or deleted?");
+                    AppModel.ErrorToMenu("ROBOT_SELECT|Could not load robot: " + rs.Key + "\nHas it been moved or deleted?");
                     return;
                 }
 
@@ -873,28 +874,31 @@ namespace Synthesis.States
                 }
             }
 
-            Tracker[] fieldTrackers = fieldObject.GetComponentsInChildren<Tracker>();
-
-            int i = 0;
-
-            foreach (Tracker t in fieldTrackers)
+            if (hasField)
             {
-                t.States = fieldStates[i];
-                i++;
-            }
+                Tracker[] fieldTrackers = fieldObject.GetComponentsInChildren<Tracker>();
 
-            foreach (KeyValuePair<string, List<FixedQueue<StateDescriptor>>> k in gamePieceStates)
-            {
-                GameObject referenceObject = GameObject.Find(k.Key);
+                int i = 0;
 
-                if (referenceObject == null)
-                    continue;
-
-                foreach (FixedQueue<StateDescriptor> f in k.Value)
+                foreach (Tracker t in fieldTrackers)
                 {
-                    GameObject currentPiece = UnityEngine.Object.Instantiate(referenceObject);
-                    currentPiece.name = k.Key + "(Clone)";
-                    currentPiece.GetComponent<Tracker>().States = f;
+                    t.States = fieldStates[i];
+                    i++;
+                }
+
+                foreach (KeyValuePair<string, List<FixedQueue<StateDescriptor>>> k in gamePieceStates)
+                {
+                    GameObject referenceObject = GameObject.Find(k.Key);
+
+                    if (referenceObject == null)
+                        continue;
+
+                    foreach (FixedQueue<StateDescriptor> f in k.Value)
+                    {
+                        GameObject currentPiece = UnityEngine.Object.Instantiate(referenceObject);
+                        currentPiece.name = k.Key + "(Clone)";
+                        currentPiece.GetComponent<Tracker>().States = f;
+                    }
                 }
             }
 
@@ -1080,22 +1084,6 @@ namespace Synthesis.States
         public void ResetRobotOrientation()
         {
             ActiveRobot.ResetRobotOrientation();
-        }
-
-        /// <summary>
-        /// Saves the active robot's current orientation to be used whenever robot is reset
-        /// </summary>
-        public void SaveRobotOrientation()
-        {
-            ActiveRobot.SaveRobotOrientation();
-        }
-
-        /// <summary>
-        /// Cancels the active robot's unsaved orientation changes
-        /// </summary>
-        public void CancelRobotOrientation()
-        {
-            ActiveRobot.CancelRobotOrientation();
         }
         #endregion
 

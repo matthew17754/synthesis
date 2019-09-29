@@ -19,12 +19,6 @@ namespace hel{
 
         double percent_output;
 
-        /**
-         * \brief Whether to invert the percent_output signal or not
-         */
-
-        bool inverted; // Move to CTRE motor controllers only?
-
     public:
         /**
          * \brief Format the CANMotorControllerBase as a string
@@ -48,14 +42,6 @@ namespace hel{
         double getPercentOutput()const noexcept;
 
         /**
-         * \fn void setInverted(bool inverted)noexcept
-         * \brief Set the inverted flag of the motor controller
-         * \param i Whether to invert motor controller output
-         */
-
-        void setInverted(bool)noexcept;
-
-        /**
          * Constructor for CANMotorControllerBase
          */
 
@@ -68,7 +54,7 @@ namespace hel{
 
         CANMotorControllerBase(const CANMotorControllerBase&)noexcept;
 
-      /**
+      	/**
          * Constructor for CANMotorControllerBase
          * \param device The device information to use
          */
@@ -77,7 +63,12 @@ namespace hel{
     };
 
     namespace ctre{
-        struct CANMotorController: public CANMotorControllerBase{
+
+        /**
+		 * \brief Representation of a CTRE CAN motor controller
+		 */
+
+		struct CANMotorController: public CANMotorControllerBase{
             static constexpr uint32_t HEARTBEAT_ID = 63;
             static constexpr uint32_t HEARTBEAT_API_ID = 1;
 
@@ -98,13 +89,29 @@ namespace hel{
                 INVERT = 6
             };
 
+			/**
+			 * \brief Interpretation definitions for command API bit mask
+			 */
+
             enum CommandAPIID: int32_t{
                 GET_PERCENT_OUTPUT = 0x007
             };
+		
+			/**
+			 * \brief Parse a CAN message and update the motor controller state
+			 * \param api_id The API ID
+			 * \param data The CAN data bytes
+			 */
 
-            void parseCANPacket(const int32_t&, const std::vector<uint8_t>&);
+        	void parseCANPacket(const int32_t&, const std::vector<uint8_t>&);
 
-            std::vector<uint8_t> generateCANPacket(const int32_t&)const;
+			/**
+			 * \brief Generate a CAN message given an API ID
+			 * \param api_id The API ID to use
+			 * \return The generated data bytes as determined by the API ID
+			 */
+
+	        std::vector<uint8_t> generateCANPacket(const int32_t&)const;
 
             /**
              * Constructor for CANMotorController
@@ -129,13 +136,42 @@ namespace hel{
     }
 
     namespace rev{
+
+        /**
+		 * \brief Representation of a REV CAN motor controller
+		 */
+
         struct CANMotorController: public CANMotorControllerBase{
-            // Firmware version can packet strucute: Major | Minor | Build 2 | Build 1 | Debug | Hardware Revision - REV swaps Build 2 and build 1 bytes when determining build version
+			
+			/**
+			 * \brief The minimum allowed REV CAN motor controller firmware version
+             * 
+             * Firmware version can packet strucute: Major | Minor | Build 2 | Build 1 | Debug | Hardware Revision - REV swaps Build 2 and build 1 bytes when determining build version
+			 */
+
             static constexpr uint32_t MIN_FIRMWARE_VERSION = 0x0101001C;
+			
+			/**
+			 * \brief Whether to enable emulated REV CAN motor controller firmware debug mode
+			 */
+
             static constexpr bool USE_FIRMWARE_DEBUG_BUILD = false;
+			
+			/**
+			 * \brief The emulated REV CAN motor controller hardware revision
+			 */
+
             static constexpr uint8_t HARDWARE_REVISION = 0x00;
 
+			/**
+			 * \brief The CAN bus ID for REV heartbeats
+			 */
+
             static constexpr uint32_t HEARTBEAT_ID = 0;
+
+			/**
+			 * \brief Interpretation for the command API ID bit mask
+			 */
 
             enum CommandAPIID: int32_t{
                 DC_SET = 0x002,
@@ -150,9 +186,21 @@ namespace hel{
                 PARAM_ACCESS = 0x300 // least significant eight bits of the API ID with this identifier select for the parameter
             };
 
-            void parseCANPacket(const int32_t&, const std::vector<uint8_t>&);
+			/**
+			 * \brief Parse a CAN message and update the motor controller state
+			 * \param api_id The API ID
+			 * \param data The CAN data bytes
+			 */
 
-            std::vector<uint8_t> generateCANPacket(const int32_t&)const;
+        	void parseCANPacket(const int32_t&, const std::vector<uint8_t>&);
+
+			/**
+			 * \brief Generate a CAN message given an API ID
+			 * \param api_id The API ID to use
+			 * \return The generated data bytes as determined by the API ID
+			 */
+
+	        std::vector<uint8_t> generateCANPacket(const int32_t&)const;
 
             /**
              * Constructor for CANMotorController

@@ -20,7 +20,7 @@ namespace hel{
     std::recursive_mutex RobotOutputsManager::send_data_mutex;
     std::recursive_mutex RobotInputsManager::receive_data_mutex;
 
-    void __attribute__((constructor)) printVersionInfo() {
+    void __attribute__((constructor)) printVersionInfo() { // Print version info when library is loaded
         std::ifstream vm_info;
         vm_info.open(VIRTUAL_MACHINE_INFO_PATH);
 
@@ -39,7 +39,7 @@ namespace hel{
         std::string port;
             std::getline(server_config, port);
             hel::gRPCPort = std::stoi(port);
-        } catch (std::invalid_argument s) {
+        } catch (std::invalid_argument& s) {
             hel::gRPCPort = 50051;
         }
         printf("Synthesis Emulation Startup Info: \n\tHEL Version: %s\n\tVirtual Machine Version: %s\n\tWPILib Version: %s\n\tNI Libraries Version: %s\n\n", LIBHEL_VERSION, vm_version.c_str(), wpilib_version.c_str(), nilib_version.c_str());

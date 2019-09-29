@@ -1,9 +1,10 @@
 #!/bin/bash
 #sed -i -e 's/\r$//' LinuxInstaller.sh
 
-VERSION="4.3.0"
+VERSION="4.3.1"
 source ./ProgressBar.sh
 sudo echo "Installing Autodesk Synthesis $VERSION For Linux"
+echo "This software is licensed under the terms and conditions of the Apache 2.0 License."
 
 enable_trapping
 setup_scroll_area

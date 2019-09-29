@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Synthesis.Field;
+using Synthesis.GUI;
 using Synthesis.Input.Enums;
 using Synthesis.Input.Inputs;
 using System;
@@ -100,6 +101,7 @@ namespace Synthesis.Input
         public class Axes
         {
             //PWM Axes
+            [JsonProperty]
             public Axis[] pwmAxes;
 
             public Axes()
@@ -128,10 +130,12 @@ namespace Synthesis.Input
             axes = new Axes();
         }
 
-        private static JsonSerializerSettings JSON_SETTINGS = new JsonSerializerSettings
+        public static JsonSerializerSettings JSON_SETTINGS = new JsonSerializerSettings
         {
-            TypeNameHandling = TypeNameHandling.All,
-            PreserveReferencesHandling = PreserveReferencesHandling.Objects
+            TypeNameHandling = TypeNameHandling.Auto,
+            PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+            MissingMemberHandling = MissingMemberHandling.Error
         };
 
         public new string ToString()
@@ -141,7 +145,14 @@ namespace Synthesis.Input
 
         public void FromString(string input)
         {
-            JsonConvert.PopulateObject(input, this, JSON_SETTINGS);
+            try
+            {
+                JsonConvert.PopulateObject(input, this, JSON_SETTINGS);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         // Default PWM addresses for various motors for use in default profiles

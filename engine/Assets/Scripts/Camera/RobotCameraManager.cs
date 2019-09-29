@@ -352,6 +352,8 @@ namespace Synthesis.Camera
         {
             //if (ChangingCameraPosition)
             //{
+            if (CurrentCamera != null)
+            {
                 if (IsChangingFOV) //Control fov
                 {
                     CurrentCamera.GetComponent<UnityEngine.Camera>().fieldOfView += Input.InputControl.GetAxis(Input.Controls.Global.GetAxes().cameraLateral);
@@ -368,6 +370,7 @@ namespace Synthesis.Camera
                 }
 
                 CurrentCamera.GetComponent<RobotCamera>().UpdateConfiguration();
+            }
             //}
         }
 

@@ -6,26 +6,40 @@
 #include "../Data/Filesystem.h"
 #include "../Data/BXDJ/Driver.h"
 #include "../Data/BXDJ/Components.h"
+#include "Analytics.h"
 
-using namespace SynthesisAddIn;
+ using namespace SynthesisAddIn;
+
+/// General Events
+// Once Fusion 360 is done loading
+void DocumentOpenedHandler::notify(const Ptr<DocumentEventArgs>& eventArgs)
+{
+	if (Analytics::firstLaunchNotification)
+		eui->showFirstLaunchNotification();
+}
 
 /// Workspace Events
 // Activate Workspace Event
 void WorkspaceActivatedHandler::notify(const Ptr<WorkspaceEventArgs>& eventArgs)
 {
-	if (eventArgs->workspace()->id() == WORKSPACE_SYNTHESIS)
+	if (eventArgs->workspace()->id() == "FusionSolidEnvironment")
 	{
+		Analytics::StartSession(eui->getApp());
 		eui->prepareAllPalettes();
-		eui->openGuidePalette();
+		if (Analytics::guideEnabled)
+			eui->openGuidePalette();
+		else
+			eui->closeGuidePalette(true);
 	}
 }
 
 // Deactivate Workspace Event
 void WorkspaceDeactivatedHandler::notify(const Ptr<WorkspaceEventArgs>& eventArgs)
 {
-	if (eventArgs->workspace()->id() == WORKSPACE_SYNTHESIS)
+	if (eventArgs->workspace()->id() == "FusionSolidEnvironment")
 	{
 		eui->closeAllPalettes();
+		Analytics::EndSession();
 	}
 }
 
@@ -75,10 +89,22 @@ void ShowPaletteCommandExecuteHandler::notify(const Ptr<CommandEventArgs>& event
 	//	eui->toggleKeyPalette();
 	/*} */ else if (id == SynthesisAddIn::BTN_SETTINGS)
 	{
-		eui->openSettingsPalette(eui->guideEnabled);
+		eui->openSettingsPalette();
 	}
 	else if (id == SynthesisAddIn::BTN_EXPORT)
 		eui->openFinishPalette();
+}
+// Conversion helper
+std::wstring s2ws(const std::string& s)
+{
+	int len;
+	int slength = (int)s.length() + 1;
+	len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
+	wchar_t* buf = new wchar_t[len];
+	MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
+	std::wstring r(buf);
+	delete[] buf;
+	return r;
 }
 
 /// Palette Events
@@ -87,12 +113,28 @@ void ReceiveFormDataHandler::notify(const Ptr<HTMLEventArgs>& eventArgs)
 {
 	if (eventArgs->action() == "highlight")
 		eui->highlightAndFocusSingleJoint(eventArgs->data(), false, 1);
-	else if (eventArgs->action() == "edit_sensors")
+	else if (eventArgs->action() == "edit_sensors") {
+		eui->closeJointEditorPalette();
 		eui->openSensorsPalette(eventArgs->data());
-	else if (eventArgs->action() == "save_sensors")
+	} 
+	else if (eventArgs->action() == "save_sensors") {
 		eui->closeSensorsPalette(eventArgs->data());
+		eui->openJointEditorPalette();
+	}
 	else if (eventArgs->action() == "settings_guide")
 		eui->closeSettingsPalette(eventArgs->data());
+	else if (eventArgs->action() == "open_link")
+	{
+		std::wstring stemp = s2ws(eventArgs->data());
+		LPCWSTR result = stemp.c_str();
+		ShellExecute(0, 0, result, 0, 0, SW_SHOWNORMAL);
+		//system("open http://google.com"); opens link on Linux/macOS/Unix
+
+	}
+	else if (eventArgs->action() == "settings_analytics")
+	{
+		Analytics::SetEnabled(eventArgs->data() == "true");
+	}
 	else if (eventArgs->action() == "close")
 	{
 		if (eventArgs->data() == "drivetrain_type")
@@ -140,8 +182,10 @@ void ClosePaletteEventHandler::notify(const Ptr<UserInterfaceGeneralEventArgs>& 
 		eui->closeDriveWeightPalette();
 	else if (id == SynthesisAddIn::PALETTE_JOINT_EDITOR)
 		eui->closeJointEditorPalette();
-	else if (id == SynthesisAddIn::PALETTE_GUIDE)
-		eui->closeGuidePalette();
+	else if (id == SynthesisAddIn::PALETTE_GUIDE) {
+		eui->closeGuidePalette(true);
+		Analytics::SaveSettings();
+	}
 	else if (id == SynthesisAddIn::PALETTE_SETTINGS)
 		eui->closeSettingsPalette("");
 	else if (id == SynthesisAddIn::PALETTE_FINISH)

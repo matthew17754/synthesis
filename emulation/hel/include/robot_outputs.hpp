@@ -15,6 +15,7 @@
 #include "robot_output_service.hpp"
 
 namespace hel {
+
 /**
  * \brief Container for all the data to send to the Synthesis engine
  * Contains functions to interpret RoboRIO data and prepare it for transmission
@@ -23,16 +24,16 @@ namespace hel {
 struct RobotOutputs {
    private:
 	/**
-	 * \brief Whether RobotOutputs has been updated since last serialization
-	 */
-
-	bool new_data;
-
-	/**
 	 * \brief Whether the robot is enabled and RobotOutputs should send outputs
 	 */
 
 	bool enabled;
+
+	/**
+	 * \brief Generate zeroed-output packet when disabled
+	 */
+
+	const inline EmulationService::RobotOutputs generateZeroedOutput()const;
 
 	/**
 	 * \brief The interpreted states of all the PWM header outputs
@@ -65,13 +66,17 @@ struct RobotOutputs {
 	 * \brief The interpreted states of all the digital header outputs
 	 */
 
-	BoundsCheckedArray<bool, DigitalSystem::NUM_DIGITAL_HEADERS> digital_hdrs;
+	BoundsCheckedArray<std::pair<DigitalSystem::HeaderConfig, bool>, DigitalSystem::NUM_DIGITAL_HEADERS> digital_hdrs;
 
 	/**
 	 * \brief All the CAN motor controller outputs
 	 */
 
     std::map<uint32_t, std::shared_ptr<CANMotorControllerBase>> can_motor_controllers;
+
+	/**
+	 * \brief The cached robot outputs state for transmission
+	 */
 
 	EmulationService::RobotOutputs output;
 
@@ -111,7 +116,20 @@ struct RobotOutputs {
 
 	std::string toString() const;
 
+	/**
+	 * \brief Update the gRPC robot outputs state for transmission
+	 *
+	 * Only update core outputs
+	 */
+	
 	EmulationService::RobotOutputs syncShallow();
+	
+	/**
+	 * \brief Update the gRPC robot outputs state for transmission
+	 *
+	 * Update all outputs
+	 */
+	
 	EmulationService::RobotOutputs syncDeep();
 
 	/**

@@ -10,6 +10,7 @@ public class AnalyticsManager : MonoBehaviour {
 
     public static AnalyticsManager GlobalInstance { get; set; }
 
+    public string Guid { get; private set; }
     public const string URL_COLLECT = "https://www.google-analytics.com/collect";
     public const string URL_BATCH = "https://www.google-analytics.com/batch";
     public const string OFFICIAL_TRACKING_ID = "UA-81892961-3";
@@ -27,6 +28,13 @@ public class AnalyticsManager : MonoBehaviour {
 
     public void Awake()
     {
+        Guid = PlayerPrefs.GetString("AnalyticsGUID");
+        if (Guid == "")
+        {
+            Guid = (Application.isEditor ? "editor-" : "") + System.Guid.NewGuid().ToString();
+            PlayerPrefs.SetString("AnalyticsGUID", Guid);
+        }
+
         mutex = new Mutex();
         GlobalInstance = this;
         LastDump = Time.time;
@@ -106,7 +114,7 @@ public class AnalyticsManager : MonoBehaviour {
     {
         loggedData.Enqueue(new KeyValuePair<string, string>("v", "1"));
         loggedData.Enqueue(new KeyValuePair<string, string>("tid", OFFICIAL_TRACKING_ID));
-        loggedData.Enqueue(new KeyValuePair<string, string>("cid", "555"));
+        loggedData.Enqueue(new KeyValuePair<string, string>("cid", Guid));
     }
 
     private Task LogEvent(string Catagory, string Action, string Label, string Value)
@@ -180,6 +188,7 @@ public class AnalyticsManager : MonoBehaviour {
             mutex.WaitOne();
             if (loggedData.Count < 1 || !DumpData) {
                 loggedData = new Queue<KeyValuePair<string, string>>();
+                mutex.ReleaseMutex();
                 return;
             }
 
@@ -194,7 +203,6 @@ public class AnalyticsManager : MonoBehaviour {
             while (loggedCopy.Count > 0)
             {
                 KeyValuePair<string, string> pair = loggedCopy.Dequeue();
-                //Debug.Log(pair.Key + " " + pair.Value);
                 if (pair.Key != null)
                 {
                     if (pair.Key.Equals("NEW"))
@@ -214,26 +222,32 @@ public class AnalyticsManager : MonoBehaviour {
 
             }
 
-            if (client == null)
-            {
-                client = new WebClient();
-            }
-
-            string result;
-
-            using (var _client = new WebClient())
-            {
-                if (batchSend)
+            
+                if (client == null)
                 {
-                    result = _client.UploadString(URL_BATCH, "POST", data);
+                    client = new WebClient();
                 }
-                else
+
+                string result;
+
+            try
+            {
+                using (var _client = new WebClient())
                 {
-                    result = _client.UploadString(URL_COLLECT, "POST", data);
+                    if (batchSend)
+                    {
+                        result = _client.UploadString(URL_BATCH, "POST", data);
+                    }
+                    else
+                    {
+                        result = _client.UploadString(URL_COLLECT, "POST", data);
+                    }
                 }
             }
-
-            // Debug.Log(result);
+            catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+            }
         });
     }
 
