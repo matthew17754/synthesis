@@ -2,6 +2,7 @@
 using Synthesis.Configuration;
 using Synthesis.Field;
 using Synthesis.FSM;
+using Synthesis.GUI;
 using Synthesis.Input;
 using Synthesis.Robot;
 using Synthesis.States;
@@ -55,6 +56,8 @@ namespace Synthesis.DriverPractice
 
         void Update()
         {
+            if (!SimUI.BotLoaded || !SimUI.FieldLoaded) return;
+
             if (mainState == null)
                 mainState = StateMachine.SceneGlobal.FindState<MainState>();
             else

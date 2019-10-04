@@ -20,6 +20,7 @@ using Assets.Scripts.GUI;
 using Synthesis.Field;
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Synthesis.GUI
 {
@@ -67,9 +68,16 @@ namespace Synthesis.GUI
         GameObject gamepieceTab;
         GameObject scoringTab;
 
+        public static readonly object mainQueueObj = new object();
+
         private bool navigationTooltipClosed = false;
         private bool overviewWindowClosed = false;
         private bool oppositeSide = false;
+
+        public static bool BotLoaded = false;
+        public static bool FieldLoaded = false;
+
+        private static Queue<(Action, Action)> mainThreadQueue;
 
         private StateMachine tabStateMachine;
         string currentTab;
@@ -89,6 +97,8 @@ namespace Synthesis.GUI
         {
             base.Awake();
             instance = this;
+
+            mainThreadQueue = new Queue<(Action, Action)>();
 
             UpdateJoystickStates(false);
         }
@@ -746,7 +756,7 @@ namespace Synthesis.GUI
         /// </summary>
         private void UpdateSpawnpointWindow()
         {
-            resetRobotUI.SetActive(State.ActiveRobot.IsResetting);
+            if (FieldLoaded && BotLoaded) resetRobotUI.SetActive(State.ActiveRobot.IsResetting);
         }
 
         /// <summary>
@@ -876,5 +886,30 @@ namespace Synthesis.GUI
                 + "Autodesk" + Path.DirectorySeparatorChar + "Synthesis" + Path.DirectorySeparatorChar + "MixAndMatch" + Path.DirectorySeparatorChar
                 + "DriveBases");
         }
+
+        public static void QueueOnMain(Action exec, Action post)
+        {
+            lock (mainQueueObj)
+            {
+                mainThreadQueue.Enqueue((exec, post));
+            }
+        }
+
+        public static void QueueOnMain(Action exec, bool wait)
+        {
+            bool a = false;
+            Action post = () => { };
+            if (wait)
+            {
+                post = () => { a = true; };
+            } else
+            {
+                a = true;
+            }
+            mainThreadQueue.Enqueue((exec, post));
+            while (!a) { Thread.Sleep(50); UnityEngine.Debug.Log("Waiting"); }
+        }
+
+        public static ref Queue<(Action, Action)> getMainThreadQueue() { return ref mainThreadQueue; }
     }
 }

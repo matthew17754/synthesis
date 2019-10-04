@@ -204,6 +204,98 @@ namespace Synthesis.Robot
             return true;
         }
 
+        public bool InitializeRobotAsync(string directory)
+        {
+            RobotDirectory = directory;
+            RobotName = new DirectoryInfo(directory).Name;
+
+            //Deletes all nodes if any exist, take the old node transforms out from the robot object
+            SimUI.QueueOnMain(
+                () => {
+                    foreach (Transform child in transform)
+                        Destroy(child.gameObject);
+                },
+                true
+            );
+
+            robotStartPosition = FieldDataHandler.robotSpawn != new Vector3(99999, 99999, 99999) ? FieldDataHandler.robotSpawn : robotStartPosition;
+
+            SimUI.QueueOnMain(
+                () => transform.position = robotStartPosition, //Sets the position of the object to the set spawn point
+                true
+            );
+
+            if (!File.Exists(directory + Path.DirectorySeparatorChar + "skeleton.bxdj") && !File.Exists(directory + Path.DirectorySeparatorChar + "skeleton.json"))
+                return false;
+
+            SimUI.QueueOnMain(() => OnInitializeRobot(), true);
+
+            //Loads the node and skeleton data
+            RigidNode_Base.NODE_FACTORY = delegate (Guid guid) { return new RigidNode(guid); };
+
+            List<RigidNode_Base> nodes = new List<RigidNode_Base>();
+
+            RootNode = BXDExtensions.ReadSkeletonSafe(directory + Path.DirectorySeparatorChar + "skeleton") as RigidNode;
+
+            RootNode.ListAllNodes(nodes);
+
+            emuList = new List<EmuNetworkInfo>();
+
+            foreach (RigidNode_Base Base in RootNode.ListAllNodes())
+            {
+                try
+                {
+                    if (Base.GetSkeletalJoint() != null && Base.GetSkeletalJoint().attachedSensors != null)
+                    {
+                        foreach (RobotSensor sensor in Base.GetSkeletalJoint().attachedSensors)
+                        {
+                            if (sensor.type == RobotSensorType.ENCODER)
+                            {
+                                emuList.Add(new EmuNetworkInfo
+                                {
+                                    encoderTickCount = 0,
+                                    RobotSensor = sensor,
+                                    wheel = Base,
+                                    wheel_radius = 0
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    SimUI.QueueOnMain(
+                        () => Debug.Log(e.ToString()),
+                        () => { }
+                    );
+                }
+            }
+
+            //Initializes the wheel variables
+            float collectiveMass = 0f;
+
+            if (!ConstructRobotAsync(nodes, ref collectiveMass))
+                return false;
+
+            BRaycastRobot[] R = null;
+            SimUI.QueueOnMain(() => R = GetComponentsInChildren<BRaycastRobot>(), true);
+
+            foreach (BRaycastRobot r in R)
+            {
+                r.RaycastRobot.OverrideMass = collectiveMass;
+                SimUI.QueueOnMain(() => r.RaycastRobot.RootRigidBody = (RigidBody)((RigidNode)nodes[0]).MainObject.GetComponent<BRigidBody>().GetCollisionObject(), true);
+            }
+
+            SimUI.QueueOnMain(() =>
+            {
+                OnRobotSetup();
+
+                RotateRobot(robotStartOrientation);
+            }, true);
+
+            return true;
+        }
+
         /// <summary>
         /// Rotates the robot about its origin by a mathematical 4x4 matrix
         /// </summary>
@@ -336,6 +428,31 @@ namespace Synthesis.Robot
             return true;
         }
 
+        protected virtual bool ConstructRobotAsync(List<RigidNode_Base> nodes, ref float collectiveMass)
+        {
+            //Initializes the nodes
+            foreach (RigidNode_Base n in nodes)
+            {
+                RigidNode node = (RigidNode)n;
+                SimUI.QueueOnMain(() => node.CreateTransform(transform), true);
+
+                bool createMeshResult = false;
+                SimUI.QueueOnMain(() => createMeshResult = !node.CreateMesh(RobotDirectory + Path.DirectorySeparatorChar + node.ModelFileName), true);
+                if (createMeshResult)
+                    return false;
+
+                if (node.PhysicalProperties != null)
+                    collectiveMass += node.PhysicalProperties.mass;
+            }
+
+            SimUI.QueueOnMain(() => RootNode.GenerateWheelInfo(), true);
+
+            foreach (RigidNode_Base n in nodes)
+                SimUI.QueueOnMain(() => ((RigidNode)n).CreateJoint(this), true);
+
+            return true;
+        }
+
         /// <summary>
         /// Updates all motors on the robot.
         /// </summary>
@@ -349,6 +466,8 @@ namespace Synthesis.Robot
         /// </summary>
         protected virtual void UpdatePhysics()
         {
+            if (!(SimUI.BotLoaded && SimUI.FieldLoaded)) return;
+
             GameObject mainNode = transform.GetChild(0).gameObject;
 
             //calculates stats of robot

@@ -26,6 +26,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using Newtonsoft.Json;
 using Assets.Scripts;
+using System.Threading.Tasks;
 
 namespace Synthesis.States
 {
@@ -59,7 +60,9 @@ namespace Synthesis.States
         /// Used for accessing the active robot in this state.
         /// </summary>
         /// <returns></returns>
-        public GameObject Robot => ActiveRobot.transform.GetChild(0).gameObject ?? ActiveRobot.gameObject;
+        public GameObject Robot => ActiveRobot.transform.GetChild(0).gameObject ?? (ActiveRobot.gameObject ?? null);
+
+        public GameObject loadingPanel;
 
         /// <summary>
         /// True if the robot is not resetting.
@@ -83,6 +86,8 @@ namespace Synthesis.States
 
         private string fieldPath;
         private string robotPath;
+
+        private Action postLoad;
 
         public List<SimulatorRobot> SpawnedRobots { get; private set; }
         private const int MAX_ROBOTS = 6;
@@ -151,8 +156,19 @@ namespace Synthesis.States
             BPhysicsTickListener.Instance.OnTick -= BRobotManager.Instance.UpdateRaycastRobots;
             BPhysicsTickListener.Instance.OnTick += BRobotManager.Instance.UpdateRaycastRobots;
 
+            postLoad = () =>
+            {
+                physicsWorld.gravity = new Vector3(0, -9.8f, 0);
+                //physicsWorld.gameObject.SetActive(false);
+                //physicsWorld.gameObject.SetActive(true);
+                loadingPanel.SetActive(false);
+            };
+
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
             string selectedReplay = PlayerPrefs.GetString("simSelectedReplay");
+
+            GameObject canvas = Auxiliary.FindObject("Canvas");
+            loadingPanel = Auxiliary.FindObject(canvas, "LoadingPanel");
 
             if (PlayerPrefs.GetString("simSelectedRobot", "").Equals(""))
             {
@@ -164,7 +180,48 @@ namespace Synthesis.States
             {
                 Tracking = true;
 
-                if (!LoadField(PlayerPrefs.GetString("simSelectedField")))
+                LoadFieldAsync(PlayerPrefs.GetString("simSelectedField"), r =>
+                {
+                    if (!r)
+                    {
+                        AppModel.ErrorToMenu("FIELD_SELECT|Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
+                    }
+                    else
+                    {
+                        MovePlane();
+                    }
+                });
+
+                try
+                {
+                    LoadRobotAsync(PlayerPrefs.GetString("simSelectedRobot"), false, result =>
+                    {
+                        if (result)
+                        {
+                            reset = FieldDataHandler.robotSpawn == new Vector3(99999, 99999, 99999);
+
+                            if (RobotTypeManager.IsMixAndMatch && RobotTypeManager.HasManipulator)
+                            {
+                                Debug.Log(LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
+                            }
+
+                            SimUI.BotLoaded = true;
+                            GameObject.Find("RobotCameraList").GetComponent<RobotCameraManager>().enabled = true;
+                        }
+                        else
+                        {
+                            Debug.Log("Bad result");
+                            AppModel.ErrorToMenu("ROBOT_SELECT|Could not find the selected robot");
+                        }
+                    });
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(e.StackTrace);
+                    AppModel.ErrorToMenu("ROBOT_SELECT|Could not find the selected robot");
+                }
+
+                /*if (!LoadField(PlayerPrefs.GetString("simSelectedField")))
                 {
                     //AppModel.ErrorToMenu("FIELD_SELECT|FIRST");
                     AppModel.ErrorToMenu("FIELD_SELECT|Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
@@ -173,9 +230,9 @@ namespace Synthesis.States
                 else
                 {
                     MovePlane();
-                }
+                }*/
 
-                bool result = false;
+                /*bool result = false;
 
                 try
                 {
@@ -197,7 +254,7 @@ namespace Synthesis.States
                 if (RobotTypeManager.IsMixAndMatch && RobotTypeManager.HasManipulator)
                 {
                     Debug.Log(LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
-                }
+                }*/
             }
             else
             {
@@ -242,9 +299,36 @@ namespace Synthesis.States
         /// </summary>
         public override void Update()
         {
+            float start = Time.realtimeSinceStartup;
+            float maxFrame = (1f / 60f);
+
+            //Debug.Log((start + maxFrame) - Time.unscaledTime);
+            (Action exec, Action post) act = (null, null);
+            while (start + maxFrame > Time.realtimeSinceStartup && SimUI.getMainThreadQueue().Count > 0)
+            {
+                lock (SimUI.mainQueueObj)
+                {
+                    act = SimUI.getMainThreadQueue().Dequeue();
+                }
+                act.exec();
+                act.post();
+                act = (null, null);
+
+                //Debug.Log(((start + maxFrame) - Time.realtimeSinceStartup) + " Time left to work");
+            }
+
+            if (postLoad != null)
+            {
+                if (SimUI.FieldLoaded && SimUI.BotLoaded)
+                {
+                    postLoad();
+                    postLoad = null;
+                }
+            }
+
             if (ActiveRobot == null)
             {
-                AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
+                // AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
                 return;
             }
 
@@ -290,7 +374,7 @@ namespace Synthesis.States
             //robotCameraObject.transform.position = activeRobot.transform.GetChild(0).transform.position;
             if (ActiveRobot == null)
             {
-                AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
+                // AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
                 return;
             }
         }
@@ -408,6 +492,52 @@ namespace Synthesis.States
             return fieldDefinition.CreateMesh(directory + Path.DirectorySeparatorChar + "mesh.bxda");
         }
 
+        public async void LoadFieldAsync(string directory, Action<bool> result)
+        {
+            await Task.Factory.StartNew(() =>
+            {
+                SimUI.FieldLoaded = false;
+
+                fieldPath = directory;
+
+                SimUI.QueueOnMain(() => fieldObject = new GameObject("Field"), true);
+
+                FieldDefinition.Factory = delegate (Guid guid, string name)
+                {
+                    return new UnityFieldDefinition(guid, name);
+                };
+
+                bool isEmptyGrid = directory == "" || new DirectoryInfo(directory).Name == UnityFieldDefinition.EmptyGridName;
+
+                if (!File.Exists(directory + Path.DirectorySeparatorChar + "definition.bxdf")) { SimUI.QueueOnMain(() => result(false), false); return; }
+
+                SimUI.QueueOnMain(() =>
+                {
+                    FieldDataHandler.LoadFieldMetaData(fieldPath);
+
+                    Controls.Load();
+                    Controls.UpdateFieldControls();
+                    if (!Controls.HasBeenSaved())
+                        Controls.Save();
+                }, true);
+
+                if (isEmptyGrid)
+                {
+                    SimUI.QueueOnMain(() => result(true), false);
+                }
+                else
+                {
+                    fieldDefinition = (UnityFieldDefinition)BXDFProperties.ReadProperties(directory + Path.DirectorySeparatorChar + "definition.bxdf", out string loadResult);
+                    Debug.Log(loadResult);
+                    SimUI.QueueOnMain(() => fieldDefinition.CreateTransform(fieldObject.transform), true);
+                    bool createRes = fieldDefinition.CreateMeshAsync(directory + Path.DirectorySeparatorChar + "mesh.bxda");
+                    SimUI.QueueOnMain(() => result(createRes), false);
+                }
+                SimUI.FieldLoaded = true;
+                return;
+            });
+        }
+
         /// <summary>
         /// Loads a new robot from a given directory
         /// </summary>
@@ -501,6 +631,131 @@ namespace Synthesis.States
                 return true;
             }
             return false;
+        }
+
+        public async void LoadRobotAsync(string directory, bool isMixAndMatch, Action<bool> results)
+        {
+            await Task.Factory.StartNew(() =>
+            {
+
+                //SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
+                SimUI.BotLoaded = false;
+                physicsWorld.gravity = Vector3.zero;
+
+                bool b = true;
+
+                if (!Directory.Exists(directory))
+                {
+                    SimUI.QueueOnMain(() => results(false), () => { });
+                    return;
+                }
+                else
+                {
+                    string[] files = Directory.GetFiles(directory);
+                    foreach (string a in files)
+                    {
+                        string name = Path.GetFileName(a);
+                        if (name.ToLower().Contains("skeleton"))
+                        {
+                            b = false;
+                        }
+                    }
+                }
+
+                if (b)
+                {
+                    SimUI.QueueOnMain(() => results(false), () => { });
+                    return;
+                }
+
+                if (SpawnedRobots.Count < MAX_ROBOTS)
+                {
+                    GameObject robotObject = null; // = new GameObject("Robot");
+                    SimUI.QueueOnMain(() => robotObject = new GameObject("Robot"), true);
+                    SimulatorRobot robot = null;
+
+                    if (isMixAndMatch)
+                    {
+                        robotPath = RobotTypeManager.RobotPath;
+                        MaMRobot mamRobot = null;
+                        SimUI.QueueOnMain(() => mamRobot = robotObject.AddComponent<MaMRobot>(), true);
+                        mamRobot.RobotHasManipulator = false; // Defaults to false
+                        robot = mamRobot;
+
+                        if (AnalyticsManager.GlobalInstance != null)
+                        {
+                            SimUI.QueueOnMain(
+                                () => AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.LoadRobot,
+                                AnalyticsLedger.EventAction.Load,
+                                "Robot - Mix and Match",
+                                AnalyticsLedger.getMilliseconds().ToString()),
+                                true);
+                        }
+                    }
+                    else
+                    {
+                        robotPath = directory;
+                        SimUI.QueueOnMain(
+                            () => robot = robotObject.AddComponent<SimulatorRobot>(),
+                            true);
+
+                        if (AnalyticsManager.GlobalInstance != null)
+                        {
+                            SimUI.QueueOnMain(
+                                () => AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.LoadRobot,
+                                AnalyticsLedger.EventAction.Load,
+                                "Robot - Exported",
+                                AnalyticsLedger.getMilliseconds().ToString()),
+                                true);
+                        }
+                    }
+                    robot.FilePath = robotPath;
+                    //Initialiezs the physical robot based off of robot directory. Returns false if not sucessful
+                    if (!robot.InitializeRobotAsync(robotPath))
+                    {
+                        SimUI.QueueOnMain(() => results(false), false);
+                        return;
+                    }
+
+                    //If this is the first robot spawned, then set it to be the active robot and initialize the robot camera on it
+                    if (ActiveRobot == null)
+                    {
+                        ActiveRobot = robot;
+                    }
+
+                    robot.ControlIndex = SpawnedRobots.Count;
+                    SpawnedRobots.Add(robot);
+
+                    DPMDataHandler.Load(robotPath);
+
+                    SimUI.QueueOnMain(() =>
+                    {
+                        if (!isMixAndMatch && !PlayerPrefs.HasKey(robot.RootNode.GUID.ToString()) && !SampleRobotGUIDs.Contains(robot.RootNode.GUID.ToString()))
+                        {
+                            AnalyticsManager.GlobalInstance.LogEventAsync(AnalyticsLedger.EventCatagory.LoadRobot,
+                                AnalyticsLedger.EventAction.Load,
+                                robot.RootNode.GUID.ToString(),
+                                AnalyticsLedger.getMilliseconds().ToString());
+                        }
+                    }, false);
+
+                    SimUI.QueueOnMain(() => results(true), false);
+                }
+                else
+                {
+                    SimUI.QueueOnMain(() => results(false), false);
+                }
+
+                //physicsWorld.gravity = new Vector3(0, -9.8f, 0);
+                SimUI.BotLoaded = true;
+
+                SimUI.QueueOnMain(() =>
+                {
+                    dynamicCamera.GetComponent<DynamicCamera>().SwitchCameraState(new DynamicCamera.OrbitState(dynamicCamera));
+                    DynamicCamera.ControlEnabled = true;
+                    //loadingPanel.SetActive(false);
+                }, true);
+            });
         }
 
         /// <summary>

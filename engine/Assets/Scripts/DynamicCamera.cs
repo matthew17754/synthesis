@@ -6,6 +6,7 @@ using Synthesis.Input;
 using Synthesis.Camera;
 using Synthesis.States;
 using Synthesis.Robot;
+using Synthesis.GUI;
 
 public class DynamicCamera : MonoBehaviour
 {
@@ -220,6 +221,8 @@ public class DynamicCamera : MonoBehaviour
 
         public override void Update()
         {
+            if (!(SimUI.BotLoaded && SimUI.FieldLoaded)) return;
+
             if (RobotProvider.Robot == null)
                 return;
 

@@ -201,6 +201,8 @@ namespace Synthesis.Robot
         /// </summary>
         protected override void UpdatePhysics()
         {
+            if (!(SimUI.FieldLoaded && SimUI.BotLoaded)) return;
+
             var begin = DateTime.Now;
             base.UpdatePhysics();
 
