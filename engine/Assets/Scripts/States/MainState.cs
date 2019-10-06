@@ -77,6 +77,8 @@ namespace Synthesis.States
         private SensorManager sensorManager;
         private SensorManagerGUI sensorManagerGUI;
 
+        private float startTime;
+
         private SimUI simUI;
 
         private GameObject fieldObject;
@@ -162,6 +164,8 @@ namespace Synthesis.States
                 //physicsWorld.gameObject.SetActive(false);
                 //physicsWorld.gameObject.SetActive(true);
                 loadingPanel.SetActive(false);
+
+                Debug.Log("Load Time -> " + (Time.realtimeSinceStartup - startTime));
             };
 
             //If a replay has been selected, load the replay. Otherwise, load the field and robot.
@@ -180,8 +184,11 @@ namespace Synthesis.States
             {
                 Tracking = true;
 
+                startTime = Time.realtimeSinceStartup;
                 LoadFieldAsync(PlayerPrefs.GetString("simSelectedField"), r =>
                 {
+                    
+
                     if (!r)
                     {
                         AppModel.ErrorToMenu("FIELD_SELECT|Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
@@ -300,7 +307,7 @@ namespace Synthesis.States
         public override void Update()
         {
             float start = Time.realtimeSinceStartup;
-            float maxFrame = (1f / 60f);
+            float maxFrame = (1f / 15f);
 
             //Debug.Log((start + maxFrame) - Time.unscaledTime);
             (Action exec, Action post) act = (null, null);
@@ -326,7 +333,7 @@ namespace Synthesis.States
                 }
             }
 
-            if (ActiveRobot == null)
+            if (!(SimUI.BotLoaded && SimUI.FieldLoaded))
             {
                 // AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
                 return;

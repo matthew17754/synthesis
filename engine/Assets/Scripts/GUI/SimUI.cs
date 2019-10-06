@@ -907,7 +907,12 @@ namespace Synthesis.GUI
                 a = true;
             }
             mainThreadQueue.Enqueue((exec, post));
-            while (!a) { Thread.Sleep(50); UnityEngine.Debug.Log("Waiting"); }
+            float started = DateTime.Now.Millisecond;
+            while (!a) {
+                if (started + 3000 < DateTime.Now.Millisecond) break;
+                Thread.Sleep(50);
+                UnityEngine.Debug.Log("Waiting");
+            }
         }
 
         public static ref Queue<(Action, Action)> getMainThreadQueue() { return ref mainThreadQueue; }

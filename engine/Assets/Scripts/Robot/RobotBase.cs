@@ -458,6 +458,7 @@ namespace Synthesis.Robot
         /// </summary>
         protected virtual void UpdateMotors()
         {
+            if (!(SimUI.BotLoaded && SimUI.FieldLoaded)) return;
             DriveJoints.UpdateAllMotors(RootNode, ControlIndex, emuList);
         }
 
@@ -488,6 +489,8 @@ namespace Synthesis.Robot
         /// </summary>
         protected virtual void UpdateTransform()
         {
+            if (!(SimUI.BotLoaded && SimUI.FieldLoaded)) return;
+
             BRigidBody rigidBody = GetComponentInChildren<BRigidBody>();
 
             if (rigidBody == null)
