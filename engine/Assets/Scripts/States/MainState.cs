@@ -160,9 +160,10 @@ namespace Synthesis.States
 
             postLoad = () =>
             {
-                physicsWorld.gravity = new Vector3(0, -9.8f, 0);
-                //physicsWorld.gameObject.SetActive(false);
-                //physicsWorld.gameObject.SetActive(true);
+                EnablePhysics();
+                // physicsWorld.enabled = true;
+                // physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = true;
+                // physicsWorld.gravity = new Vector3(0, -9.8f, 0);
                 loadingPanel.SetActive(false);
 
                 Debug.Log("Load Time -> " + (Time.realtimeSinceStartup - startTime));
@@ -227,41 +228,6 @@ namespace Synthesis.States
                     Debug.Log(e.StackTrace);
                     AppModel.ErrorToMenu("ROBOT_SELECT|Could not find the selected robot");
                 }
-
-                /*if (!LoadField(PlayerPrefs.GetString("simSelectedField")))
-                {
-                    //AppModel.ErrorToMenu("FIELD_SELECT|FIRST");
-                    AppModel.ErrorToMenu("FIELD_SELECT|Could not load field: " + PlayerPrefs.GetString("simSelectedField") + "\nHas it been moved or deleted?)");
-                    return;
-                }
-                else
-                {
-                    MovePlane();
-                }*/
-
-                /*bool result = false;
-
-                try
-                {
-                    result = LoadRobot(PlayerPrefs.GetString("simSelectedRobot"), false);
-                }
-                catch (Exception e)
-                {
-                    MonoBehaviour.Destroy(GameObject.Find("Robot"));
-                }
-
-                if (!result)
-                {
-                    AppModel.ErrorToMenu("ROBOT_SELECT|Could not find the selected robot");
-                    return;
-                }
-
-                reset = FieldDataHandler.robotSpawn == new Vector3(99999, 99999, 99999);
-
-                if (RobotTypeManager.IsMixAndMatch && RobotTypeManager.HasManipulator)
-                {
-                    Debug.Log(LoadManipulator(RobotTypeManager.ManipulatorPath) ? "Load manipulator success" : "Load manipulator failed");
-                }*/
             }
             else
             {
@@ -307,7 +273,7 @@ namespace Synthesis.States
         public override void Update()
         {
             float start = Time.realtimeSinceStartup;
-            float maxFrame = (1f / 15f);
+            float maxFrame = (1f / 2f);
 
             //Debug.Log((start + maxFrame) - Time.unscaledTime);
             (Action exec, Action post) act = (null, null);
@@ -642,12 +608,15 @@ namespace Synthesis.States
 
         public async void LoadRobotAsync(string directory, bool isMixAndMatch, Action<bool> results)
         {
+            // physicsWorld.enabled = false;
+            // physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = false;
+            DisablePhysics();
+
             await Task.Factory.StartNew(() =>
             {
 
                 //SimUI.QueueOnMain(() => { loadingPanel.SetActive(true); Debug.Log("Opening " + Time.time); }, true);
                 SimUI.BotLoaded = false;
-                physicsWorld.gravity = Vector3.zero;
 
                 bool b = true;
 
@@ -770,7 +739,7 @@ namespace Synthesis.States
         /// </summary>
         /// <param name="directory"></param>
         /// <returns>whether the process was successful</returns>
-        public bool ChangeRobot(string directory, bool isMixAndMatch)
+        public void ChangeRobot(string directory, bool isMixAndMatch, Action<bool> resultAct)
         {
             sensorManager.RemoveSensorsFromRobot(ActiveRobot);
             sensorManagerGUI.ShiftOutputPanels();
@@ -779,13 +748,27 @@ namespace Synthesis.States
             RemoveRobot(SpawnedRobots.IndexOf(ActiveRobot));
             //ActiveRobot = null;
 
-            if (LoadRobot(directory, isMixAndMatch))
+            LoadRobotAsync(directory, isMixAndMatch, result =>
+            {
+                if (result)
+                {
+                    DynamicCamera.ControlEnabled = true;
+
+                    // physicsWorld.enabled = true;
+                    // physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = true;
+                    EnablePhysics();
+                }
+
+                resultAct(result);
+            });
+
+            /*if (LoadRobot(directory, isMixAndMatch))
             {
                 DynamicCamera.ControlEnabled = true;
                 return true;
             }
 
-            return false;
+            return false;*/
         }
 
         /// <summary>
@@ -1108,6 +1091,18 @@ namespace Synthesis.States
         public UnityEngine.Camera GetCamera()
         {
             return DynamicCameraObject.GetComponent<UnityEngine.Camera>();
+        }
+
+        public void EnablePhysics()
+        {
+            physicsWorld.enabled = true;
+            physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = true;
+        }
+
+        public void DisablePhysics()
+        {
+            physicsWorld.enabled = false;
+            physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = false;
         }
     }
 }

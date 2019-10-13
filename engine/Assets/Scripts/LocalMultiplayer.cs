@@ -97,7 +97,9 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
         if (Directory.Exists(directory))
         {
             PlayerPrefs.SetString("simSelectedReplay", string.Empty);
-            State.LoadRobot(directory, false);
+            State.LoadRobotAsync(directory, false, result => {
+                State.EnablePhysics();
+            });
         }
         else
         {

@@ -480,7 +480,7 @@ namespace Synthesis.GUI
                 robotCameraManager.DetachCamerasFromRobot(State.ActiveRobot);
                 sensorManager.RemoveSensorsFromRobot(State.ActiveRobot);
 
-                State.ChangeRobot(directory, false);
+                State.ChangeRobot(directory, false, result => { });
                 RobotTypeManager.IsMixAndMatch = false;
             }
             else
@@ -503,15 +503,19 @@ namespace Synthesis.GUI
             if (mamRobot != null && mamRobot.RobotHasManipulator)
                 State.DeleteManipulatorNodes();
 
-            if (!State.ChangeRobot(robotDirectory, true)) {
-                AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
-            }
-
-            //If the new robot has a manipulator, load the manipulator
-            if (RobotTypeManager.HasManipulator)
-                State.LoadManipulator(manipulatorDirectory);
-            else if (mamRobot != null)
-                mamRobot.RobotHasManipulator = false;
+            State.ChangeRobot(robotDirectory, true, result => {
+                if (result)
+                {
+                    //If the new robot has a manipulator, load the manipulator
+                    if (RobotTypeManager.HasManipulator)
+                        State.LoadManipulator(manipulatorDirectory);
+                    else if (mamRobot != null)
+                        mamRobot.RobotHasManipulator = false;
+                } else
+                {
+                    AppModel.ErrorToMenu("ROBOT_SELECT|Failed to load Mix & Match robot");
+                }
+            });
         }
 
         public void ToggleChangeRobotPanel()
@@ -642,7 +646,7 @@ namespace Synthesis.GUI
 
         public void ToggleAddRobotPanel()
         {
-            if (addPanel.activeSelf == true)
+            if (addPanel.activeSelf)
             {
                 addPanel.SetActive(false);
             }
@@ -906,12 +910,15 @@ namespace Synthesis.GUI
             {
                 a = true;
             }
-            mainThreadQueue.Enqueue((exec, post));
+            lock (mainQueueObj)
+            {
+                mainThreadQueue.Enqueue((exec, post));
+            }
             float started = DateTime.Now.Millisecond;
             while (!a) {
-                if (started + 3000 < DateTime.Now.Millisecond) break;
+                if (started + 3000 < DateTime.Now.Millisecond) break; // three second timeout
                 Thread.Sleep(50);
-                UnityEngine.Debug.Log("Waiting");
+                //UnityEngine.Debug.Log("Waiting");
             }
         }
 
