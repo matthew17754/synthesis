@@ -72,7 +72,7 @@ namespace Synthesis.DriverPractice
 
         public bool GetDetected(int id)
         {
-            return collisionDetector[id];
+            return collisionDetector[id]; // collisionDetector.Count > 0 ? collisionDetector[id] : false;
         }
 
         public GameObject GetObject(int id)

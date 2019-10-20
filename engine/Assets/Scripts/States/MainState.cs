@@ -63,11 +63,14 @@ namespace Synthesis.States
         public GameObject Robot => ActiveRobot.transform.GetChild(0).gameObject ?? (ActiveRobot.gameObject ?? null);
 
         public GameObject loadingPanel;
+        public Text loadingText;
 
         /// <summary>
         /// True if the robot is not resetting.
         /// </summary>
         public bool RobotActive => !ActiveRobot.IsResetting;
+
+        private bool isLoading = false;
 
         private DynamicCamera dynamicCamera;
         public GameObject DynamicCameraObject;
@@ -88,6 +91,9 @@ namespace Synthesis.States
 
         private string fieldPath;
         private string robotPath;
+
+        private float lastAdditionalDot = 0;
+        private int dotCount = 0;
 
         private Action postLoad;
 
@@ -174,6 +180,7 @@ namespace Synthesis.States
 
             GameObject canvas = Auxiliary.FindObject("Canvas");
             loadingPanel = Auxiliary.FindObject(canvas, "LoadingPanel");
+            loadingText = Auxiliary.FindObject(loadingPanel, "Text").GetComponent<Text>();
 
             if (PlayerPrefs.GetString("simSelectedRobot", "").Equals(""))
             {
@@ -299,6 +306,25 @@ namespace Synthesis.States
                 }
             }
 
+            if (isLoading)
+            {
+                if (!loadingPanel.activeSelf) loadingPanel.SetActive(true);
+
+                if (Time.unscaledTime >= lastAdditionalDot + 0.75)
+                {
+                    dotCount = (dotCount + 1) % 4;
+                    loadingText.text = "Loading";
+                    for (int i = 0; i < dotCount; i++)
+                    {
+                        loadingText.text += ".";
+                    }
+                    lastAdditionalDot = Time.unscaledTime;
+                }
+            } else
+            {
+                if (loadingPanel.activeSelf) loadingPanel.SetActive(false);
+            }
+
             if (!(SimUI.BotLoaded && SimUI.FieldLoaded))
             {
                 // AppModel.ErrorToMenu("ROBOT_SELECT|Robot instance not valid.");
@@ -343,6 +369,10 @@ namespace Synthesis.States
         /// </summary>
         public override void FixedUpdate()
         {
+
+            if ((!SimUI.BotLoaded || !SimUI.FieldLoaded) && !isLoading) isLoading = true;
+            else if ((SimUI.BotLoaded && SimUI.FieldLoaded) && isLoading) isLoading = false;
+
             //This line is essential for the reset to work accurately
             //robotCameraObject.transform.position = activeRobot.transform.GetChild(0).transform.position;
             if (ActiveRobot == null)
@@ -700,9 +730,8 @@ namespace Synthesis.States
                     }
 
                     robot.ControlIndex = SpawnedRobots.Count;
-                    SpawnedRobots.Add(robot);
 
-                    DPMDataHandler.Load(robotPath);
+                    SimUI.QueueOnMain(() => DPMDataHandler.Load(robotPath), true);
 
                     SimUI.QueueOnMain(() =>
                     {
@@ -715,7 +744,7 @@ namespace Synthesis.States
                         }
                     }, false);
 
-                    SimUI.QueueOnMain(() => results(true), false);
+                    SimUI.QueueOnMain(() => { EnablePhysics(); SpawnedRobots.Add(robot); results(true); }, false);
                 }
                 else
                 {
@@ -972,6 +1001,64 @@ namespace Synthesis.States
             return robot.InitializeManipulator(manipulatorDirectory);
         }
 
+        public async void LoadRobotWithManipulatorAsync(string baseDirectory, string manipulatorDirectory, Action<bool> post)
+        {
+            DisablePhysics();
+
+            await Task.Factory.StartNew(() =>
+            {
+                SimUI.BotLoaded = false;
+
+                if (SpawnedRobots.Count >= MAX_ROBOTS)
+                {
+                    SimUI.QueueOnMain(() =>
+                    {
+                        post(false);
+                        EnablePhysics();
+                    }, false);
+                    return;
+                }
+
+                robotPath = baseDirectory;
+
+                GameObject robotObject;// = new GameObject("Robot");
+                MaMRobot robot = null;// = robotObject.AddComponent<MaMRobot>();
+
+                SimUI.QueueOnMain(() => { robotObject = new GameObject("Robot"); robot = robotObject.AddComponent<MaMRobot>(); }, true);
+
+                robot.FilePath = robotPath;
+
+                //Initialiezs the physical robot based off of robot directory. Returns false if not sucessful
+                if (!robot.InitializeRobotAsync(baseDirectory))
+                {
+                    SimUI.QueueOnMain(() =>
+                    {
+                        MonoBehaviour.Destroy(robot);
+                        post(false);
+                        EnablePhysics();
+                    }, false);
+                    return;
+                }
+
+                //If this is the first robot spawned, then set it to be the active robot and initialize the robot camera on it
+                if (ActiveRobot == null)
+                    ActiveRobot = robot;
+
+                robot.ControlIndex = SpawnedRobots.Count;
+
+                DPMDataHandler.Load(robotPath);
+                bool initManipulatorResult = false;
+                SimUI.QueueOnMain(() => initManipulatorResult = robot.InitializeManipulator(manipulatorDirectory), true); // There are a lot of main thread calls needed for this and I don't want to do that right now.
+                SimUI.QueueOnMain(() =>
+                {
+                    if (!initManipulatorResult) { MonoBehaviour.Destroy(robot); }
+                    else { SpawnedRobots.Add(robot); DynamicCamera.ControlEnabled = true; }
+                    post(initManipulatorResult);
+                    EnablePhysics();
+                }, false);
+            });
+        }
+
         /// <summary>
         /// Resumes the normal simulation and exits the replay mode, showing all UI elements again
         /// </summary>
@@ -1097,12 +1184,14 @@ namespace Synthesis.States
         {
             physicsWorld.enabled = true;
             physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = true;
+            Debug.Log("Physics Enabled");
         }
 
         public void DisablePhysics()
         {
             physicsWorld.enabled = false;
             physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = false;
+            Debug.Log("Physics Disabled");
         }
     }
 }

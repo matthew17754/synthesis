@@ -116,12 +116,15 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
     /// </summary>
     public void AddMaMRobot(string baseDirectory, string manipulatorDirectory, bool hasManipulator)
     {
-        if (hasManipulator)
-            State.LoadRobotWithManipulator(baseDirectory, manipulatorDirectory);
-        else
-            State.LoadRobot(baseDirectory, true);
+        Debug.Log("Adding MaMRobot");
+        if (hasManipulator) Debug.Log("Has Manipulator");
 
-        UpdateUI();
+        if (hasManipulator)
+            State.LoadRobotWithManipulatorAsync(baseDirectory, manipulatorDirectory, result => { UpdateUI(); });
+        else
+            State.LoadRobotAsync(baseDirectory, true, result => { UpdateUI(); });
+
+        // UpdateUI();
     }
 
     /// <summary>
@@ -151,6 +154,7 @@ public class LocalMultiplayer : LinkedMonoBehaviour<MainState>
         }
         else
         {
+            simUI.EndOtherProcesses();
             addRobotWindow.SetActive(true);
         }
     }
