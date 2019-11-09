@@ -66,7 +66,6 @@ namespace Synthesis.DriverPractice
         {
             if (File.Exists(filePath + Path.DirectorySeparatorChar + "robot_data.xml"))
             {
-
                 file = XDocument.Load(filePath + Path.DirectorySeparatorChar + "robot_data.xml");
                 dpmodes = getDriverPractice();
             }
@@ -80,7 +79,6 @@ namespace Synthesis.DriverPractice
             List<DriverPractice> dp = new List<DriverPractice>();
             foreach (XElement e in file.Root.Element("DriverPractice").Elements())
             {
-
                 dp.Add(new DriverPractice(e));
             }
             return dp;

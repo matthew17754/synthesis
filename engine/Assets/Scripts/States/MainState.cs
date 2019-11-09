@@ -732,6 +732,7 @@ namespace Synthesis.States
                     robot.ControlIndex = SpawnedRobots.Count;
 
                     SimUI.QueueOnMain(() => DPMDataHandler.Load(robotPath), true);
+                    SimUI.QueueOnMain(() => robot.GetDriverPractice().SetAllInteractors(), false);
 
                     SimUI.QueueOnMain(() =>
                     {
@@ -1184,14 +1185,12 @@ namespace Synthesis.States
         {
             physicsWorld.enabled = true;
             physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = true;
-            Debug.Log("Physics Enabled");
         }
 
         public void DisablePhysics()
         {
             physicsWorld.enabled = false;
             physicsWorld.GetComponent<BPhysicsWorldLateHelperEx>().enabled = false;
-            Debug.Log("Physics Disabled");
         }
     }
 }
