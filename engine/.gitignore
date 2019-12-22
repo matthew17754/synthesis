@@ -222,6 +222,7 @@ pip-log.txt
 #############
 Assets/SteamVR
 Assets/SteamVR.meta
+Assets/Steam
 Assets/BulletUnity
 Assets/BulletUnity.meta
 Assets/Plugins
@@ -235,3 +236,7 @@ SteamVR.csproj
 SteamVR_Editor.csproj
 SteamVR_Windows_EditorHelper.csproj
 SteamVR_Input_Editor.csproj
+SteamVR.csproj.meta
+SteamVR_Editor.csproj.meta
+SteamVR_Windows_EditorHelper.csproj.meta
+SteamVR_Input_Editor.csproj.meta
