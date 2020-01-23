@@ -25,7 +25,8 @@ namespace SynthesisAddIn {
 			std::uniform_int_distribution<> dis(0, 255);
 			return dis(gen);
 		}
-		static std::string generate_hex(const unsigned int len) {
+
+		static std::string generate_hex(const int len) {
 			std::stringstream ss;
 			for (auto i = 0; i < len; i++) {
 				const auto rc = random_char();
@@ -36,10 +37,12 @@ namespace SynthesisAddIn {
 			}
 			return ss.str();
 		}
+
 		static std::string generate_guid()
 		{
 			return generate_hex(4) + "-" + generate_hex(2) + "-" + generate_hex(2) + "-" + generate_hex(2) + "-" + generate_hex(6);
 		}
+
 	public:
 		static bool guideEnabled;
 		static bool firstLaunchNotification;

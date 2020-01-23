@@ -280,9 +280,9 @@
     <None Include="palette\jointEditor.html">
       <Filter>Source\AddIn\Palette</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="palette\drivetrain_type.html" />
     <None Include="palette\drivetrain_weight.html" />
     <None Include="palette\js\drivetrain_weight.js" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+
 #include <thread>
 #include <list>
 #include <experimental/filesystem>
@@ -17,6 +19,7 @@
 #include <ShlObj.h>
 #include "CustomHandlers.h"
 #include "Identifiers.h"
+#include "Analytics.h"
 #include "../Data/BXDJ/ConfigData.h"
 #include "../Data/Filesystem.h"
 #include <Fusion/Components/JointGeometry.h>

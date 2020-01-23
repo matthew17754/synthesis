@@ -36,9 +36,11 @@ bool EUI::createWorkspace()
 
 		return true;
 	}
-	catch (std::exception e)
+	catch (std::exception & e)
 	{
-		UI->messageBox("Failed to load Synthesis Exporter add-in.");
+		// new throw with nested, however this should have already been caught
+		std::throw_with_nested(e);
+		UI->messageBox(std::string("Failed to load Synthesis Exporter add-in."));
 		return false;
 	}
 }
