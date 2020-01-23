@@ -283,7 +283,7 @@ void EUI::updateProgress(double percent)
 		percent = 1;
 	}
 
-	progressPalette->sendInfoToHTML("progress", std::to_string(percent));
+	progressPalette->sendInfoToHTML(std::string("progress"), std::to_string(percent));
 
 }
 
@@ -312,7 +312,10 @@ void EUI::exportRobot(BXDJ::ConfigData config, bool openSynthesis)
 			{
 				system(cs.c_str());
 			}
-			catch (const std::exception& e) {}
+			catch (const std::exception& e) {
+				UI->messageBox(std::string("Failed to load Synthesis Exporter add-in."));
+				std::throw_with_nested(e);
+			}
 		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -322,6 +325,8 @@ void EUI::exportRobot(BXDJ::ConfigData config, bool openSynthesis)
 	{
 		progressPalette->sendInfoToHTML("error", "An error occurred while exporting \"" + config.robotName + "\":<br>" + std::string(e.what()));
 		Analytics::LogEvent(U("Export"), U("Failed"));
+		UI->messageBox(std::string("Failed to load Synthesis Exporter add-in."));
+		std::throw_with_nested(e);
 		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	}
 

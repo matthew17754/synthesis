@@ -1,11 +1,11 @@
 #include <Core/CoreAll.h>
+#include <Fusion/FusionAll.h>
 #include "EUI.h"
 #include "Identifiers.h"
 
 // does this not have a header file for linking?
 
 using namespace adsk::core;
-using namespace SynthesisAddIn;
 
 Ptr<Application> app;
 Ptr<UserInterface> UI;
@@ -18,9 +18,16 @@ void unroll_exception(const std::exception& e, int level = 0)
 	//std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';
 	if (UI) {
 		UI->messageBox(level + " -> " + std::string(e.what()));
-		if (Analytics::IsEnabled()) {
+		std::string errorMessage;
+
+		//try to get the fusion related error maybe?
+		int errorCode = app->getLastError(&errorMessage);
+		if (GenericErrors::Ok != errorCode)
+			UI->messageBox(errorMessage);
+
+		if (SynthesisAddIn::Analytics::IsEnabled()) {
 			// doesn't allow const char* so let's see if this cast even works.
-			Analytics::LogEvent(U("Error"), utility::conversions::to_string_t(std::string((e.what()))));
+			SynthesisAddIn::Analytics::LogEvent(U("Error"), utility::conversions::to_string_t(std::string((e.what()))));
 		}
 	}
 

@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Core/Memory.h>
+// this is the only reference for the old memory file, trying out the new import.
+#include <Core/CoreAll.h>
+#include <Fusion/FusionAll.h>
 
 namespace BXDJ
 {
